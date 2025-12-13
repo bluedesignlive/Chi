@@ -1,14 +1,27 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(smartui VERSION 0.1 LANGUAGES CXX)
+project(smartui-beta VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+include(GNUInstallDirs)
+
 find_package(Qt6 REQUIRED COMPONENTS Quick Qml)
 
-add_library(smartui STATIC
+# 1. Dynamic QML Path Detection
+get_target_property(QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)
+execute_process(COMMAND ${QMAKE_EXECUTABLE} -query QT_INSTALL_QML
+    OUTPUT_VARIABLE QT_QML_INSTALL_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+message(STATUS "Qt QML Path: ${QT_QML_INSTALL_DIR}")
+message(STATUS "Installing to: ${QT_QML_INSTALL_DIR}/SmartUIBeta")
+
+# 2. SHARED Library (Plugin)
+add_library(SmartUIBeta SHARED
     smartui.cpp
     smartui.h
 
@@ -78,12 +91,33 @@ add_library(smartui STATIC
     qml/smartui/ui/chips/Chip.qml
     qml/smartui/ui/chips/ChipGroup.qml
 
+    # Common
+    qml/smartui/ui/common/Icon.qml
+
     # Menus
     qml/smartui/ui/menus/Menu.qml
+    qml/smartui/ui/menus/MenuManager.qml
     qml/smartui/ui/menus/MenuItem.qml
     qml/smartui/ui/menus/MenuDivider.qml
+    qml/smartui/ui/menus/MenuGap.qml
     qml/smartui/ui/menus/ContextMenu.qml
     qml/smartui/ui/menus/Tooltip.qml
+
+    # Common
+    qml/smartui/ui/common/Icon.qml
+
+    # Menus (Gen 2 Expressive)
+    qml/smartui/ui/menus2/Menu.qml
+    qml/smartui/ui/menus2/MenuItem.qml
+    qml/smartui/ui/menus2/MenuDivider.qml
+
+    # Dialogs
+    qml/smartui/ui/dialogs/Dialog.qml
+    qml/smartui/ui/dialogs/AlertDialog.qml
+    qml/smartui/ui/dialogs/ConfirmDialog.qml
+    qml/smartui/ui/dialogs/FullscreenDialog.qml
+    qml/smartui/ui/dialogs/DialogManager.qml
+    qml/smartui/ui/menus/MenuGap.qml
 
     # Pickers
     qml/smartui/ui/pickers/DatePicker.qml
@@ -95,6 +129,7 @@ add_library(smartui STATIC
 
     # Lists
     qml/smartui/ui/lists/ListItem.qml
+    qml/smartui/ui/lists/SwipeListItem.qml
 
     # Data Display
     qml/smartui/ui/data/Avatar.qml
@@ -106,6 +141,7 @@ add_library(smartui STATIC
     qml/smartui/ui/data/ColorSwatch.qml
     qml/smartui/ui/data/IconLabel.qml
     qml/smartui/ui/data/Tag.qml
+    qml/smartui/ui/data/FileTable.qml
 
     # Layout
     qml/smartui/ui/system/Splitter.qml
@@ -115,14 +151,39 @@ add_library(smartui STATIC
     qml/smartui/ui/window/TitleBar.qml
     qml/smartui/ui/window/ApplicationWindow.qml
     qml/smartui/ui/window/StatusBar.qml
+
+    # Application Window (Smart M3)
+    qml/smartui/ui/applicationwindow/SmartApplicationWindow.qml
+    qml/smartui/ui/applicationwindow/WindowControls.qml
 )
 
-target_link_libraries(smartui
+target_link_libraries(SmartUIBeta
     PRIVATE Qt6::Quick Qt6::Qml
 )
 
-target_include_directories(smartui
+target_include_directories(SmartUIBeta
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-add_subdirectory(testui)
+# 3. Install Instructions
+install(TARGETS SmartUIBeta
+    ARCHIVE DESTINATION ${QT_QML_INSTALL_DIR}/SmartUIBeta
+    LIBRARY DESTINATION ${QT_QML_INSTALL_DIR}/SmartUIBeta
+)
+
+install(DIRECTORY qml/smartui/
+    DESTINATION ${QT_QML_INSTALL_DIR}/SmartUIBeta
+    FILES_MATCHING
+    PATTERN "*.qml"
+    PATTERN "qmldir"
+    PATTERN "*.js"
+    PATTERN "*.png"
+    PATTERN "*.svg"
+)
+
+install(FILES smartui.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/SmartUIBeta
+)
+
+# Disabled until library is installed
+# add_subdirectory(testui)

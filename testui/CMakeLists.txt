@@ -39,7 +39,7 @@ set_target_properties(apptestui PROPERTIES
 )
 
 target_link_libraries(apptestui
-    PRIVATE Qt6::Quick Qt6::Qml smartui
+    PRIVATE Qt6::Quick Qt6::Qml smartui-beta
 )
 
 target_compile_definitions(apptestui

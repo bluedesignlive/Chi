@@ -1,19 +1,54 @@
 #ifndef SMARTUI_H
 #define SMARTUI_H
 
-#include <QtQuick/QQuickPaintedItem>
-#include <QtQml/qqml.h>   // Needed for QML_ELEMENT
+#include <QObject>
+#include <QQmlEngine>
+#include <QColor>
+#include <QFileSystemWatcher>
+#include <QJsonObject>
+#include <QFile>
+#include <QDir>
+#include <QStandardPaths>
+#include <QJsonDocument>
+#include <QQmlExtensionPlugin>
 
-class SmartUi : public QQuickPaintedItem
+// The Backend Logic
+class ThemeBackend : public QObject
 {
     Q_OBJECT
-    QML_ELEMENT
-    Q_DISABLE_COPY(SmartUi)
+    // Properties that QML will listen to
+    Q_PROPERTY(bool isDarkMode READ isDarkMode WRITE setDarkMode NOTIFY themeChanged)
+    Q_PROPERTY(QString primaryColor READ primaryColor WRITE setPrimaryColor NOTIFY themeChanged)
 
 public:
-    explicit SmartUi(QQuickItem *parent = nullptr);
-    void paint(QPainter *painter) override;
-    ~SmartUi() override;
+    explicit ThemeBackend(QObject *parent = nullptr);
+    
+    bool isDarkMode() const;
+    void setDarkMode(bool dark);
+    
+    QString primaryColor() const;
+    void setPrimaryColor(const QString &color);
+
+signals:
+    void themeChanged();
+
+private:
+    void loadConfig();
+    void saveConfig();
+    
+    bool m_isDarkMode;
+    QString m_primaryColor;
+    QString m_configPath;
+    QFileSystemWatcher *m_watcher;
 };
 
-#endif // SMARTUI_H
+// The Plugin Entry Point (Required for SHARED libraries)
+class SmartUIPlugin : public QQmlExtensionPlugin
+{
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
+public:
+    void registerTypes(const char *uri) override;
+};
+
+#endif

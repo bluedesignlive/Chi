@@ -13,6 +13,12 @@ IconButtonToggle 1.0 ui/Buttons/IconButtonToggle.qml
 # FAB
 FAB 1.0 ui/FAB/FAB.qml
 FABMenu 1.0 ui/FAB/FABMenu.qml
+Menu2 1.0 ui/menus2/Menu.qml
+MenuItem2 1.0 ui/menus2/MenuItem.qml
+MenuDivider2 1.0 ui/menus2/MenuDivider.qml
+Menu2 1.0 ui/menus2/Menu.qml
+MenuItem2 1.0 ui/menus2/MenuItem.qml
+MenuDivider2 1.0 ui/menus2/MenuDivider.qml
 FABMenuItem 1.0 ui/FAB/FABMenuItem.qml
 
 # Switches
@@ -65,9 +71,21 @@ ChipGroup 1.0 ui/chips/ChipGroup.qml
 
 # Menus
 Menu 1.0 ui/menus/Menu.qml
+Menu2 1.0 ui/menus2/Menu.qml
+MenuItem2 1.0 ui/menus2/MenuItem.qml
+MenuDivider2 1.0 ui/menus2/MenuDivider.qml
+Menu2 1.0 ui/menus2/Menu.qml
+MenuItem2 1.0 ui/menus2/MenuItem.qml
+MenuDivider2 1.0 ui/menus2/MenuDivider.qml
 MenuItem 1.0 ui/menus/MenuItem.qml
 MenuDivider 1.0 ui/menus/MenuDivider.qml
 ContextMenu 1.0 ui/menus/ContextMenu.qml
+Menu2 1.0 ui/menus2/Menu.qml
+MenuItem2 1.0 ui/menus2/MenuItem.qml
+MenuDivider2 1.0 ui/menus2/MenuDivider.qml
+Menu2 1.0 ui/menus2/Menu.qml
+MenuItem2 1.0 ui/menus2/MenuItem.qml
+MenuDivider2 1.0 ui/menus2/MenuDivider.qml
 Tooltip 1.0 ui/menus/Tooltip.qml
 
 # Pickers
@@ -101,6 +119,8 @@ Splitter 1.0 ui/system/Splitter.qml
 WindowControls 1.0 ui/window/WindowControls.qml
 TitleBar 1.0 ui/window/TitleBar.qml
 ApplicationWindow 1.0 ui/window/ApplicationWindow.qml
+SmartApplicationWindow 1.0 ui/applicationwindow/SmartApplicationWindow.qml
+SmartWindowControls 1.0 ui/applicationwindow/WindowControls.qml
 StatusBar 1.0 ui/window/StatusBar.qml
 
 # Toolbar
@@ -109,16 +129,8 @@ ToolbarItem 1.0 ui/containers/ToolbarItem.qml
 ToolbarToggleItem 1.0 ui/containers/ToolbarToggleItem.qml
 ToolbarSeparator 1.0 ui/containers/ToolbarSeparator.qml
 
-# Application Window (was missing)
-SmartApplicationWindow 1.0 ui/applicationwindow/SmartApplicationWindow.qml
-SmartWindowControls 1.0 ui/applicationwindow/WindowControls.qml
 
-# Menu Manager Singleton
-singleton MenuManager 1.0 ui/menus/MenuManager.qml
-
-# Dialogs
-Dialog 1.0 ui/dialogs/Dialog.qml
-AlertDialog 1.0 ui/dialogs/AlertDialog.qml
-ConfirmDialog 1.0 ui/dialogs/ConfirmDialog.qml
-FullscreenDialog 1.0 ui/dialogs/FullscreenDialog.qml
-singleton DialogManager 1.0 ui/dialogs/DialogManager.qml
+# Gen 2 Menus
+Menu 2.0 ui/menus2/Menu.qml
+MenuItem 2.0 ui/menus2/MenuItem.qml
+MenuDivider 2.0 ui/menus2/MenuDivider.qml

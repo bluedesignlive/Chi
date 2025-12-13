@@ -1,630 +1,426 @@
 import QtQuick
+import QtQuick.Layouts
 import QtQuick.Controls.Basic
 import Qt5Compat.GraphicalEffects
 import "../../theme" as Theme
-import "../FAB" as Fab
 
 Item {
     id: navigationRail
 
-    property string variant: "rail"      // "rail" or "expanded"
-    property string alignment: "top"     // "top" or "middle"
+    property string variant: "rail"
+    property string alignment: "top"
+    
+    // Feature: Allow custom icon font (e.g., Nerd Fonts)
+    property string iconFont: ""
+
     property bool showMenuButton: true
+    property string menuIcon: "menu" 
+    
     property bool showFab: true
-    property string fabIcon: "add"
+    property string fabIcon: "+"
     property string fabText: "New"
-    property string menuIcon: "menu"
+
     property int selectedIndex: 0
     property bool enabled: true
 
-    // Consumers fill these
-    property ListModel items: ListModel { }
-    property ListModel sections: ListModel { }
+    property ListModel items: ListModel {}
+    property ListModel sections: ListModel {}
 
     signal itemClicked(int index)
     signal fabClicked()
     signal menuClicked()
 
     opacity: enabled ? 1.0 : 0.38
-    Behavior on opacity {
-        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-    }
-
-    readonly property int railWidth: 96
-    readonly property int expandedWidth: 220
-    readonly property int contentMargin: 16
-
+    readonly property int railWidth: 80
+    readonly property int expandedWidth: 256
     property var colors: Theme.ChiTheme.colors
 
     implicitWidth: variant === "rail" ? railWidth : expandedWidth
     implicitHeight: parent ? parent.height : 800
 
+    Behavior on implicitWidth { 
+        NumberAnimation { duration: 200; easing.type: Easing.OutCubic } 
+    }
+
     Rectangle {
-        id: bg
         anchors.fill: parent
         color: colors.surface
+        Behavior on color { ColorAnimation { duration: 200 } }
+    }
 
-        // Main content area inside the rail, with top/bottom paddings
+    // HEADER
+    Column {
+        id: headerSection
+        anchors.top: parent.top
+        anchors.topMargin: 12
+        anchors.left: parent.left
+        anchors.right: parent.right
+        spacing: 4
+        z: 10
+
         Item {
-            id: contentArea
-            anchors {
-                fill: parent
-                topMargin: 44
-                bottomMargin: variant === "rail" ? 56 : 20
+            visible: showMenuButton
+            width: parent.width
+            height: 56
+            
+            RailIconButton {
+                anchors.centerIn: variant === "rail" ? parent : undefined
+                anchors.left: variant === "expanded" ? parent.left : undefined
+                anchors.leftMargin: variant === "expanded" ? 16 : 0
+                anchors.verticalCenter: parent.verticalCenter
+                icon: menuIcon
+                onClicked: navigationRail.menuClicked()
             }
+        }
 
-            // Menu + FAB section pinned to top of contentArea
-            Item {
-                id: menuFabSection
-                anchors {
-                    top: parent.top
-                    left: parent.left
-                    right: parent.right
-                }
-                height: 116
-
-                // Menu button
-                IconButton {
-                    id: menuButton
-                    visible: showMenuButton
-                    icon: menuIcon
-                    anchors {
-                        left: parent.left
-                        leftMargin: contentMargin
-                        top: parent.top
-                    }
-                    onClicked: navigationRail.menuClicked()
-                }
-
-                // FAB in rail mode — centered horizontally
-                Item {
-                    id: fabRail
-                    visible: showFab && variant === "rail"
-                    anchors {
-                        bottom: parent.bottom
-                        horizontalCenter: parent.horizontalCenter
-                    }
-
-                    Fab.FAB {
-                        icon: fabIcon
-                        variant: "primary"
-                        onClicked: navigationRail.fabClicked()
-                    }
-                }
-
-                // Extended FAB in expanded mode — left aligned
-                Item {
-                    id: fabExpanded
-                    visible: showFab && variant === "expanded"
-                    anchors {
-                        bottom: parent.bottom
-                        left: parent.left
-                        leftMargin: contentMargin
-                    }
-
-                    ExtendedFAB {
-                        icon: fabIcon
-                        text: fabText
-                        onClicked: navigationRail.fabClicked()
-                    }
-                }
+        Item {
+            visible: showFab
+            width: parent.width
+            height: 56
+            
+            RailFAB {
+                visible: variant === "rail"
+                anchors.centerIn: parent
+                icon: fabIcon
+                onClicked: navigationRail.fabClicked()
             }
+            
+            ExtendedFAB {
+                visible: variant === "expanded"
+                anchors.left: parent.left
+                anchors.leftMargin: 12
+                anchors.verticalCenter: parent.verticalCenter
+                icon: fabIcon
+                text: fabText
+                onClicked: navigationRail.fabClicked()
+            }
+        }
+    }
 
-            // Navigation area: all space below menuFabSection
-            Item {
-                id: navArea
-                anchors {
-                    left: parent.left
-                    right: parent.right
-                    top: menuFabSection.bottom
-                    bottom: parent.bottom
+    // BODY
+    Item {
+        id: navContainer
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: headerSection.bottom
+        anchors.topMargin: 12
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 12
+
+        Column {
+            id: navColumn
+            width: parent.width
+            spacing: variant === "rail" ? 0 : 2
+
+            states: [
+                State { 
+                    name: "top"
+                    when: alignment === "top"
+                    AnchorChanges { target: navColumn; anchors.top: navContainer.top; anchors.verticalCenter: undefined; anchors.bottom: undefined } 
+                },
+                State { 
+                    name: "middle"
+                    when: alignment === "middle"
+                    AnchorChanges { target: navColumn; anchors.top: undefined; anchors.verticalCenter: navContainer.verticalCenter; anchors.bottom: undefined } 
+                },
+                State { 
+                    name: "bottom"
+                    when: alignment === "bottom"
+                    AnchorChanges { target: navColumn; anchors.top: undefined; anchors.verticalCenter: undefined; anchors.bottom: navContainer.bottom } 
                 }
+            ]
+            transitions: Transition { AnchorAnimation { duration: 200; easing.type: Easing.OutCubic } }
 
-                // Column of items inside navArea
-                Column {
-                    id: itemsColumn
-                    anchors {
-                        left: parent.left
-                        right: parent.right
-                        leftMargin: contentMargin
-                        rightMargin: contentMargin
-
-                        // Vertical alignment logic:
-                        // - "top": pin to top
-                        // - "middle": center in navArea
-                        top: alignment === "top" ? parent.top : undefined
-                        verticalCenter: alignment === "middle" ? parent.verticalCenter : undefined
-                    }
-                    spacing: variant === "rail" ? 4 : 0
-
-                    // Flat list of items (no sections)
-                    Repeater {
-                        model: sections.count === 0 ? navigationRail.items : 0
-
-                        delegate: NavItem {
-                            variant: navigationRail.variant
-                            icon: model.icon
-                            activeIcon: model.activeIcon || model.icon
-                            label: model.label
-                            selected: navigationRail.selectedIndex === index
-                            badge: model.badge || "none"
-                            badgeText: model.badgeText || ""
-                            enabled: navigationRail.enabled
-
-                            onClicked: {
-                                navigationRail.selectedIndex = index
-                                navigationRail.itemClicked(index)
-                            }
-                        }
-                    }
-
-                    // Sectioned items (expanded only)
-                    Repeater {
-                        model: sections.count > 0 ? sections : 0
-
-                        delegate: Column {
-                            width: parent.width
-                            spacing: 0
-
-                            Item {
-                                visible: model.title !== ""
-                                width: parent.width
-                                height: 36
-
-                                Text {
-                                    anchors {
-                                        left: parent.left
-                                        verticalCenter: parent.verticalCenter
-                                    }
-                                    text: model.title || ""
-                                    font.family: "Roboto"
-                                    font.weight: Font.Medium
-                                    font.pixelSize: 14
-                                    font.letterSpacing: 0.1
-                                    lineHeight: 20
-                                    lineHeightMode: Text.FixedHeight
-                                    color: colors.onSurfaceVariant
-                                }
-                            }
-
-                            Repeater {
-                                model: model.items
-                                delegate: NavItem {
-                                    variant: navigationRail.variant
-                                    icon: modelData.icon
-                                    activeIcon: modelData.activeIcon || modelData.icon
-                                    label: modelData.label
-                                    selected: modelData.id === navigationRail.selectedIndex
-                                    badge: modelData.badge || "none"
-                                    badgeText: modelData.badgeText || ""
-                                    enabled: navigationRail.enabled
-
-                                    onClicked: {
-                                        navigationRail.selectedIndex = modelData.id
-                                        navigationRail.itemClicked(modelData.id)
-                                    }
-                                }
-                            }
-
-                            Item {
-                                width: 1
-                                height: index < sections.count - 1 ? 12 : 0
-                            }
-                        }
-                    }
+            Repeater {
+                model: sections.count === 0 ? navigationRail.items : null
+                delegate: Loader {
+                    width: navColumn.width
+                    sourceComponent: variant === "rail" ? railItemComponent : expandedItemComponent
+                    property int itemIndex: index
+                    property string itemIcon: model.icon || ""
+                    property string itemActiveIcon: model.activeIcon || model.icon || ""
+                    property string itemLabel: model.label || ""
+                    property bool itemSelected: navigationRail.selectedIndex === index
                 }
             }
         }
     }
 
-    // ===== Local IconButton (menu) =====
-    component IconButton: Item {
-        id: iconBtn
-        property string icon: ""
-        signal clicked()
+    // INTERNAL COMPONENTS
+    Component {
+        id: railItemComponent
+        Item {
+            width: parent ? parent.width : railWidth
+            height: 56
+            property string displayIcon: itemSelected && itemActiveIcon !== "" ? itemActiveIcon : itemIcon
 
-        width: 56
-        height: 56
-
-        Rectangle {
-            anchors.fill: parent
-            radius: 16
-            color: "transparent"
-            clip: true
-
-            Rectangle {
-                id: iconRipple
-                anchors.fill: parent
-                radius: parent.radius
-                color: colors.onSurfaceVariant
-                opacity: 0
-
-                SequentialAnimation on opacity {
-                    id: iconRippleAnimation
-                    running: false
-                    NumberAnimation { from: 0; to: 0.12; duration: 90;  easing.type: Easing.OutCubic }
-                    NumberAnimation { to: 0;              duration: 210; easing.type: Easing.OutCubic }
+            Column {
+                anchors.centerIn: parent
+                spacing: 4
+                
+                Item {
+                    width: 56
+                    height: 32
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    
+                    Rectangle { 
+                        anchors.centerIn: parent
+                        width: itemSelected ? 56 : 0
+                        height: 32
+                        radius: 16
+                        color: colors.secondaryContainer
+                        Behavior on width { NumberAnimation { duration: 200 } } 
+                    }
+                    
+                    Rectangle { 
+                        anchors.centerIn: parent
+                        width: 56
+                        height: 32
+                        radius: 16
+                        color: itemSelected ? colors.onSecondaryContainer : colors.onSurface
+                        opacity: railItemMouse.pressed ? 0.12 : railItemMouse.containsMouse ? 0.08 : 0 
+                    }
+                    
+                    Item {
+                        anchors.centerIn: parent
+                        width: 24
+                        height: 24
+                        Loader {
+                            anchors.fill: parent
+                            sourceComponent: isImagePath(displayIcon) ? imageIconComp : textIconComp
+                            property string iconSrc: displayIcon
+                            property color iconClr: itemSelected ? colors.onSecondaryContainer : colors.onSurfaceVariant
+                        }
+                    }
+                }
+                
+                Text { 
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: itemLabel
+                    font.family: "Roboto"
+                    font.pixelSize: 12
+                    font.weight: itemSelected ? Font.Medium : Font.Normal
+                    color: itemSelected ? colors.onSurface : colors.onSurfaceVariant 
                 }
             }
-
-            Rectangle {
+            MouseArea { 
+                id: railItemMouse
                 anchors.fill: parent
-                radius: parent.radius
-                color: colors.onSurfaceVariant
-                opacity: iconMouseArea.pressed ? 0.12 : iconMouseArea.containsMouse ? 0.08 : 0
-                Behavior on opacity {
-                    NumberAnimation { duration: iconMouseArea.pressed ? 50 : 150; easing.type: Easing.OutCubic }
-                }
-            }
-
-            readonly property bool isImageIcon: icon.indexOf(".") !== -1 || icon.indexOf("/") !== -1
-
-            Image {
-                id: iconImage
-                anchors.centerIn: parent
-                width: 24
-                height: 24
-                visible: isImageIcon
-                source: isImageIcon ? icon : ""
-                fillMode: Image.PreserveAspectFit
-            }
-
-            Text {
-                anchors.centerIn: parent
-                visible: !iconImage.visible
-                text: icon
-                font.family: "Material Icons"
-                font.pixelSize: 24
-                color: colors.onSurfaceVariant
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: { navigationRail.selectedIndex = itemIndex; navigationRail.itemClicked(itemIndex) } 
             }
         }
+    }
 
-        MouseArea {
-            id: iconMouseArea
+    Component {
+        id: expandedItemComponent
+        Item {
+            width: parent ? parent.width : expandedWidth
+            height: 56
+            property string displayIcon: itemSelected && itemActiveIcon !== "" ? itemActiveIcon : itemIcon
+            
+            Rectangle {
+                anchors.fill: parent
+                anchors.leftMargin: 12
+                anchors.rightMargin: 12
+                radius: 28
+                color: itemSelected ? colors.secondaryContainer : "transparent"
+                
+                Rectangle { 
+                    anchors.fill: parent
+                    radius: parent.radius
+                    color: itemSelected ? colors.onSecondaryContainer : colors.onSurface
+                    opacity: expItemMouse.pressed ? 0.12 : expItemMouse.containsMouse ? 0.08 : 0 
+                }
+                
+                Row {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 16
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 12
+                    
+                    Item {
+                        width: 24
+                        height: 24
+                        Loader {
+                            anchors.fill: parent
+                            sourceComponent: isImagePath(displayIcon) ? imageIconComp : textIconComp
+                            property string iconSrc: displayIcon
+                            property color iconClr: itemSelected ? colors.onSecondaryContainer : colors.onSurfaceVariant
+                        }
+                    }
+                    
+                    Text { 
+                        text: itemLabel
+                        font.family: "Roboto"
+                        font.pixelSize: 14
+                        font.weight: itemSelected ? Font.Medium : Font.Normal
+                        color: itemSelected ? colors.onSecondaryContainer : colors.onSurfaceVariant
+                        anchors.verticalCenter: parent.verticalCenter 
+                    }
+                }
+                MouseArea { 
+                    id: expItemMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: { navigationRail.selectedIndex = itemIndex; navigationRail.itemClicked(itemIndex) } 
+                }
+            }
+        }
+    }
+
+    function isImagePath(icon) {
+        if (!icon || icon === "") return false
+        var s = icon.toLowerCase()
+        return s.indexOf("/") !== -1 || s.indexOf(".") !== -1 || s.indexOf("qrc:") !== -1
+    }
+
+    Component {
+        id: textIconComp
+        Text {
+            text: iconSrc
+            // Use custom font if set, otherwise default to Material Icons
+            font.family: navigationRail.iconFont !== "" ? navigationRail.iconFont : "Material Icons"
+            font.pixelSize: 22
+            color: iconClr
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            Behavior on color { ColorAnimation { duration: 150 } }
+        }
+    }
+
+    Component {
+        id: imageIconComp
+        Image { 
+            source: iconSrc
+            sourceSize: Qt.size(24, 24)
+            fillMode: Image.PreserveAspectFit
+            smooth: true
+            mipmap: true 
+        }
+    }
+
+    component RailIconButton: Item {
+        property string icon: ""
+        signal clicked()
+        width: 48
+        height: 48
+        
+        Rectangle { 
+            anchors.centerIn: parent
+            width: 40
+            height: 40
+            radius: 20
+            color: colors.onSurfaceVariant
+            opacity: btnMouse.pressed ? 0.12 : btnMouse.containsMouse ? 0.08 : 0 
+        }
+        
+        Item {
+            anchors.centerIn: parent
+            width: 24
+            height: 24
+            Loader { 
+                anchors.fill: parent
+                sourceComponent: isImagePath(icon) ? imageIconComp : textIconComp
+                property string iconSrc: icon
+                property color iconClr: colors.onSurfaceVariant 
+            }
+        }
+        MouseArea { 
+            id: btnMouse
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            onPressed: iconRippleAnimation.restart()
-            onClicked: iconBtn.clicked()
+            onClicked: parent.clicked() 
         }
     }
 
-    // ===== Extended FAB (local) =====
-    component ExtendedFAB: Item {
+    component RailFAB: Item {
         property string icon: ""
-        property string text: ""
         signal clicked()
-
-        width: 144
+        width: 56
         height: 56
-
+        
         Rectangle {
             anchors.fill: parent
             radius: 16
             color: colors.primaryContainer
-            clip: true
-
             layer.enabled: true
-            layer.effect: DropShadow {
+            layer.effect: DropShadow { 
                 transparentBorder: true
-                horizontalOffset: 0
-                verticalOffset: fabMouseArea.containsMouse ? 2 : 1
-                radius: fabMouseArea.containsMouse ? 8 : 4
-                samples: 17
-                color: Qt.rgba(0, 0, 0, 0.3)
+                verticalOffset: 1
+                radius: 3
+                color: Qt.rgba(0,0,0,0.2) 
             }
-
-            Rectangle {
-                anchors.fill: parent
-                radius: parent.radius
-                color: colors.onPrimaryContainer
-                opacity: fabMouseArea.pressed ? 0.12 : fabMouseArea.containsMouse ? 0.08 : 0
-                Behavior on opacity {
-                    NumberAnimation { duration: fabMouseArea.pressed ? 50 : 150; easing.type: Easing.OutCubic }
-                }
-            }
-
-            Row {
-                anchors.centerIn: parent
-                spacing: 8
-
-                readonly property bool isImageIcon: icon.indexOf(".") !== -1 || icon.indexOf("/") !== -1
-
-                Image {
-                    id: extIconImage
-                    width: 24
-                    height: 24
-                    visible: isImageIcon
-                    source: isImageIcon ? icon : ""
-                    fillMode: Image.PreserveAspectFit
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                Text {
-                    visible: !extIconImage.visible
-                    text: icon
-                    font.family: "Material Icons"
-                    font.pixelSize: 24
-                    color: colors.onPrimaryContainer
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                Text {
-                    text: ExtendedFAB.text
-                    font.family: "Roboto"
-                    font.weight: Font.Medium
-                    font.pixelSize: 16
-                    font.letterSpacing: 0.15
-                    lineHeight: 24
-                    lineHeightMode: Text.FixedHeight
-                    color: colors.onPrimaryContainer
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-            }
-        }
-
-        MouseArea {
-            id: fabMouseArea
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: parent.clicked()
-        }
-    }
-
-    // ===== Navigation Item =====
-    component NavItem: Item {
-        id: navItem
-
-        property string variant: "rail"
-        property string icon: ""
-        property string activeIcon: ""
-        property string label: ""
-        property bool selected: false
-        property string badge: "none"   // "none", "small", "large"
-        property string badgeText: ""
-        property bool enabled: true
-
-        signal clicked()
-
-        width: parent ? parent.width : (variant === "rail" ? railWidth : expandedWidth)
-        height: variant === "rail" ? 64 : 56
-
-        states: [
-            State { name: "disabled"; when: !enabled },
-            State { name: "pressed";  when: itemMouseArea.pressed && enabled },
-            State { name: "focused";  when: navItem.activeFocus && enabled && !itemMouseArea.pressed },
-            State { name: "hovered";  when: itemMouseArea.containsMouse && enabled && !itemMouseArea.pressed },
-            State { name: "enabled";  when: enabled && !itemMouseArea.containsMouse && !itemMouseArea.pressed && !navItem.activeFocus }
-        ]
-
-        // Rail layout
-        Column {
-            visible: variant === "rail"
-            anchors.centerIn: parent
-            spacing: 4
-
+            
             Item {
-                width: 56
-                height: 32
-                anchors.horizontalCenter: parent.horizontalCenter
-
-                Rectangle {
+                anchors.centerIn: parent
+                width: 24
+                height: 24
+                Loader { 
                     anchors.fill: parent
-                    radius: 16
-                    color: selected ? colors.secondaryContainer : "transparent"
-                    clip: true
-
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: parent.radius
-                        color: selected ? colors.onSecondaryContainer : colors.onSurface
-                        opacity: {
-                            if (!enabled) return 0
-                            switch (navItem.state) {
-                            case "pressed": return 0.12
-                            case "focused": return 0.12
-                            case "hovered": return 0.08
-                            default:        return 0
-                            }
-                        }
-                        Behavior on opacity {
-                            NumberAnimation { duration: navItem.state === "pressed" ? 50 : 150; easing.type: Easing.OutCubic }
-                        }
-                    }
-
-                    readonly property string effectiveIcon: selected && activeIcon !== "" ? activeIcon : icon
-                    readonly property bool isImageIcon: effectiveIcon.indexOf(".") !== -1 || effectiveIcon.indexOf("/") !== -1
-
-                    Image {
-                        id: railIconImage
-                        anchors.centerIn: parent
-                        width: 24
-                        height: 24
-                        visible: isImageIcon
-                        source: isImageIcon ? effectiveIcon : ""
-                        fillMode: Image.PreserveAspectFit
-                    }
-
-                    Text {
-                        anchors.centerIn: parent
-                        visible: !railIconImage.visible
-                        text: effectiveIcon
-                        font.family: "Material Icons"
-                        font.pixelSize: 24
-                        color: selected ? colors.onSecondaryContainer : colors.onSurfaceVariant
-                    }
-                }
-
-                Badge {
-                    anchors {
-                        right: parent.right
-                        rightMargin: badge === "small" ? 16 : 14
-                        top: parent.top
-                        topMargin: 4
-                    }
-                    type: badge
-                    text: badgeText
-                }
-            }
-
-            Text {
-                width: railWidth
-                text: label
-                font.family: "Roboto"
-                font.weight: Font.Medium
-                font.pixelSize: 12
-                font.letterSpacing: 0.5
-                lineHeight: 16
-                lineHeightMode: Text.FixedHeight
-                horizontalAlignment: Text.AlignHCenter
-                color: selected ? colors.secondary : colors.onSurfaceVariant
-            }
-        }
-
-        // Expanded layout
-        Rectangle {
-            id: expandedBg
-            visible: variant === "expanded"
-            anchors.fill: parent
-            radius: 100
-            color: selected ? colors.secondaryContainer : "transparent"
-            clip: true
-
-            Rectangle {
-                id: expandedRipple
-                anchors.fill: parent
-                radius: parent.radius
-                color: selected ? colors.onSecondaryContainer : colors.primary
-                opacity: 0
-
-                SequentialAnimation on opacity {
-                    id: expandedRippleAnimation
-                    running: false
-                    NumberAnimation { from: 0; to: 0.12; duration: 90;  easing.type: Easing.OutCubic }
-                    NumberAnimation { to: 0;              duration: 210; easing.type: Easing.OutCubic }
-                }
-            }
-
-            Rectangle {
-                anchors.fill: parent
-                radius: parent.radius
-                color: selected ? colors.onSecondaryContainer : colors.onSurface
-                opacity: {
-                    if (!enabled) return 0
-                    switch (navItem.state) {
-                    case "pressed": return 0.12
-                    case "focused": return 0.12
-                    case "hovered": return 0.08
-                    default:        return 0
-                    }
-                }
-                Behavior on opacity {
-                    NumberAnimation { duration: navItem.state === "pressed" ? 50 : 150; easing.type: Easing.OutCubic }
-                }
-            }
-
-            Row {
-                anchors {
-                    left: parent.left
-                    right: parent.right
-                    leftMargin: 16
-                    rightMargin: 16
-                    verticalCenter: parent.verticalCenter
-                }
-                spacing: 8
-
-                readonly property string effectiveIcon: selected && activeIcon !== "" ? activeIcon : icon
-                readonly property bool isImageIcon: effectiveIcon.indexOf(".") !== -1 || effectiveIcon.indexOf("/") !== -1
-
-                Image {
-                    id: expIconImage
-                    width: 24
-                    height: 24
-                    visible: isImageIcon
-                    source: isImageIcon ? effectiveIcon : ""
-                    fillMode: Image.PreserveAspectFit
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                Text {
-                    visible: !expIconImage.visible
-                    text: effectiveIcon
-                    font.family: "Material Icons"
-                    font.pixelSize: 24
-                    color: selected ? colors.onSecondaryContainer : colors.onSurfaceVariant
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                Text {
-                    text: label
-                    font.family: "Roboto"
-                    font.weight: Font.Medium
-                    font.pixelSize: 14
-                    font.letterSpacing: 0.1
-                    lineHeight: 20
-                    lineHeightMode: Text.FixedHeight
-                    color: selected ? colors.onSecondaryContainer : colors.onSurfaceVariant
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                Badge {
-                    visible: badge !== "none"
-                    type: badge
-                    text: badgeText
-                    anchors.verticalCenter: parent.verticalCenter
+                    sourceComponent: isImagePath(icon) ? imageIconComp : textIconComp
+                    property string iconSrc: icon
+                    property color iconClr: colors.onPrimaryContainer 
                 }
             }
         }
-
-        // Focus ring
-        Rectangle {
-            visible: navItem.state === "focused"
+        MouseArea { 
             anchors.fill: parent
-            anchors.margins: variant === "rail" ? 8 : 4
-            radius: variant === "rail" ? 24 : 100
-            color: "transparent"
-            border.width: 3
-            border.color: colors.secondary
-        }
-
-        MouseArea {
-            id: itemMouseArea
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onPressed: if (variant === "expanded") expandedRippleAnimation.restart()
-            onClicked: navItem.clicked()
+            onClicked: parent.clicked()
+            cursorShape: Qt.PointingHandCursor 
         }
     }
 
-    // ===== Badge =====
-    component Badge: Item {
-        property string type: "none"
+    component ExtendedFAB: Item {
+        property string icon: ""
         property string text: ""
-
-        visible: type !== "none"
-        width: type === "small" ? 6 : Math.max(16, badgeLabel.width + 8)
-        height: type === "small" ? 6 : 16
-
+        signal clicked()
+        implicitWidth: extRow.implicitWidth + 32
+        implicitHeight: 56
+        
         Rectangle {
             anchors.fill: parent
-            radius: 100
-            color: colors.error
-
-            Text {
-                id: badgeLabel
-                visible: type === "large" && text !== ""
-                anchors.centerIn: parent
-                text: parent.parent.text
-                font.family: "Roboto"
-                font.weight: Font.Medium
-                font.pixelSize: 11
-                font.letterSpacing: 0.5
-                lineHeight: 16
-                lineHeightMode: Text.FixedHeight
-                color: colors.onError
+            radius: 16
+            color: colors.primaryContainer
+            layer.enabled: true
+            layer.effect: DropShadow { 
+                transparentBorder: true
+                verticalOffset: 1
+                radius: 3
+                color: Qt.rgba(0,0,0,0.2) 
             }
+            
+            Row {
+                id: extRow
+                anchors.centerIn: parent
+                spacing: 12
+                Item {
+                    width: 24
+                    height: 24
+                    Loader { 
+                        anchors.fill: parent
+                        sourceComponent: isImagePath(icon) ? imageIconComp : textIconComp
+                        property string iconSrc: icon
+                        property color iconClr: colors.onPrimaryContainer 
+                    }
+                }
+                Text { 
+                    text: parent.parent.parent.text
+                    font.family: "Roboto"
+                    font.pixelSize: 14
+                    font.weight: Font.Medium
+                    color: colors.onPrimaryContainer
+                    anchors.verticalCenter: parent.verticalCenter 
+                }
+            }
+        }
+        MouseArea { 
+            anchors.fill: parent
+            onClicked: parent.clicked()
+            cursorShape: Qt.PointingHandCursor 
         }
     }
 }

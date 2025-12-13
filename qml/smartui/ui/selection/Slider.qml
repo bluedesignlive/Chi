@@ -288,5 +288,4 @@ Item {
 
     Accessible.role: Accessible.Slider
     Accessible.name: "Slider"
-    Accessible.value: value.toString()
 }

@@ -8,7 +8,7 @@ Item {
     property bool checked: false
     property string label: ""
     property bool enabled: true
-    property string size: "medium"           // "small", "medium", "large"
+    property string size: "medium"
 
     signal toggled()
 
@@ -47,7 +47,7 @@ Item {
                 width: 40
                 height: 40
                 radius: 20
-                color: checked ? colors.primary : colors.onSurface
+                color: root.checked ? colors.primary : colors.onSurface
                 opacity: {
                     if (!enabled) return 0
                     if (mouseArea.pressed) return 0.12
@@ -75,7 +75,7 @@ Item {
                 border.width: 2
                 border.color: {
                     if (!enabled) return colors.onSurface
-                    if (checked) return colors.primary
+                    if (root.checked) return colors.primary
                     return colors.onSurfaceVariant
                 }
 
@@ -86,7 +86,7 @@ Item {
                 // Inner dot
                 Rectangle {
                     anchors.centerIn: parent
-                    width: checked ? currentSize.innerSize : 0
+                    width: root.checked ? currentSize.innerSize : 0
                     height: width
                     radius: width / 2
                     color: {
@@ -117,8 +117,9 @@ Item {
                 cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
 
                 onClicked: {
-                    if (!checked) {
-                        checked = true
+                    // Only trigger toggled if not already checked
+                    // The group will handle setting checked state
+                    if (!root.checked) {
                         root.toggled()
                     }
                 }
@@ -144,8 +145,7 @@ Item {
                 enabled: root.enabled
                 cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
                 onClicked: {
-                    if (!checked) {
-                        checked = true
+                    if (!root.checked) {
                         root.toggled()
                     }
                 }
@@ -153,8 +153,8 @@ Item {
         }
     }
 
-    Keys.onSpacePressed: if (enabled && !checked) { checked = true; toggled() }
-    Keys.onReturnPressed: if (enabled && !checked) { checked = true; toggled() }
+    Keys.onSpacePressed: if (enabled && !root.checked) { root.toggled() }
+    Keys.onReturnPressed: if (enabled && !root.checked) { root.toggled() }
 
     Accessible.role: Accessible.RadioButton
     Accessible.name: label

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Qt5Compat.GraphicalEffects
 import "../../theme" as Theme
 
 Item {
@@ -22,7 +23,7 @@ Item {
     property bool radioChecked: false
     property bool enabled: true
     property bool selected: false
-    property string size: "medium"           // "small", "medium", "large"
+    property string size: "medium"
 
     signal clicked()
     signal checkboxToggled(bool checked)
@@ -53,12 +54,8 @@ Item {
     Rectangle {
         anchors.fill: parent
         color: selected ? colors.secondaryContainer : "transparent"
+        Behavior on color { ColorAnimation { duration: 150 } }
 
-        Behavior on color {
-            ColorAnimation { duration: 150 }
-        }
-
-        // State layer
         Rectangle {
             anchors.fill: parent
             color: colors.onSurface
@@ -68,10 +65,7 @@ Item {
                 if (mouseArea.containsMouse) return 0.08
                 return 0
             }
-
-            Behavior on opacity {
-                NumberAnimation { duration: 100 }
-            }
+            Behavior on opacity { NumberAnimation { duration: 100 } }
         }
 
         RowLayout {
@@ -135,10 +129,7 @@ Item {
                         height: width
                         radius: width / 2
                         color: colors.primary
-
-                        Behavior on width {
-                            NumberAnimation { duration: 150 }
-                        }
+                        Behavior on width { NumberAnimation { duration: 150 } }
                     }
 
                     MouseArea {
@@ -193,10 +184,7 @@ Item {
                     font.family: "Material Icons"
                     font.pixelSize: currentSize.iconSize
                     color: colors.onSurfaceVariant
-
-                    Behavior on color {
-                        ColorAnimation { duration: 150 }
-                    }
+                    Behavior on color { ColorAnimation { duration: 150 } }
                 }
             }
 
@@ -213,10 +201,7 @@ Item {
                     color: colors.onSurface
                     elide: Text.ElideRight
                     Layout.fillWidth: true
-
-                    Behavior on color {
-                        ColorAnimation { duration: 150 }
-                    }
+                    Behavior on color { ColorAnimation { duration: 150 } }
                 }
 
                 Text {
@@ -227,10 +212,7 @@ Item {
                     color: colors.onSurfaceVariant
                     elide: Text.ElideRight
                     Layout.fillWidth: true
-
-                    Behavior on color {
-                        ColorAnimation { duration: 150 }
-                    }
+                    Behavior on color { ColorAnimation { duration: 150 } }
                 }
 
                 Text {
@@ -241,10 +223,7 @@ Item {
                     color: colors.onSurfaceVariant
                     elide: Text.ElideRight
                     Layout.fillWidth: true
-
-                    Behavior on color {
-                        ColorAnimation { duration: 150 }
-                    }
+                    Behavior on color { ColorAnimation { duration: 150 } }
                 }
             }
 
@@ -278,13 +257,8 @@ Item {
                             height: width
                             radius: width / 2
                             color: switchChecked ? colors.onPrimary : colors.outline
-
-                            Behavior on x {
-                                NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
-                            }
-                            Behavior on width {
-                                NumberAnimation { duration: 150 }
-                            }
+                            Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                            Behavior on width { NumberAnimation { duration: 150 } }
                         }
                     }
 
@@ -307,10 +281,7 @@ Item {
                     font.family: "Roboto"
                     font.pixelSize: currentSize.secondarySize
                     color: colors.onSurfaceVariant
-
-                    Behavior on color {
-                        ColorAnimation { duration: 150 }
-                    }
+                    Behavior on color { ColorAnimation { duration: 150 } }
                 }
 
                 // Trailing icon
@@ -321,10 +292,7 @@ Item {
                     font.family: "Material Icons"
                     font.pixelSize: currentSize.iconSize
                     color: colors.onSurfaceVariant
-
-                    Behavior on color {
-                        ColorAnimation { duration: 150 }
-                    }
+                    Behavior on color { ColorAnimation { duration: 150 } }
 
                     MouseArea {
                         anchors.fill: parent
@@ -342,7 +310,6 @@ Item {
             enabled: root.enabled
             hoverEnabled: true
             cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-
             onClicked: root.clicked()
         }
     }

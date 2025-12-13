@@ -1,33 +1,54 @@
 import QtQuick
 import "../../theme" as Theme
+import "." as Menus
 
 Menu {
     id: root
 
-    property point position: Qt.point(0, 0)
+    property real clickX: 0
+    property real clickY: 0
 
-    x: position.x
-    y: position.y
-
-    // Ensure menu stays within parent bounds
-    onOpenChanged: {
-        if (open && parent) {
-            // Adjust horizontal position
-            if (x + width > parent.width) {
-                x = parent.width - width - 8
-            }
-            if (x < 8) x = 8
-
-            // Adjust vertical position
-            if (y + height > parent.height) {
-                y = parent.height - height - 8
-            }
-            if (y < 8) y = 8
+    Timer {
+        id: contextReopenTimer
+        interval: 16
+        onTriggered: {
+            updatePosition()
+            open = true
         }
     }
 
+    function updatePosition() {
+        if (!appWindow) return
+
+        var parentPos = parent ? parent.mapToItem(appWindow, 0, 0) : Qt.point(0, 0)
+        var windowWidth = appWindow.width
+        var windowHeight = appWindow.height
+
+        var absX = Math.round(parentPos.x + clickX)
+        var absY = Math.round(parentPos.y + clickY)
+
+        if (absX + implicitWidth > windowWidth - 8) {
+            absX = Math.max(8, absX - implicitWidth)
+        }
+        if (absY + implicitHeight > windowHeight - 8) {
+            absY = Math.max(8, absY - implicitHeight)
+        }
+
+        menuX = absX
+        menuY = absY
+    }
+
     function popup(px, py) {
-        position = Qt.point(px, py)
-        show()
+        clickX = px
+        clickY = py
+        Menus.MenuManager.closeAllExcept(root)
+        
+        if (open) {
+            open = false
+            contextReopenTimer.start()
+        } else {
+            updatePosition()
+            open = true
+        }
     }
 }

@@ -4,76 +4,48 @@ import "../../theme" as Theme
 Row {
     id: root
     spacing: 8
-
-    // The window instance to control
     property Window targetWindow: Window.window
+    property var colors: Theme.ChiTheme.colors
 
-    // Button Component
     component WinBtn: Rectangle {
         id: btn
-        width: 40
-        height: 40
-        radius: 20
+        width: 32; height: 32; radius: 16
         color: "transparent"
-
-        property string symbol: ""
-        property bool isDestructive: false // For Close button
+        property string icon: ""
+        property bool danger: false
+        
+        // FIX: Signal name must match usage (clicked -> onClicked)
         signal clicked()
 
-        // Hover State
         Rectangle {
-            anchors.fill: parent
-            radius: parent.radius
-            color: btn.isDestructive ? Theme.ChiTheme.colors.error : Theme.ChiTheme.colors.onSurface
-            opacity: {
-                if (ma.pressed) return 0.12
-                if (ma.containsMouse) return btn.isDestructive ? 1.0 : 0.08
-                return 0
-            }
+            anchors.fill: parent; radius: 16
+            color: btn.danger ? colors.error : colors.onSurface
+            opacity: ma.pressed ? 0.12 : (ma.containsMouse ? (btn.danger ? 1.0 : 0.08) : 0)
             visible: ma.containsMouse || ma.pressed
-
             Behavior on opacity { NumberAnimation { duration: 150 } }
         }
-
-        // Icon/Text
         Text {
-            anchors.centerIn: parent
-            text: btn.symbol
-            font.pixelSize: 16
-            color: {
-                if (btn.isDestructive && ma.containsMouse) return Theme.ChiTheme.colors.onError
-                return Theme.ChiTheme.colors.onSurface
-            }
-            font.family: "Material Icons" // Fallback to system font if missing
+            anchors.centerIn: parent; text: btn.icon
+            color: (btn.danger && ma.containsMouse) ? colors.onError : colors.onSurface
+            font.pixelSize: 14; font.family: "Material Icons"
         }
-
-        MouseArea {
+        MouseArea { 
             id: ma
             anchors.fill: parent
             hoverEnabled: true
-            onClicked: btn.clicked()
+            onClicked: btn.clicked() 
         }
     }
 
-    WinBtn {
-        symbol: "─" // Minimize
-        onClicked: root.targetWindow.showMinimized()
-    }
-
-    WinBtn {
-        // Toggle icon based on state
-        symbol: root.targetWindow.visibility === Window.Maximized ? "❐" : "☐"
-        onClicked: {
-            if (root.targetWindow.visibility === Window.Maximized)
+    WinBtn { icon: "─"; onClicked: root.targetWindow.showMinimized() }
+    WinBtn { 
+        icon: root.targetWindow.visibility === Window.Maximized ? "❐" : "☐"
+        onClicked: { 
+            if(root.targetWindow.visibility === Window.Maximized) 
                 root.targetWindow.showNormal()
-            else
+            else 
                 root.targetWindow.showMaximized()
-        }
+        } 
     }
-
-    WinBtn {
-        symbol: "✕" // Close
-        isDestructive: true
-        onClicked: root.targetWindow.close()
-    }
+    WinBtn { icon: "✕"; danger: true; onClicked: root.targetWindow.close() }
 }

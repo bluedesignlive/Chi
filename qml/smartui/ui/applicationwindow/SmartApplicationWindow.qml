@@ -1,69 +1,168 @@
+// import QtQuick
+// import QtQuick.Window
+// import QtQuick.Controls.Basic
+// import QtQuick.Layouts
+// import "../../theme" as Theme
+
+// Window {
+//     id: root
+    
+//     visible: true
+//     color: "transparent"
+//     flags: Qt.Window | Qt.FramelessWindowHint
+    
+//     property string title: "Application"
+//     property bool showControls: true
+//     default property alias content: contentContainer.data
+//     property var colors: Theme.ChiTheme.colors
+
+//     // Main Container
+//     Rectangle {
+//         id: appBackground
+//         anchors.fill: parent
+        
+//         anchors.margins: root.visibility === Window.Maximized ? 0 : 10
+//         radius: root.visibility === Window.Maximized ? 0 : 20
+        
+//         // CRITICAL FIX: Use 'background' (The tinted tonal surface)
+//         color: colors.background
+        
+//         border.width: 1
+//         border.color: colors.outlineVariant
+//         clip: true
+
+//         Behavior on color { ColorAnimation { duration: 300 } }
+
+//         // 1. Title Bar
+//         Item {
+//             id: titleBarArea
+//             height: 48
+//             anchors.top: parent.top
+//             anchors.left: parent.left
+//             anchors.right: parent.right
+//             z: 999
+
+//             MouseArea {
+//                 anchors.fill: parent
+//                 onPressed: root.startSystemMove()
+//                 onDoubleClicked: {
+//                     if (root.visibility === Window.Maximized) root.showNormal()
+//                     else root.showMaximized()
+//                 }
+//             }
+
+//             Text {
+//                 anchors.centerIn: parent
+//                 text: root.title
+//                 font.family: "Roboto"
+//                 font.weight: Font.Medium
+//                 font.pixelSize: 14
+//                 color: colors.onSurfaceVariant
+//             }
+
+//             WindowControls {
+//                 visible: root.showControls
+//                 targetWindow: root
+//                 anchors.right: parent.right
+//                 anchors.verticalCenter: parent.verticalCenter
+//                 anchors.rightMargin: 12
+//             }
+//         }
+
+//         // 2. Content Area
+//         Item {
+//             id: contentContainer
+//             anchors.top: titleBarArea.bottom
+//             anchors.left: parent.left
+//             anchors.right: parent.right
+//             anchors.bottom: parent.bottom
+//         }
+//     }
+
+//     // 3. Resize Handles (Only when windowed)
+//     Item {
+//         anchors.fill: parent
+//         visible: root.visibility !== Window.Maximized
+//         z: 1000
+//         property int e: 6
+
+//         MouseArea { anchors { right: parent.right; top: parent.top; bottom: parent.bottom } width: parent.e; cursorShape: Qt.SizeHorCursor; onPressed: root.startSystemResize(Qt.RightEdge) }
+//         MouseArea { anchors { left: parent.left; top: parent.top; bottom: parent.bottom } width: parent.e; cursorShape: Qt.SizeHorCursor; onPressed: root.startSystemResize(Qt.LeftEdge) }
+//         MouseArea { anchors { bottom: parent.bottom; left: parent.left; right: parent.right } height: parent.e; cursorShape: Qt.SizeVerCursor; onPressed: root.startSystemResize(Qt.BottomEdge) }
+//         MouseArea { anchors { top: parent.top; left: parent.left; right: parent.right } height: parent.e; cursorShape: Qt.SizeVerCursor; onPressed: root.startSystemResize(Qt.TopEdge) }
+//         MouseArea { anchors { bottom: parent.bottom; right: parent.right } width: 12; height: 12; cursorShape: Qt.SizeFDiagCursor; onPressed: root.startSystemResize(Qt.RightEdge | Qt.BottomEdge) }
+//     }
+// }
+
+
+
+
 import QtQuick
 import QtQuick.Window
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
+import Qt5Compat.GraphicalEffects // Required for smooth masking
 import "../../theme" as Theme
 
 Window {
     id: root
 
-    // Default Properties
     visible: true
     color: "transparent"
     flags: Qt.Window | Qt.FramelessWindowHint
 
-    // Custom Properties
     property string title: "Application"
     property bool showControls: true
-
-    // The content inside the window
     default property alias content: contentContainer.data
-
-    // Theme shortcut
     property var colors: Theme.ChiTheme.colors
 
-    // Background Container (The actual visible window)
+    // 1. Define the Shape (Mask Source)
+    // We separate the shape definition so we can use it to mask the content
     Rectangle {
-        id: appBackground
+        id: windowShape
         anchors.fill: parent
-
-        // When maximized, remove margins and radius
         anchors.margins: root.visibility === Window.Maximized ? 0 : 10
-        radius: root.visibility === Window.Maximized ? 0 : 20 // M3 Expressive uses large radii
+        radius: root.visibility === Window.Maximized ? 0 : 20
+        visible: false // Used as a mask source only
+    }
 
-        color: colors.background
+    // 2. The Visible Background & Content (Masked)
+    Item {
+        id: maskedArea
+        anchors.fill: windowShape
 
-        // Subtle border for definition against dark wallpapers
-        border.width: 1
-        border.color: colors.outlineVariant
+        // This ensures the sidebar/content inside main.qml respects the rounded corners
+        // OpacityMask cuts off anything outside the 'windowShape' radius cleanly
+        layer.enabled: true
+        layer.effect: OpacityMask {
+            maskSource: windowShape
+        }
 
-        clip: true
+        // The Background Color
+        Rectangle {
+            anchors.fill: parent
+            color: colors.background
+            Behavior on color { ColorAnimation { duration: 300 } }
+        }
 
-        // 1. Custom Title Bar
+        // Title Bar
         Item {
             id: titleBarArea
             height: 48
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
-            z: 999 // Keep above content
+            z: 999
 
-            // Drag Area (Title Bar)
             MouseArea {
                 anchors.fill: parent
-                // Exclude the buttons area from dragging if necessary,
-                // but usually fine to overlap as buttons consume the event first.
-
                 onPressed: root.startSystemMove()
                 onDoubleClicked: {
-                    if (root.visibility === Window.Maximized)
-                        root.showNormal()
-                    else
-                        root.showMaximized()
+                    if (root.visibility === Window.Maximized) root.showNormal()
+                    else root.showMaximized()
                 }
             }
 
-            // Window Title
             Text {
                 anchors.centerIn: parent
                 text: root.title
@@ -73,68 +172,49 @@ Window {
                 color: colors.onSurfaceVariant
             }
 
-            // Window Controls (Min/Max/Close)
             WindowControls {
                 visible: root.showControls
+                targetWindow: root
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.rightMargin: 8
+                anchors.rightMargin: 12
             }
         }
 
-        // 2. Main Content Area
+        // Content Area
         Item {
             id: contentContainer
             anchors.top: titleBarArea.bottom
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
+            // Content inside here will now be clipped by the OpacityMask
         }
     }
 
-    // 3. Resize Handles (Invisible MouseAreas)
-    // Only active when not maximized
+    // 3. Border Overlay
+    // We draw the border *outside* the mask so it looks crisp and isn't half-clipped
+    Rectangle {
+        anchors.fill: windowShape
+        radius: windowShape.radius
+        color: "transparent"
+        border.width: 1
+        border.color: colors.outlineVariant
+        visible: root.visibility !== Window.Maximized
+        z: 1001 // On top of content
+    }
+
+    // 4. Resize Handles
     Item {
         anchors.fill: parent
         visible: root.visibility !== Window.Maximized
-        z: 1000 // Topmost
+        z: 1002
+        property int e: 6
 
-        property int edge: 5 // Thickness of resize area
-
-        // Right
-        MouseArea {
-            anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
-            width: parent.edge
-            cursorShape: Qt.SizeHorCursor
-            onPressed: root.startSystemResize(Qt.RightEdge)
-        }
-        // Left
-        MouseArea {
-            anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
-            width: parent.edge
-            cursorShape: Qt.SizeHorCursor
-            onPressed: root.startSystemResize(Qt.LeftEdge)
-        }
-        // Bottom
-        MouseArea {
-            anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
-            height: parent.edge
-            cursorShape: Qt.SizeVerCursor
-            onPressed: root.startSystemResize(Qt.BottomEdge)
-        }
-        // Top
-        MouseArea {
-            anchors { top: parent.top; left: parent.left; right: parent.right }
-            height: parent.edge
-            cursorShape: Qt.SizeVerCursor
-            onPressed: root.startSystemResize(Qt.TopEdge)
-        }
-        // Bottom-Right Corner
-        MouseArea {
-            anchors { bottom: parent.bottom; right: parent.right }
-            width: 10; height: 10
-            cursorShape: Qt.SizeFDiagCursor
-            onPressed: root.startSystemResize(Qt.RightEdge | Qt.BottomEdge)
-        }
+        MouseArea { anchors { right: parent.right; top: parent.top; bottom: parent.bottom } width: parent.e; cursorShape: Qt.SizeHorCursor; onPressed: root.startSystemResize(Qt.RightEdge) }
+        MouseArea { anchors { left: parent.left; top: parent.top; bottom: parent.bottom } width: parent.e; cursorShape: Qt.SizeHorCursor; onPressed: root.startSystemResize(Qt.LeftEdge) }
+        MouseArea { anchors { bottom: parent.bottom; left: parent.left; right: parent.right } height: parent.e; cursorShape: Qt.SizeVerCursor; onPressed: root.startSystemResize(Qt.BottomEdge) }
+        MouseArea { anchors { top: parent.top; left: parent.left; right: parent.right } height: parent.e; cursorShape: Qt.SizeVerCursor; onPressed: root.startSystemResize(Qt.TopEdge) }
+        MouseArea { anchors { bottom: parent.bottom; right: parent.right } width: 12; height: 12; cursorShape: Qt.SizeFDiagCursor; onPressed: root.startSystemResize(Qt.RightEdge | Qt.BottomEdge) }
     }
 }

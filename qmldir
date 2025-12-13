@@ -108,17 +108,3 @@ Toolbar 1.0 ui/containers/Toolbar.qml
 ToolbarItem 1.0 ui/containers/ToolbarItem.qml
 ToolbarToggleItem 1.0 ui/containers/ToolbarToggleItem.qml
 ToolbarSeparator 1.0 ui/containers/ToolbarSeparator.qml
-
-# Application Window (was missing)
-SmartApplicationWindow 1.0 ui/applicationwindow/SmartApplicationWindow.qml
-SmartWindowControls 1.0 ui/applicationwindow/WindowControls.qml
-
-# Menu Manager Singleton
-singleton MenuManager 1.0 ui/menus/MenuManager.qml
-
-# Dialogs
-Dialog 1.0 ui/dialogs/Dialog.qml
-AlertDialog 1.0 ui/dialogs/AlertDialog.qml
-ConfirmDialog 1.0 ui/dialogs/ConfirmDialog.qml
-FullscreenDialog 1.0 ui/dialogs/FullscreenDialog.qml
-singleton DialogManager 1.0 ui/dialogs/DialogManager.qml
