@@ -155,6 +155,11 @@ add_library(SmartUIBeta SHARED
     # Application Window (Smart M3)
     qml/smartui/ui/applicationwindow/SmartApplicationWindow.qml
     qml/smartui/ui/applicationwindow/WindowControls.qml
+
+	# Carousel
+	qml/smartui/ui/carousel/Carousel.qml
+	qml/smartui/ui/carousel/CarouselItem.qml
+        qml/smartui/ui/search/SearchSuggestionItem.qml
 )
 
 target_link_libraries(SmartUIBeta

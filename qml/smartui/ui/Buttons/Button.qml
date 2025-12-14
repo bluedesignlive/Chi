@@ -137,7 +137,8 @@ Item {
             opacity: 0.12
         }
 
-        border.width: variant === "outlined" ? 1 : 0
+        // border.width: variant === "outlined" ? 1 : 0
+        border.width: variant === "outlined" ? 0.6 : 0
         border.color: {
             if (variant !== "outlined") return "transparent"
             if (!enabled) return Qt.rgba(0, 0, 0, 0.12)

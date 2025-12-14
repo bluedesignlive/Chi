@@ -122,3 +122,12 @@ AlertDialog 1.0 ui/dialogs/AlertDialog.qml
 ConfirmDialog 1.0 ui/dialogs/ConfirmDialog.qml
 FullscreenDialog 1.0 ui/dialogs/FullscreenDialog.qml
 singleton DialogManager 1.0 ui/dialogs/DialogManager.qml
+
+# Carousel
+Carousel 1.0 ui/carousel/Carousel.qml
+CarouselItem 1.0 ui/carousel/CarouselItem.qml
+
+# Carousel
+Carousel 1.0 ui/carousel/Carousel.qml
+CarouselItem 1.0 ui/carousel/CarouselItem.qml
+NumberField 1.0 ui/inputs/NumberField.qml
