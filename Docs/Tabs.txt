@@ -1,0 +1,103 @@
+TABS
+====
+
+PROPERTIES
+----------
+currentIndex: int = 0
+variant: string = "primary"       // primary, secondary
+scrollable: bool = false
+enabled: bool = true
+
+CHILD COMPONENTS
+----------------
+Tab { }
+
+SIGNALS
+-------
+tabClicked(int index)
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic tabs
+Tabs {
+    id: tabs
+    currentIndex: 0
+    
+    Tab { text: "Overview" }
+    Tab { text: "Details" }
+    Tab { text: "Settings" }
+    
+    onTabClicked: (index) => {
+        console.log("Tab:", index)
+    }
+}
+
+// With icons
+Tabs {
+    variant: "primary"
+    
+    Tab {
+        text: "Home"
+        icon: "\ue88a"
+    }
+    
+    Tab {
+        text: "Search"
+        icon: "\ue8b6"
+    }
+}
+
+// Secondary tabs
+Tabs {
+    variant: "secondary"
+    
+    Tab { text: "Tab 1" }
+    Tab { text: "Tab 2" }
+}
+
+// Scrollable tabs
+Tabs {
+    scrollable: true
+    width: 400
+    
+    Tab { text: "Tab 1" }
+    Tab { text: "Tab 2" }
+    Tab { text: "Tab 3" }
+    Tab { text: "Tab 4" }
+    Tab { text: "Tab 5" }
+}
+
+// With badges
+Tabs {
+    Tab {
+        text: "Messages"
+        showBadge: true
+        badgeText: "5"
+    }
+    
+    Tab {
+        text: "Notifications"
+        showBadge: true
+    }
+}
+
+// Programmatic switching
+Button {
+    text: "Go to Tab 2"
+    onClicked: tabs.currentIndex = 1
+}
+
+// With content switching
+Tabs {
+    id: contentTabs
+}
+
+StackLayout {
+    currentIndex: contentTabs.currentIndex
+    
+    Item { /* Tab 1 content */ }
+    Item { /* Tab 2 content */ }
+    Item { /* Tab 3 content */ }
+}

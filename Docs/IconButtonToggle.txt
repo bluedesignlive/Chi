@@ -1,0 +1,35 @@
+ICON BUTTON TOGGLE
+==================
+
+PROPERTIES
+----------
+icon: string = "☆"                // Default icon
+selectedIcon: string = "★"        // Icon when selected
+size: string = "small"            // xsmall, small, medium, large, xlarge
+widthMode: string = "default"     // narrow, default, wide
+selected: bool = false
+enabled: bool = true
+tooltip: string = ""
+
+SIGNALS
+-------
+toggled(bool selected)
+
+USAGE
+-----
+import SmartUIBeta
+
+IconButtonToggle {
+    icon: "\ue87e"
+    selectedIcon: "\ue87d"
+    size: "medium"
+    selected: false
+    onToggled: (sel) => console.log("Selected:", sel)
+}
+
+IconButtonToggle {
+    icon: "☆"
+    selectedIcon: "★"
+    selected: true
+    tooltip: "Favorite"
+}

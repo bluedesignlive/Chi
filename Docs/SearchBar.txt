@@ -1,0 +1,116 @@
+SEARCH BAR
+==========
+
+PROPERTIES
+----------
+text: string = ""
+placeholderText: string = "Search"
+leadingIcon: string = "search"
+trailingIcon: string = "mic"
+showAvatar: bool = false
+avatarSource: string = ""
+avatarFallback: string = ""
+expanded: bool = false
+enabled: bool = true
+showClearButton: bool = true
+showTrailingIcon: bool = true
+showDivider: bool = true
+docked: bool = true
+persistentClear: bool = false
+suggestions: var = []
+size: int = SearchBar.Size.Medium  // Small, Medium, Large
+
+enableContextMenu: bool = true
+showCut: bool = true
+showCopy: bool = true
+showPaste: bool = true
+showSelectAll: bool = true
+
+SIGNALS
+-------
+search(string query)
+cleared()
+suggestionClicked(int index, var item)
+trailingIconClicked()
+leadingIconClicked()
+inputFocusChanged(bool hasFocus)
+
+FUNCTIONS
+---------
+focusInput()
+clear()
+selectAll()
+collapse()
+expand()
+setText(string newText)
+getSelectedText()
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic search bar
+SearchBar {
+    placeholderText: "Search files..."
+    onSearch: (query) => console.log("Searching:", query)
+}
+
+// With suggestions
+SearchBar {
+    id: searchBar
+    
+    suggestions: [
+        "Recent search 1",
+        "Recent search 2",
+        "Popular item"
+    ]
+    
+    onSuggestionClicked: (index, item) => {
+        console.log("Selected:", item)
+    }
+}
+
+// With structured suggestions
+SearchBar {
+    suggestions: [
+        { text: "JavaScript", icon: "code", subtitle: "Programming language" },
+        { text: "Python", icon: "code", subtitle: "Programming language" },
+        { text: "Recent: project.txt", icon: "history" }
+    ]
+}
+
+// With avatar
+SearchBar {
+    showAvatar: true
+    avatarSource: "qrc:/images/user.png"
+    avatarFallback: "JD"
+}
+
+// Different sizes
+SearchBar {
+    size: SearchBar.Size.Small
+}
+
+SearchBar {
+    size: SearchBar.Size.Large
+}
+
+// Custom trailing icon
+SearchBar {
+    trailingIcon: "filter_list"
+    onTrailingIconClicked: showFilters()
+}
+
+// Programmatic control
+Button {
+    text: "Search 'test'"
+    onClicked: {
+        searchBar.setText("test")
+        searchBar.focusInput()
+    }
+}
+
+Button {
+    text: "Clear"
+    onClicked: searchBar.clear()
+}

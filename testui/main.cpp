@@ -8,9 +8,6 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
 
-    // Add the smartui QML module path, e.g. /home/you/smartui/qml
-    engine.addImportPath(QStringLiteral(SMARTUI_QML_DIR));
-
     const QUrl url(QStringLiteral("qrc:/testui/Main.qml"));
     QObject::connect(
         &engine,

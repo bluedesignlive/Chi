@@ -1,0 +1,60 @@
+SKELETON
+========
+
+PROPERTIES
+----------
+variant: string = "text"          // text, circular, rectangular, rounded
+animated: bool = true
+aspectRatio: real = 0             // 0 = use explicit height
+
+USAGE
+-----
+import SmartUIBeta
+
+// Text skeleton
+Skeleton {
+    variant: "text"
+    width: 200
+    height: 16
+}
+
+// Circular skeleton (avatar)
+Skeleton {
+    variant: "circular"
+    width: 40
+    height: 40
+}
+
+// Card skeleton
+Column {
+    spacing: 12
+    
+    Skeleton {
+        variant: "rectangular"
+        width: 300
+        height: 200
+    }
+    
+    Skeleton {
+        variant: "text"
+        width: 250
+    }
+    
+    Skeleton {
+        variant: "text"
+        width: 180
+    }
+}
+
+// With aspect ratio
+Skeleton {
+    variant: "rounded"
+    width: parent.width
+    aspectRatio: 16/9
+}
+
+// Disabled animation
+Skeleton {
+    variant: "rectangular"
+    animated: false
+}

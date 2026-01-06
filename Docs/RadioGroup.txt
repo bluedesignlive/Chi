@@ -1,0 +1,104 @@
+RADIO GROUP
+===========
+
+PROPERTIES
+----------
+selectedIndex: int = -1
+label: string = ""
+size: string = "medium"           // small, medium, large
+enabled: bool = true
+
+CHILD COMPONENTS
+----------------
+RadioButton { }
+
+SIGNALS
+-------
+selectionChanged(int index)
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic radio group
+RadioGroup {
+    id: radioGroup
+    label: "Choose an option"
+    selectedIndex: 0
+    
+    RadioButton {
+        label: "Option 1"
+    }
+    
+    RadioButton {
+        label: "Option 2"
+    }
+    
+    RadioButton {
+        label: "Option 3"
+    }
+    
+    onSelectionChanged: (index) => {
+        console.log("Selected:", index)
+    }
+}
+
+// Different sizes
+RadioGroup {
+    size: "large"
+    
+    RadioButton { label: "Large option 1" }
+    RadioButton { label: "Large option 2" }
+}
+
+// Without group label
+RadioGroup {
+    selectedIndex: 1
+    
+    RadioButton { label: "Yes" }
+    RadioButton { label: "No" }
+}
+
+// Disabled
+RadioGroup {
+    enabled: false
+    selectedIndex: 0
+    
+    RadioButton { label: "Disabled 1" }
+    RadioButton { label: "Disabled 2" }
+}
+
+// Programmatic selection
+Button {
+    text: "Select Option 2"
+    onClicked: radioGroup.selectedIndex = 1
+}
+
+// With descriptions
+RadioGroup {
+    label: "Payment method"
+    
+    Column {
+        RadioButton {
+            label: "Credit Card"
+        }
+        Text {
+            text: "Visa, Mastercard, Amex"
+            font.pixelSize: 12
+            color: "#666"
+            leftPadding: 32
+        }
+    }
+    
+    Column {
+        RadioButton {
+            label: "PayPal"
+        }
+        Text {
+            text: "Pay with your PayPal account"
+            font.pixelSize: 12
+            color: "#666"
+            leftPadding: 32
+        }
+    }
+}

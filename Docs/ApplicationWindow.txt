@@ -1,0 +1,58 @@
+APPLICATION WINDOW
+==================
+
+PROPERTIES
+----------
+title: string = "Application"
+showControls: bool = true
+content: default alias
+
+CHILD COMPONENTS
+----------------
+WindowControls (internal)
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic application window
+ApplicationWindow {
+    title: "My App"
+    width: 800
+    height: 600
+    
+    Rectangle {
+        anchors.fill: parent
+        color: "white"
+        
+        Text {
+            anchors.centerIn: parent
+            text: "Content"
+        }
+    }
+}
+
+// Without window controls
+ApplicationWindow {
+    title: "Fullscreen App"
+    showControls: false
+    
+    // Your content
+}
+
+// With complex layout
+ApplicationWindow {
+    title: "Dashboard"
+    
+    RowLayout {
+        anchors.fill: parent
+        
+        NavigationRail {
+            // Navigation
+        }
+        
+        StackLayout {
+            // Main content
+        }
+    }
+}

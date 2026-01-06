@@ -1,0 +1,97 @@
+MENU
+====
+
+PROPERTIES
+----------
+open: bool = false
+minWidth: real = 112
+maxWidth: real = 280
+maxHeight: real = 400
+variant: string = "expressive"    // expressive, standard
+colorStyle: string = "standard"   // standard, vibrant
+
+CHILD COMPONENTS
+----------------
+MenuItem { }
+MenuDivider { }
+MenuGap { }
+
+SIGNALS
+-------
+closed()
+itemClicked(int index)
+
+FUNCTIONS
+---------
+show()
+close()
+toggle()
+updatePosition()
+
+USAGE
+-----
+import SmartUIBeta
+
+IconButton {
+    icon: "\ue5d4"
+    onClicked: optionsMenu.show()
+}
+
+Menu {
+    id: optionsMenu
+    
+    MenuItem {
+        text: "New File"
+        leadingIcon: "insert_drive_file"
+        trailingText: "Ctrl+N"
+        onClicked: createFile()
+    }
+    
+    MenuItem {
+        text: "Open"
+        leadingIcon: "folder_open"
+        trailingText: "Ctrl+O"
+    }
+    
+    MenuDivider { }
+    
+    MenuItem {
+        text: "Settings"
+        leadingIcon: "settings"
+    }
+    
+    MenuItem {
+        text: "Delete"
+        leadingIcon: "delete"
+        destructive: true
+    }
+}
+
+// Vibrant style
+Menu {
+    variant: "expressive"
+    colorStyle: "vibrant"
+    
+    MenuItem { text: "Profile"; leadingIcon: "person" }
+    MenuItem { text: "Logout"; leadingIcon: "logout" }
+}
+
+// With supporting text
+Menu {
+    MenuItem {
+        text: "Wi-Fi"
+        supportingText: "Connected to HomeNet"
+        leadingIcon: "wifi"
+        selected: true
+    }
+}
+
+// With trailing icons
+Menu {
+    MenuItem {
+        text: "Dark Mode"
+        leadingIcon: "dark_mode"
+        trailingIcon: "check"
+        selected: true
+    }
+}

@@ -1,0 +1,89 @@
+CHECKBOX
+========
+
+PROPERTIES
+----------
+checked: bool = false
+indeterminate: bool = false
+label: string = ""
+enabled: bool = true
+size: string = "medium"           // small, medium, large
+
+SIGNALS
+-------
+toggled()
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic checkbox
+Checkbox {
+    label: "Accept terms"
+    checked: false
+    onToggled: console.log("Checked:", checked)
+}
+
+// Different sizes
+Checkbox {
+    label: "Small"
+    size: "small"
+}
+
+Checkbox {
+    label: "Large"
+    size: "large"
+}
+
+// Indeterminate state
+Checkbox {
+    label: "Select all"
+    indeterminate: true
+    
+    onToggled: {
+        if (indeterminate) {
+            indeterminate = false
+            checked = true
+        }
+    }
+}
+
+// Without label
+Checkbox {
+    checked: true
+}
+
+// Disabled
+Checkbox {
+    label: "Disabled option"
+    enabled: false
+    checked: true
+}
+
+// In a list
+Column {
+    spacing: 8
+    
+    Checkbox {
+        label: "Option 1"
+        onToggled: handleOption1(checked)
+    }
+    
+    Checkbox {
+        label: "Option 2"
+        checked: true
+        onToggled: handleOption2(checked)
+    }
+    
+    Checkbox {
+        label: "Option 3"
+        onToggled: handleOption3(checked)
+    }
+}
+
+// Controlled checkbox
+Checkbox {
+    label: "Remember me"
+    checked: appSettings.rememberMe
+    onToggled: appSettings.rememberMe = checked
+}

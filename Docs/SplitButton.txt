@@ -1,0 +1,60 @@
+SPLIT BUTTON
+============
+
+PROPERTIES
+----------
+text: string = "Action"
+leadingIcon: string = ""
+showLeadingIcon: bool = false
+trailingIcon: string = "⌄"        // Dropdown indicator
+variant: string = "filled"        // filled, elevated, tonal, outlined, text
+size: string = "small"            // xsmall, small, medium, large, xlarge
+enabled: bool = true
+trailingSelected: bool = false    // Dropdown state
+
+SIGNALS
+-------
+leadingClicked()                  // Main action
+trailingClicked()                 // Dropdown toggle
+
+NOTES
+-----
+- Leading button performs primary action
+- Trailing button toggles dropdown/menu
+- trailingSelected auto-toggles on click
+
+USAGE
+-----
+import SmartUIBeta
+
+SplitButton {
+    text: "Save"
+    variant: "filled"
+    size: "medium"
+    
+    onLeadingClicked: {
+        console.log("Save clicked")
+    }
+    
+    onTrailingClicked: {
+        console.log("Dropdown:", trailingSelected)
+        // Show menu here
+    }
+}
+
+SplitButton {
+    text: "Export"
+    variant: "tonal"
+    showLeadingIcon: true
+    leadingIcon: "\ue2c4"
+    
+    onLeadingClicked: exportDefault()
+    onTrailingClicked: showExportMenu()
+}
+
+// With custom dropdown icon
+SplitButton {
+    text: "More"
+    trailingIcon: "⋯"
+    variant: "outlined"
+}

@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/testui">
+    <file alias="qmldir">/home/lufuno/Desktop/smartui-beta/testui/testui/testui/qmldir</file>
+  </qresource>
+</RCC>
+

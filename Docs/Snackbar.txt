@@ -1,0 +1,85 @@
+SNACKBAR
+========
+
+PROPERTIES
+----------
+text: string = ""
+actionText: string = ""
+showClose: bool = false
+duration: int = 4000              // 0 = infinite
+position: string = "bottom"       // bottom, top
+multiLine: bool = false
+longerAction: bool = false        // Action on separate line
+
+SIGNALS
+-------
+actionClicked()
+closed()
+
+FUNCTIONS
+---------
+show(string message?, string action?, bool closeable?)
+hide()
+
+READONLY
+--------
+isShowing: bool
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic snackbar
+Snackbar {
+    id: snackbar
+    text: "File saved"
+}
+
+Button {
+    text: "Save"
+    onClicked: snackbar.show()
+}
+
+// With action
+Snackbar {
+    id: undoSnackbar
+    text: "Item deleted"
+    actionText: "Undo"
+    
+    onActionClicked: {
+        restoreItem()
+    }
+}
+
+// With close button
+Snackbar {
+    text: "Network error"
+    showClose: true
+    duration: 0  // Don't auto-hide
+}
+
+// Multi-line
+Snackbar {
+    text: "This is a longer message that needs multiple lines to display properly"
+    multiLine: true
+}
+
+// Longer action (action on new line)
+Snackbar {
+    text: "Your session is about to expire. Please save your work."
+    actionText: "Save and continue"
+    longerAction: true
+}
+
+// Dynamic show
+Button {
+    onClicked: {
+        snackbar.show("Custom message", "Action", true)
+    }
+}
+
+// Top position
+Snackbar {
+    position: "top"
+    text: "New version available"
+}

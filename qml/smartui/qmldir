@@ -131,3 +131,18 @@ CarouselItem 1.0 ui/carousel/CarouselItem.qml
 Carousel 1.0 ui/carousel/Carousel.qml
 CarouselItem 1.0 ui/carousel/CarouselItem.qml
 NumberField 1.0 ui/inputs/NumberField.qml
+
+# Button Groups (M3 Expressive)
+ButtonGroup 1.0 ui/Buttons/ButtonGroup.qml
+ConnectedButtonGroup 1.0 ui/Buttons/ConnectedButtonGroup.qml
+ConnectedIconButtonGroup 1.0 ui/Buttons/ConnectedIconButtonGroup.qml
+
+# Common Components
+Icon 1.0 ui/common/Icon.qml
+
+# Application Window Menus
+OverflowMenu 1.0 ui/applicationwindow/OverflowMenu.qml
+DropdownMenu 1.0 ui/applicationwindow/DropdownMenu.qml
+
+# Smart File Dialog
+SmartFileDialog 1.0 ui/dialogs/SmartFileDialog.qml

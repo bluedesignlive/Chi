@@ -1,0 +1,72 @@
+CHIP GROUP
+==========
+
+PROPERTIES
+----------
+singleSelection: bool = false
+selectedIndex: int = -1
+selectedIndices: var = []
+size: string = "medium"
+chipSpacing: real = 8
+
+SIGNALS
+-------
+selectionChanged()
+
+FUNCTIONS
+---------
+clearSelection()
+updateSelectedIndices()
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic chip group
+ChipGroup {
+    spacing: 8
+    
+    Chip { text: "Option 1" }
+    Chip { text: "Option 2" }
+    Chip { text: "Option 3" }
+}
+
+// Single selection
+ChipGroup {
+    singleSelection: true
+    
+    Chip { text: "Small"; variant: "filter" }
+    Chip { text: "Medium"; variant: "filter"; selected: true }
+    Chip { text: "Large"; variant: "filter" }
+    
+    onSelectionChanged: {
+        console.log("Selected:", selectedIndex)
+    }
+}
+
+// Multi-selection
+ChipGroup {
+    singleSelection: false
+    
+    Chip { text: "Red"; variant: "filter" }
+    Chip { text: "Green"; variant: "filter" }
+    Chip { text: "Blue"; variant: "filter" }
+    
+    onSelectionChanged: {
+        console.log("Selected indices:", selectedIndices)
+    }
+}
+
+// Different sizes
+ChipGroup {
+    size: "small"
+    
+    Chip { text: "Tag 1" }
+    Chip { text: "Tag 2" }
+}
+
+// Clear selection
+Button {
+    text: "Clear"
+    onClicked: chipGroup.clearSelection()
+}

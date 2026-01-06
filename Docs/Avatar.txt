@@ -1,0 +1,52 @@
+AVATAR
+======
+
+PROPERTIES
+----------
+source: string = ""
+text: string = ""
+icon: string = ""
+size: string = "medium"           // xsmall, small, medium, large, xlarge
+showBadge: bool = false
+badgeIcon: string = ""
+online: bool = false
+
+USAGE
+-----
+import SmartUIBeta
+
+// Text avatar
+Avatar {
+    text: "John Doe"
+    size: "medium"
+}
+
+// Image avatar
+Avatar {
+    source: "qrc:/images/profile.jpg"
+}
+
+// Icon avatar
+Avatar {
+    icon: "\ue7fd"
+}
+
+// With online badge
+Avatar {
+    text: "JD"
+    online: true
+}
+
+// With custom badge
+Avatar {
+    source: "avatar.png"
+    showBadge: true
+    badgeIcon: "✓"
+}
+
+// Different sizes
+Avatar { size: "xsmall"; text: "XS" }
+Avatar { size: "small"; text: "S" }
+Avatar { size: "medium"; text: "M" }
+Avatar { size: "large"; text: "L" }
+Avatar { size: "xlarge"; text: "XL" }

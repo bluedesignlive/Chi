@@ -1,0 +1,52 @@
+ALERT DIALOG
+============
+
+PROPERTIES
+----------
+Same as Dialog, plus:
+confirmButtonText: string = "OK"
+dismissButtonText: string = ""
+confirmButtonVariant: string = "text"
+dismissButtonVariant: string = "text"
+destructive: bool = false
+
+SIGNALS
+-------
+Same as Dialog
+
+USAGE
+-----
+import SmartUIBeta
+
+// Simple alert
+AlertDialog {
+    id: alert
+    title: "Alert"
+    supportingText: "Something went wrong."
+    confirmButtonText: "OK"
+}
+
+Button {
+    text: "Show Alert"
+    onClicked: alert.show()
+}
+
+// Alert with dismiss button
+AlertDialog {
+    title: "Unsaved changes"
+    supportingText: "You have unsaved changes. Continue?"
+    confirmButtonText: "Continue"
+    dismissButtonText: "Go Back"
+}
+
+// Destructive alert
+AlertDialog {
+    title: "Delete account?"
+    supportingText: "This will permanently delete your account."
+    confirmButtonText: "Delete"
+    confirmButtonVariant: "filled"
+    dismissButtonText: "Cancel"
+    destructive: true
+    
+    onAccepted: deleteAccount()
+}

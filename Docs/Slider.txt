@@ -1,0 +1,136 @@
+SLIDER
+======
+
+PROPERTIES
+----------
+value: real = 0.5
+from: real = 0.0
+to: real = 1.0
+stepSize: real = 0.0
+enabled: bool = true
+size: string = "medium"           // small, medium, large
+showValue: bool = false
+discrete: bool = false
+tickCount: int = 5
+
+SIGNALS
+-------
+moved()
+pressedChanged(bool pressed)
+
+READONLY
+--------
+position: real
+isPressed: bool
+
+FUNCTIONS
+---------
+increaseValue()
+decreaseValue()
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic slider
+Slider {
+    value: 0.5
+    from: 0
+    to: 1
+    
+    onMoved: {
+        console.log("Value:", value)
+    }
+}
+
+// With steps
+Slider {
+    value: 50
+    from: 0
+    to: 100
+    stepSize: 10
+}
+
+// Show value on drag
+Slider {
+    showValue: true
+    value: 0.7
+}
+
+// Discrete slider with ticks
+Slider {
+    discrete: true
+    tickCount: 5
+    value: 0.5
+    from: 0
+    to: 1
+    stepSize: 0.25
+}
+
+// Different sizes
+Slider {
+    size: "small"
+    value: 0.3
+}
+
+Slider {
+    size: "large"
+    value: 0.8
+}
+
+// Volume control
+Slider {
+    id: volumeSlider
+    value: 0.5
+    from: 0
+    to: 1
+    stepSize: 0.01
+    showValue: true
+    
+    onMoved: {
+        audioPlayer.volume = value
+    }
+}
+
+// Brightness control
+Slider {
+    value: 0.75
+    from: 0
+    to: 1
+    discrete: true
+    tickCount: 11
+    stepSize: 0.1
+}
+
+// Temperature
+Slider {
+    value: 20
+    from: 16
+    to: 30
+    stepSize: 0.5
+    showValue: true
+}
+
+// Keyboard navigation
+Slider {
+    id: keySlider
+    focus: true
+    // Left/Right arrows to adjust
+}
+
+// Disabled
+Slider {
+    value: 0.6
+    enabled: false
+}
+
+// With label
+Column {
+    Text { text: "Brightness: " + Math.round(brightnessSlider.value * 100) + "%" }
+    
+    Slider {
+        id: brightnessSlider
+        value: 0.5
+        width: 200
+    }
+}

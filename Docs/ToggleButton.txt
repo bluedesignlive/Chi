@@ -1,0 +1,44 @@
+TOGGLE BUTTON
+=============
+
+PROPERTIES
+----------
+text: string = "Toggle"
+variant: string = "filled"        // filled, elevated, tonal, outlined
+size: string = "small"            // xsmall, small, medium, large, xlarge
+shape: string = "round"           // round, square
+selected: bool = false
+showIcon: bool = false
+icon: string = ""
+selectedIcon: string = ""         // Different icon when selected
+enabled: bool = true
+
+SIGNALS
+-------
+toggled(bool selected)
+
+USAGE
+-----
+import SmartUIBeta
+
+ToggleButton {
+    text: "Bold"
+    selected: false
+    onToggled: (sel) => console.log("Bold:", sel)
+}
+
+ToggleButton {
+    text: "WiFi"
+    variant: "tonal"
+    showIcon: true
+    icon: "\ue63e"
+    selected: true
+}
+
+ToggleButton {
+    text: "Airplane"
+    variant: "outlined"
+    showIcon: true
+    icon: "\ue195"
+    selectedIcon: "\ue195"
+}

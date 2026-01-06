@@ -1,0 +1,157 @@
+DIALOG
+======
+
+PROPERTIES
+----------
+title: string = ""
+supportingText: string = ""
+icon: string = ""
+open: bool = false
+modal: bool = true
+closeOnOverlayClick: bool = true
+closeOnEscape: bool = true
+type: string = "basic"            // basic, fullscreen, assistant
+size: string = "medium"           // small, medium, large
+position: string = "center"       // center, top, bottom
+confirmText: string = "Save"
+showCloseButton: bool = true
+showHeaderDivider: bool = false
+showActionsDivider: bool = false
+content: Component = null
+
+CHILD COMPONENTS
+----------------
+actions: [ Button, Button, ... ]  // Action buttons
+
+SIGNALS
+-------
+opened()
+closed()
+accepted()
+rejected()
+
+FUNCTIONS
+---------
+show()
+close()
+accept()
+reject()
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic dialog
+Dialog {
+    id: basicDialog
+    title: "Delete file?"
+    supportingText: "This action cannot be undone."
+    
+    actions: [
+        Button {
+            text: "Cancel"
+            variant: "text"
+            onClicked: basicDialog.reject()
+        },
+        Button {
+            text: "Delete"
+            variant: "text"
+            onClicked: basicDialog.accept()
+        }
+    ]
+    
+    onAccepted: console.log("Deleted")
+    onRejected: console.log("Cancelled")
+}
+
+Button {
+    text: "Delete"
+    onClicked: basicDialog.show()
+}
+
+// Dialog with icon
+Dialog {
+    title: "Success"
+    icon: "check_circle"
+    supportingText: "Your changes have been saved."
+    size: "small"
+    
+    actions: [
+        Button {
+            text: "OK"
+            variant: "text"
+            onClicked: close()
+        }
+    ]
+}
+
+// Dialog with custom content
+Dialog {
+    id: formDialog
+    title: "Settings"
+    type: "basic"
+    size: "medium"
+    
+    content: Component {
+        Column {
+            spacing: 16
+            width: parent.width
+            
+            TextField {
+                label: "Username"
+                width: parent.width
+            }
+            
+            TextField {
+                label: "Email"
+                width: parent.width
+            }
+        }
+    }
+    
+    actions: [
+        Button {
+            text: "Cancel"
+            variant: "text"
+            onClicked: formDialog.reject()
+        },
+        Button {
+            text: "Save"
+            variant: "filled"
+            onClicked: formDialog.accept()
+        }
+    ]
+}
+
+// Fullscreen dialog
+Dialog {
+    id: fullscreenDialog
+    type: "fullscreen"
+    title: "Edit Document"
+    confirmText: "Save"
+    
+    content: Component {
+        TextArea {
+            width: parent.width
+            height: 400
+        }
+    }
+}
+
+// Assistant dialog (side panel style)
+Dialog {
+    type: "assistant"
+    title: "Assistant"
+    icon: "help"
+    
+    content: Component {
+        Column {
+            spacing: 16
+            Text { text: "How can I help you?" }
+        }
+    }
+    
+    actions: [
+        Button { text: "Close"; variant: "text"; onClicked: close() }
+    ]
+}

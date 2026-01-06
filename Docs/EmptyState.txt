@@ -1,0 +1,56 @@
+EMPTY STATE
+===========
+
+PROPERTIES
+----------
+icon: string = ""
+title: string = ""
+description: string = ""
+actionText: string = ""
+size: string = "medium"           // small, medium, large
+
+SIGNALS
+-------
+actionClicked()
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic empty state
+EmptyState {
+    icon: "📁"
+    title: "No files"
+    description: "Start by uploading your first file"
+}
+
+// With action
+EmptyState {
+    icon: "🔍"
+    title: "No results found"
+    description: "Try adjusting your search criteria"
+    actionText: "Clear filters"
+    
+    onActionClicked: {
+        clearAllFilters()
+    }
+}
+
+// Large size
+EmptyState {
+    size: "large"
+    icon: "📦"
+    title: "Your cart is empty"
+    description: "Add items to get started"
+    actionText: "Browse products"
+}
+
+// Error state
+EmptyState {
+    icon: "⚠️"
+    title: "Something went wrong"
+    description: "Unable to load content"
+    actionText: "Retry"
+    
+    onActionClicked: reload()
+}

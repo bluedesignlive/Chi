@@ -1,0 +1,54 @@
+BUTTON GROUP
+============
+
+PROPERTIES
+----------
+size: string = "small"            // xsmall, small, medium, large, xlarge
+selectionMode: string = "none"    // none, single, multi, required
+enabled: bool = true
+
+NOTES
+-----
+- Automatically propagates size to children
+- Children must have "selected" property for selection modes
+- "required" means at least one must stay selected
+
+USAGE
+-----
+import SmartUIBeta
+
+// Simple spacing group
+ButtonGroup {
+    size: "medium"
+    
+    Button { text: "One" }
+    Button { text: "Two" }
+    Button { text: "Three" }
+}
+
+// Single selection (radio)
+ButtonGroup {
+    selectionMode: "single"
+    
+    ToggleButton { text: "Left" }
+    ToggleButton { text: "Center"; selected: true }
+    ToggleButton { text: "Right" }
+}
+
+// Multi selection
+ButtonGroup {
+    selectionMode: "multi"
+    
+    ToggleButton { text: "Bold" }
+    ToggleButton { text: "Italic" }
+    ToggleButton { text: "Underline" }
+}
+
+// Required (can't deselect all)
+ButtonGroup {
+    selectionMode: "required"
+    size: "large"
+    
+    ToggleButton { text: "Option 1"; selected: true }
+    ToggleButton { text: "Option 2" }
+}

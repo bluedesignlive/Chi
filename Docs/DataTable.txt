@@ -1,0 +1,106 @@
+DATA TABLE
+==========
+
+PROPERTIES
+----------
+columns: var = []                 // [{key, label, width?, sortable?, align?}]
+rows: var = []
+showCheckboxes: bool = false
+sortable: bool = true
+sortColumn: string = ""
+sortAscending: bool = true
+selectedRows: var = []
+stickyHeader: bool = true
+striped: bool = false
+hoverable: bool = true
+bordered: bool = false
+
+SIGNALS
+-------
+rowClicked(int index, var row)
+rowDoubleClicked(int index, var row)
+selectionChanged(var selectedRows)
+sortChanged(string column, bool ascending)
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic table
+DataTable {
+    columns: [
+        {key: "name", label: "Name"},
+        {key: "email", label: "Email"},
+        {key: "role", label: "Role"}
+    ]
+    
+    rows: [
+        {name: "John", email: "john@example.com", role: "Admin"},
+        {name: "Jane", email: "jane@example.com", role: "User"}
+    ]
+    
+    onRowClicked: (index, row) => {
+        console.log("Clicked:", row.name)
+    }
+}
+
+// With column widths
+DataTable {
+    columns: [
+        {key: "id", label: "ID", width: 60},
+        {key: "name", label: "Name", width: 200},
+        {key: "status", label: "Status", width: 100}
+    ]
+    
+    rows: listModel
+}
+
+// With sorting
+DataTable {
+    columns: [
+        {key: "name", label: "Name", sortable: true},
+        {key: "date", label: "Date", sortable: true},
+        {key: "amount", label: "Amount", sortable: true, align: "right"}
+    ]
+    
+    sortable: true
+    sortColumn: "date"
+    sortAscending: false
+    
+    onSortChanged: (column, ascending) => {
+        sortData(column, ascending)
+    }
+}
+
+// With selection
+DataTable {
+    showCheckboxes: true
+    
+    columns: [
+        {key: "file", label: "File"},
+        {key: "size", label: "Size", align: "right"}
+    ]
+    
+    onSelectionChanged: (selectedRows) => {
+        console.log("Selected:", selectedRows.length)
+    }
+}
+
+// Striped rows
+DataTable {
+    striped: true
+    hoverable: true
+    bordered: true
+    
+    columns: columnsModel
+    rows: rowsModel
+}
+
+// Column alignment
+DataTable {
+    columns: [
+        {key: "left", label: "Left", align: "left"},
+        {key: "center", label: "Center", align: "center"},
+        {key: "right", label: "Right", align: "right"}
+    ]
+}

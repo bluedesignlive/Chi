@@ -1,0 +1,14 @@
+-rootPath
+/home/lufuno/Desktop/smartui-beta/testui
+-cmake-output
+-output-file
+/home/lufuno/Desktop/smartui-beta/testui/testui/.qt/qml_imports/apptestui_conf.cmake
+-importPath
+/home/lufuno/Desktop/smartui-beta/testui/testui/testui
+-importPath
+/home/lufuno/Desktop/smartui-beta/testui/testui
+-importPath
+/usr/lib64/qt6/qml
+-qrcFiles
+/home/lufuno/Desktop/smartui-beta/testui/testui/.qt/rcc/qmake_testui.qrc
+/home/lufuno/Desktop/smartui-beta/testui/testui/.qt/rcc/apptestui_raw_qml_0.qrc

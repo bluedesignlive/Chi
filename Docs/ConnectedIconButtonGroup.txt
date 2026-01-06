@@ -1,0 +1,58 @@
+CONNECTED ICON BUTTON GROUP
+============================
+
+PROPERTIES
+----------
+size: string = "small"            // xsmall, small, medium, large, xlarge
+shape: string = "round"           // round, square
+selectionMode: string = "single"  // single, multi, required
+enabled: bool = true
+elevated: bool = false
+iconFont: string = "Material Icons"
+icons: var = []                   // Array of icon code strings
+selectedIndex: int = -1
+selectedIndices: var = []
+
+SIGNALS
+-------
+selectionChanged(var indices)
+itemClicked(int index)
+
+USAGE
+-----
+import SmartUIBeta
+
+// Text formatting toolbar
+ConnectedIconButtonGroup {
+    size: "small"
+    selectionMode: "multi"
+    icons: ["\ue238", "\ue23f", "\ue249"]  // bold, italic, underline
+    selectedIndices: []
+    
+    onSelectionChanged: (indices) => {
+        console.log("Active formats:", indices)
+    }
+}
+
+// Alignment (single selection)
+ConnectedIconButtonGroup {
+    selectionMode: "single"
+    shape: "square"
+    icons: ["\ue236", "\ue234", "\ue237"]  // left, center, right
+    selectedIndices: [0]
+}
+
+// View switcher (required)
+ConnectedIconButtonGroup {
+    selectionMode: "required"
+    elevated: true
+    icons: ["\ue896", "\ue3ec", "\ue8ef"]
+    selectedIndices: [1]
+}
+
+// With custom icon font
+ConnectedIconButtonGroup {
+    iconFont: "Font Awesome"
+    icons: ["", "", ""]
+    selectionMode: "single"
+}

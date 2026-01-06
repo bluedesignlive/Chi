@@ -1,0 +1,66 @@
+CONTEXT MENU
+============
+
+PROPERTIES
+----------
+Same as Menu (extends Menu)
+
+FUNCTIONS
+---------
+popup(real x, real y)
+
+USAGE
+-----
+import SmartUIBeta
+
+Rectangle {
+    width: 400
+    height: 300
+    
+    ContextMenu {
+        id: contextMenu
+        
+        MenuItem {
+            text: "Cut"
+            leadingIcon: "content_cut"
+            trailingText: "Ctrl+X"
+        }
+        
+        MenuItem {
+            text: "Copy"
+            leadingIcon: "content_copy"
+            trailingText: "Ctrl+C"
+        }
+        
+        MenuItem {
+            text: "Paste"
+            leadingIcon: "content_paste"
+            trailingText: "Ctrl+V"
+        }
+        
+        MenuDivider { }
+        
+        MenuItem {
+            text: "Delete"
+            leadingIcon: "delete"
+            destructive: true
+        }
+    }
+    
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.RightButton
+        onClicked: (mouse) => {
+            contextMenu.popup(mouse.x, mouse.y)
+        }
+    }
+}
+
+// Programmatic positioning
+Button {
+    text: "Show Menu"
+    onClicked: {
+        var pos = mapToItem(null, width, 0)
+        contextMenu.popup(pos.x, pos.y)
+    }
+}

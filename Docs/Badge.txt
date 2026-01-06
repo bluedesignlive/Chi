@@ -1,0 +1,53 @@
+BADGE
+=====
+
+PROPERTIES
+----------
+text: string = ""
+showBadge: bool = true
+size: string = "small"            // small (dot), medium, large
+maxCount: int = 999
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic dot badge
+Badge {
+    showBadge: true
+    size: "small"
+    
+    IconButton {
+        icon: "\ue7f4"
+    }
+}
+
+// Badge with count
+Badge {
+    text: "5"
+    size: "medium"
+    
+    IconButton {
+        icon: "\ue0be"
+    }
+}
+
+// Badge with max count
+Badge {
+    text: "1234"
+    maxCount: 999    // Shows "999+"
+    
+    Icon {
+        source: "notifications"
+    }
+}
+
+// Large badge
+Badge {
+    text: "NEW"
+    size: "large"
+    
+    Card {
+        // Card content
+    }
+}

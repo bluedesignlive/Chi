@@ -33,6 +33,9 @@ add_library(SmartUIBeta SHARED
     qml/smartui/ui/Buttons/SplitButton.qml
     qml/smartui/ui/Buttons/ToggleButton.qml
     qml/smartui/ui/Buttons/IconButtonToggle.qml
+    qml/smartui/ui/Buttons/ButtonGroup.qml
+    qml/smartui/ui/Buttons/ConnectedButtonGroup.qml
+    qml/smartui/ui/Buttons/ConnectedIconButtonGroup.qml
 
     # FAB
     qml/smartui/ui/FAB/FAB.qml
@@ -93,6 +96,7 @@ add_library(SmartUIBeta SHARED
 
     # Common
     qml/smartui/ui/common/Icon.qml
+    qml/smartui/ui/common/SmoothRectangle.qml
 
     # Menus
     qml/smartui/ui/menus/Menu.qml
@@ -102,9 +106,6 @@ add_library(SmartUIBeta SHARED
     qml/smartui/ui/menus/MenuGap.qml
     qml/smartui/ui/menus/ContextMenu.qml
     qml/smartui/ui/menus/Tooltip.qml
-
-    # Common
-    qml/smartui/ui/common/Icon.qml
 
     # Menus (Gen 2 Expressive)
     qml/smartui/ui/menus2/Menu.qml
@@ -117,7 +118,7 @@ add_library(SmartUIBeta SHARED
     qml/smartui/ui/dialogs/ConfirmDialog.qml
     qml/smartui/ui/dialogs/FullscreenDialog.qml
     qml/smartui/ui/dialogs/DialogManager.qml
-    qml/smartui/ui/menus/MenuGap.qml
+    qml/smartui/ui/dialogs/SmartFileDialog.qml
 
     # Pickers
     qml/smartui/ui/pickers/DatePicker.qml
@@ -126,6 +127,7 @@ add_library(SmartUIBeta SHARED
 
     # Search
     qml/smartui/ui/search/SearchBar.qml
+    qml/smartui/ui/search/SearchSuggestionItem.qml
 
     # Lists
     qml/smartui/ui/lists/ListItem.qml
@@ -155,11 +157,12 @@ add_library(SmartUIBeta SHARED
     # Application Window (Smart M3)
     qml/smartui/ui/applicationwindow/SmartApplicationWindow.qml
     qml/smartui/ui/applicationwindow/WindowControls.qml
+    qml/smartui/ui/applicationwindow/OverflowMenu.qml
+    qml/smartui/ui/applicationwindow/DropdownMenu.qml
 
-	# Carousel
-	qml/smartui/ui/carousel/Carousel.qml
-	qml/smartui/ui/carousel/CarouselItem.qml
-        qml/smartui/ui/search/SearchSuggestionItem.qml
+    # Carousel
+    qml/smartui/ui/carousel/Carousel.qml
+    qml/smartui/ui/carousel/CarouselItem.qml
 )
 
 target_link_libraries(SmartUIBeta
@@ -189,6 +192,3 @@ install(DIRECTORY qml/smartui/
 install(FILES smartui.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/SmartUIBeta
 )
-
-# Disabled until library is installed
-# add_subdirectory(testui)

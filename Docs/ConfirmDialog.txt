@@ -1,0 +1,41 @@
+CONFIRM DIALOG
+==============
+
+PROPERTIES
+----------
+Same as Dialog, plus:
+confirmButtonText: string = "Confirm"
+dismissButtonText: string = "Cancel"
+destructive: bool = false
+
+SIGNALS
+-------
+Same as Dialog
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic confirmation
+ConfirmDialog {
+    id: confirm
+    title: "Confirm action"
+    supportingText: "Are you sure you want to proceed?"
+    
+    onAccepted: performAction()
+    onRejected: console.log("Cancelled")
+}
+
+Button {
+    text: "Delete"
+    onClicked: confirm.show()
+}
+
+// Destructive confirmation
+ConfirmDialog {
+    title: "Delete all items?"
+    supportingText: "This cannot be undone."
+    confirmButtonText: "Delete All"
+    dismissButtonText: "Keep"
+    destructive: true
+}

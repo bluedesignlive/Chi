@@ -1,0 +1,114 @@
+TEXT FIELD
+==========
+
+PROPERTIES
+----------
+text: string = ""
+placeholderText: string = ""
+label: string = ""
+supportingText: string = ""
+errorText: string = ""
+leadingIcon: string = ""
+trailingIcon: string = ""
+variant: string = "filled"        // filled, outlined
+size: string = "medium"           // small, medium, large
+shape: string = "default"         // default, rounded
+enabled: bool = true
+error: bool = false
+readOnly: bool = false
+password: bool = false
+showCharacterCount: bool = false
+showPasswordToggle: bool = false
+maxLength: int = -1
+inputMethodHints: int = Qt.ImhNone
+
+enableContextMenu: bool = true
+showCut: bool = true
+showCopy: bool = true
+showPaste: bool = true
+showSelectAll: bool = true
+
+SIGNALS
+-------
+accepted()
+editingFinished()
+trailingIconClicked()
+leadingIconClicked()
+
+FUNCTIONS
+---------
+clear()
+selectAll()
+forceActiveFocus()
+deselect()
+select(int start, int end)
+positionAt(real x, real y)
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic filled
+TextField {
+    label: "Username"
+    placeholderText: "Enter username"
+    text: ""
+}
+
+// With icons
+TextField {
+    label: "Email"
+    variant: "outlined"
+    leadingIcon: "mail"
+    trailingIcon: "clear"
+    onTrailingIconClicked: clear()
+}
+
+// Password field
+TextField {
+    label: "Password"
+    password: true
+    showPasswordToggle: true
+    maxLength: 32
+}
+
+// Error state
+TextField {
+    label: "Phone"
+    text: "123"
+    error: true
+    errorText: "Invalid phone number"
+}
+
+// Rounded shape
+TextField {
+    shape: "rounded"
+    placeholderText: "Search..."
+    leadingIcon: "search"
+}
+
+// With character count
+TextField {
+    label: "Bio"
+    maxLength: 200
+    showCharacterCount: true
+    supportingText: "Tell us about yourself"
+}
+
+// Read-only
+TextField {
+    label: "Status"
+    text: "Active"
+    readOnly: true
+}
+
+// Different sizes
+TextField {
+    size: "small"
+    label: "Compact field"
+}
+
+TextField {
+    size: "large"
+    label: "Large field"
+}

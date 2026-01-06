@@ -1,0 +1,91 @@
+BOTTOM SHEET
+============
+
+PROPERTIES
+----------
+open: bool = false
+variant: string = "standard"      // standard, modal
+showDragHandle: bool = true
+minHeight: real = 200
+maxHeight: real = parent.height * 0.9
+expandable: bool = true
+dismissible: bool = true
+
+SIGNALS
+-------
+closed()
+expanded()
+collapsed()
+
+FUNCTIONS
+---------
+show()
+close()
+expand()
+collapse()
+
+READONLY
+--------
+isExpanded: bool
+sheetHeight: real
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic bottom sheet
+BottomSheet {
+    id: sheet
+    minHeight: 200
+    maxHeight: 400
+    
+    Column {
+        spacing: 16
+        
+        Text { text: "Sheet Content" }
+        Button { text: "Action" }
+    }
+}
+
+Button {
+    text: "Show Sheet"
+    onClicked: sheet.show()
+}
+
+// Modal bottom sheet
+BottomSheet {
+    variant: "modal"
+    dismissible: true
+    
+    Column {
+        Text { text: "Select an option" }
+        // Options...
+    }
+}
+
+// Non-dismissible sheet
+BottomSheet {
+    variant: "modal"
+    dismissible: false
+    showDragHandle: false
+    
+    // Must be closed programmatically
+}
+
+// Expandable sheet
+BottomSheet {
+    id: expandableSheet
+    minHeight: 150
+    maxHeight: 600
+    expandable: true
+    
+    Column {
+        spacing: 16
+        // Long content...
+    }
+}
+
+Button {
+    text: "Expand"
+    onClicked: expandableSheet.expand()
+}

@@ -1,0 +1,72 @@
+BREADCRUMB
+==========
+
+PROPERTIES
+----------
+items: var = []                   // Array of {text, icon?, path?}
+separator: string = "›"
+showHome: bool = true
+homeIcon: string = "🏠"
+enabled: bool = true
+
+SIGNALS
+-------
+itemClicked(int index, var item)
+homeClicked()
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic breadcrumb
+Breadcrumb {
+    items: [
+        {text: "Documents"},
+        {text: "Projects"},
+        {text: "Current"}
+    ]
+    
+    onItemClicked: (index, item) => {
+        console.log("Navigate to:", item.text)
+    }
+}
+
+// With icons
+Breadcrumb {
+    items: [
+        {text: "Home", icon: "🏠"},
+        {text: "Folder", icon: "📁"},
+        {text: "File", icon: "📄"}
+    ]
+}
+
+// With paths
+Breadcrumb {
+    items: [
+        {text: "Home", path: "/"},
+        {text: "Users", path: "/users"},
+        {text: "Profile", path: "/users/profile"}
+    ]
+    
+    onItemClicked: (index, item) => {
+        navigateTo(item.path)
+    }
+}
+
+// Without home button
+Breadcrumb {
+    showHome: false
+    items: ["Level 1", "Level 2", "Level 3"]
+}
+
+// Custom separator
+Breadcrumb {
+    separator: "/"
+    items: ["root", "var", "log"]
+}
+
+// Custom home icon
+Breadcrumb {
+    homeIcon: "\ue88a"  // Material Icons home
+    items: ["Documents", "Files"]
+}

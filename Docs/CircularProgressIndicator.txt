@@ -1,0 +1,87 @@
+CIRCULAR PROGRESS INDICATOR
+===========================
+
+PROPERTIES
+----------
+progress: real = 0.0              // 0.0 to 1.0
+indeterminate: bool = false
+size: string = "medium"           // small, medium, large
+enabled: bool = true
+animated: bool = true
+animationDuration: int = 300
+
+ALIAS
+-----
+content: alias                    // Add content to center
+
+FUNCTIONS
+---------
+setProgress(real value, bool animate = true)
+reset()
+complete()
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic circular progress
+CircularProgressIndicator {
+    progress: 0.6
+    size: "medium"
+}
+
+// Indeterminate spinner
+CircularProgressIndicator {
+    indeterminate: true
+}
+
+// Different sizes
+CircularProgressIndicator {
+    progress: 0.3
+    size: "small"
+}
+
+CircularProgressIndicator {
+    progress: 0.75
+    size: "large"
+}
+
+// With center content (percentage)
+CircularProgressIndicator {
+    id: circularProgress
+    progress: 0.65
+    size: "large"
+    
+    Text {
+        anchors.centerIn: parent
+        text: Math.round(circularProgress.progress * 100) + "%"
+        font.pixelSize: 16
+        font.weight: Font.Medium
+    }
+}
+
+// With icon in center
+CircularProgressIndicator {
+    indeterminate: true
+    size: "medium"
+    
+    Text {
+        anchors.centerIn: parent
+        text: "\ue2c4"
+        font.family: "Material Icons"
+        font.pixelSize: 20
+    }
+}
+
+// Programmatic control
+CircularProgressIndicator {
+    id: loader
+}
+
+Button {
+    text: "Load"
+    onClicked: {
+        loader.reset()
+        loader.setProgress(1.0, true)
+    }
+}

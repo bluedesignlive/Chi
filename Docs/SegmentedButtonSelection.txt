@@ -1,0 +1,77 @@
+SEGMENTED BUTTON (Selection)
+=============================
+
+NOTE: This is the selection variant of SegmentedButton.
+      See also: SegmentedButton.txt (in Buttons section)
+
+PROPERTIES
+----------
+selectedIndex: int = 0
+segments: var = []                // Array of {text, icon?}
+multiSelect: bool = false
+selectedIndices: var = [0]
+enabled: bool = true
+size: string = "medium"           // small, medium, large
+
+SIGNALS
+-------
+selectionChanged(var indices)
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic segmented button
+SegmentedButton {
+    segments: [
+        {text: "Day"},
+        {text: "Week"},
+        {text: "Month"}
+    ]
+    selectedIndex: 0
+    
+    onSelectionChanged: (indices) => {
+        console.log("Selected:", indices)
+    }
+}
+
+// Multi-select
+SegmentedButton {
+    multiSelect: true
+    segments: [
+        {text: "Bold"},
+        {text: "Italic"},
+        {text: "Underline"}
+    ]
+    selectedIndices: [0]
+}
+
+// With icons
+SegmentedButton {
+    segments: [
+        {text: "List", icon: "\ue896"},
+        {text: "Grid", icon: "\ue3ec"},
+        {text: "Gallery", icon: "\ue413"}
+    ]
+}
+
+// Icon only
+SegmentedButton {
+    segments: [
+        {icon: "\ue236"},  // align left
+        {icon: "\ue234"},  // align center
+        {icon: "\ue237"}   // align right
+    ]
+}
+
+// Different sizes
+SegmentedButton {
+    size: "large"
+    segments: ["Small", "Medium", "Large"]
+}
+
+// Programmatic selection
+Button {
+    text: "Select Week"
+    onClicked: segmentBtn.selectedIndex = 1
+}

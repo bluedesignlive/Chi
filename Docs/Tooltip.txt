@@ -1,0 +1,96 @@
+TOOLTIP
+=======
+
+PROPERTIES
+----------
+text: string = ""
+target: Item = null
+position: string = "bottom"       // top, bottom, left, right
+delay: int = 500
+showDuration: int = 1500          // 0 = show until mouse leaves
+rich: bool = false
+
+FUNCTIONS
+---------
+show()
+hide()
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic tooltip
+IconButton {
+    id: saveButton
+    icon: "\ue161"
+}
+
+Tooltip {
+    text: "Save"
+    target: saveButton
+    position: "bottom"
+}
+
+// Rich tooltip (with shadow)
+IconButton {
+    id: helpButton
+    icon: "\ue887"
+}
+
+Tooltip {
+    text: "Click for help and documentation"
+    target: helpButton
+    rich: true
+    position: "right"
+}
+
+// Custom show duration
+IconButton {
+    id: copyButton
+    icon: "\ue14d"
+}
+
+Tooltip {
+    text: "Copied!"
+    target: copyButton
+    showDuration: 2000
+}
+
+// Persistent tooltip (manual control)
+IconButton {
+    id: infoButton
+    icon: "\ue88e"
+}
+
+Tooltip {
+    id: infoTip
+    text: "Hover to see details"
+    target: infoButton
+    showDuration: 0
+}
+
+// Different positions
+Tooltip { text: "Top"; target: btn1; position: "top" }
+Tooltip { text: "Bottom"; target: btn2; position: "bottom" }
+Tooltip { text: "Left"; target: btn3; position: "left" }
+Tooltip { text: "Right"; target: btn4; position: "right" }
+
+// Manual trigger
+Button {
+    id: manualBtn
+    text: "Hover me"
+    
+    MouseArea {
+        anchors.fill: parent
+        hoverEnabled: true
+        onContainsMouseChanged: {
+            if (containsMouse) customTooltip.show()
+            else customTooltip.hide()
+        }
+    }
+}
+
+Tooltip {
+    id: customTooltip
+    text: "Custom tooltip"
+}

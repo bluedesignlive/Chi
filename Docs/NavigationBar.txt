@@ -1,0 +1,91 @@
+NAVIGATION BAR
+==============
+
+PROPERTIES
+----------
+currentIndex: int = 0
+showLabels: bool = true
+enabled: bool = true
+
+CHILD COMPONENTS
+----------------
+NavigationBarItem { }
+
+SIGNALS
+-------
+itemClicked(int index)
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic navigation bar
+NavigationBar {
+    id: navBar
+    currentIndex: 0
+    
+    NavigationBarItem {
+        icon: "\ue88a"
+        label: "Home"
+    }
+    
+    NavigationBarItem {
+        icon: "\ue8b6"
+        label: "Search"
+    }
+    
+    NavigationBarItem {
+        icon: "\ue7fd"
+        label: "Profile"
+    }
+    
+    onItemClicked: (index) => {
+        console.log("Navigated to:", index)
+    }
+}
+
+// With active icons
+NavigationBar {
+    NavigationBarItem {
+        icon: "\ue88a"
+        activeIcon: "\ue88a"  // Filled version
+        label: "Home"
+    }
+    
+    NavigationBarItem {
+        icon: "\ue8b6"
+        activeIcon: "\ue8b6"
+        label: "Search"
+    }
+}
+
+// With badges
+NavigationBar {
+    NavigationBarItem {
+        icon: "\ue0be"
+        label: "Messages"
+        showBadge: true
+        badgeText: "3"
+    }
+    
+    NavigationBarItem {
+        icon: "\ue7f4"
+        label: "Notifications"
+        showBadge: true  // Dot badge
+    }
+}
+
+// Without labels
+NavigationBar {
+    showLabels: false
+    
+    NavigationBarItem { icon: "\ue88a" }
+    NavigationBarItem { icon: "\ue8b6" }
+    NavigationBarItem { icon: "\ue7fd" }
+}
+
+// Programmatic navigation
+Button {
+    text: "Go to Search"
+    onClicked: navBar.currentIndex = 1
+}

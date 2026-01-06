@@ -1,0 +1,73 @@
+SWITCH
+======
+
+PROPERTIES
+----------
+checked: bool = false
+enabled: bool = true
+showIcon: bool = false
+icon: string = "✓"
+size: string = "medium"           // small, medium, large
+
+SIGNALS
+-------
+toggled()
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic switch
+Switch {
+    checked: false
+    onToggled: console.log("Checked:", checked)
+}
+
+// With icon
+Switch {
+    checked: true
+    showIcon: true
+    icon: "\ue876"
+}
+
+// Different sizes
+Switch {
+    size: "small"
+}
+
+Switch {
+    size: "medium"
+}
+
+Switch {
+    size: "large"
+    showIcon: true
+}
+
+// Disabled state
+Switch {
+    checked: true
+    enabled: false
+}
+
+// With label
+Row {
+    spacing: 12
+    
+    Text {
+        text: "Enable notifications"
+        anchors.verticalCenter: parent.verticalCenter
+    }
+    
+    Switch {
+        id: notificationSwitch
+        checked: true
+    }
+}
+
+// Controlled switch
+Switch {
+    id: controlledSwitch
+    checked: appSettings.darkMode
+    onToggled: appSettings.darkMode = checked
+}

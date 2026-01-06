@@ -1,0 +1,140 @@
+TOP APP BAR
+===========
+
+PROPERTIES
+----------
+title: string = ""
+subtitle: string = ""
+variant: string = "small"         // small, medium, large, center
+navigationIcon: string = "←"
+showNavigation: bool = true
+elevated: bool = false
+scrollOffset: real = 0
+
+CHILD COMPONENTS
+----------------
+actions: [ TopAppBarAction, ... ]
+
+SIGNALS
+-------
+navigationClicked()
+
+READONLY
+--------
+isExpanded: bool
+scrollProgress: real
+currentHeight: real
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic small app bar
+TopAppBar {
+    title: "Page Title"
+    
+    onNavigationClicked: {
+        console.log("Back clicked")
+    }
+    
+    TopAppBarAction {
+        icon: "\ue8b6"
+        tooltip: "Search"
+        onClicked: search()
+    }
+    
+    TopAppBarAction {
+        icon: "\ue5d2"
+        tooltip: "More"
+        onClicked: showMenu()
+    }
+}
+
+// Medium app bar
+TopAppBar {
+    title: "Documents"
+    subtitle: "23 items"
+    variant: "medium"
+    
+    TopAppBarAction {
+        icon: "\ue145"
+        tooltip: "Add"
+    }
+}
+
+// Large app bar
+TopAppBar {
+    title: "Large Title"
+    variant: "large"
+}
+
+// Center-aligned
+TopAppBar {
+    title: "Centered"
+    variant: "center"
+    
+    TopAppBarAction { icon: "\ue8b8" }
+}
+
+// Without navigation
+TopAppBar {
+    title: "App Name"
+    showNavigation: false
+    
+    TopAppBarAction { icon: "\ue7fd" }
+}
+
+// Elevated
+TopAppBar {
+    title: "Title"
+    elevated: true
+}
+
+// With scroll behavior
+Flickable {
+    id: content
+    anchors.fill: parent
+    contentHeight: 2000
+    
+    onContentYChanged: {
+        appBar.scrollOffset = contentY
+    }
+}
+
+TopAppBar {
+    id: appBar
+    title: "Scrolling Title"
+    variant: "large"
+    // scrollOffset updates from Flickable
+}
+
+// Custom navigation icon
+TopAppBar {
+    title: "Settings"
+    navigationIcon: "\ue5c4"  // close
+}
+
+// Multiple actions
+TopAppBar {
+    title: "Editor"
+    
+    TopAppBarAction {
+        icon: "\ue161"
+        tooltip: "Save"
+    }
+    
+    TopAppBarAction {
+        icon: "\ue863"
+        tooltip: "Undo"
+    }
+    
+    TopAppBarAction {
+        icon: "\ue15a"
+        tooltip: "Redo"
+    }
+    
+    TopAppBarAction {
+        icon: "\ue5d4"
+        tooltip: "More"
+    }
+}

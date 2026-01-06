@@ -29,7 +29,17 @@ qt_add_qml_module(apptestui
         FABMenuShowcase.qml
         LinearProgressShowcase.qml
         NavigationRailShowcase.qml
-)
+        TextFieldShowcase.qml
+        CheckboxShowcase.qml
+        RadioButtonShowcase.qml
+        CardShowcase.qml
+        DialogShowcase.qml
+        TabsShowcase.qml
+        AvatarShowcase.qml
+        BadgeShowcase.qml
+        MenuShowcase.qml
+        SliderShowcase.qml
+    )
 
 set_target_properties(apptestui PROPERTIES
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
@@ -39,7 +49,7 @@ set_target_properties(apptestui PROPERTIES
 )
 
 target_link_libraries(apptestui
-    PRIVATE Qt6::Quick Qt6::Qml smartui-beta
+    PRIVATE Qt6::Quick Qt6::Qml
 )
 
 target_compile_definitions(apptestui

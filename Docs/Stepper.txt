@@ -1,0 +1,79 @@
+STEPPER
+=======
+
+PROPERTIES
+----------
+value: real = 0
+from: real = 0
+to: real = 100
+stepSize: real = 1
+decimals: int = 0
+editable: bool = true
+enabled: bool = true
+wrap: bool = false
+size: string = "medium"           // small, medium, large
+
+SIGNALS
+-------
+valueModified()
+
+FUNCTIONS
+---------
+increase()
+decrease()
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic stepper
+Stepper {
+    value: 5
+    from: 0
+    to: 10
+    stepSize: 1
+    onValueModified: console.log("Value:", value)
+}
+
+// Decimal values
+Stepper {
+    value: 0.5
+    from: 0
+    to: 1
+    stepSize: 0.1
+    decimals: 2
+}
+
+// Wrapping stepper
+Stepper {
+    value: 0
+    from: 0
+    to: 23
+    wrap: true
+}
+
+// Read-only display
+Stepper {
+    value: 42
+    editable: false
+}
+
+// Different sizes
+Stepper {
+    size: "small"
+    value: 1
+}
+
+Stepper {
+    size: "large"
+    value: 100
+    to: 1000
+    stepSize: 10
+}
+
+// Keyboard navigation works
+Stepper {
+    value: 50
+    Keys.onUpPressed: increase()
+    Keys.onDownPressed: decrease()
+}

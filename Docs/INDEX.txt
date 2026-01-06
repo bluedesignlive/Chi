@@ -1,0 +1,94 @@
+SMARTUI COMPONENT INDEX
+=======================
+
+BUTTONS
+-------
+Button.txt                        - Standard button with variants
+IconButton.txt                    - Icon-only button
+IconButtonToggle.txt              - Toggleable icon button
+ToggleButton.txt                  - Button with toggle state
+SplitButton.txt                   - Button with separate dropdown
+ButtonGroup.txt                   - Groups buttons with selection modes
+SegmentedButton.txt               - Connected segments (Material 3 style)
+ConnectedIconButtonGroup.txt      - Connected icon-only button group
+
+INPUTS
+------
+TextField.txt                     - Text input field with variants
+Stepper.txt                       - Number input with increment/decrement
+Switch.txt                        - Toggle switch
+
+SELECTION
+---------
+Checkbox.txt                      - Checkbox with label
+RadioGroup.txt                    - Radio button group
+SegmentedButtonSelection.txt      - Segmented button (selection variant)
+Slider.txt                        - Value slider with steps
+
+MENUS
+-----
+Menu.txt                          - Dropdown menu with items
+ContextMenu.txt                   - Right-click context menu
+Tooltip.txt                       - Hover tooltip
+
+PROGRESS
+--------
+LinearProgressIndicator.txt       - Linear progress bar with variants
+CircularProgressIndicator.txt     - Circular progress/spinner
+
+DIALOGS
+-------
+Dialog.txt                        - Base dialog (basic/fullscreen/assistant)
+AlertDialog.txt                   - Simple alert dialog
+ConfirmDialog.txt                 - Confirmation dialog
+FullscreenDialog.txt              - Fullscreen modal dialog
+
+NAVIGATION
+----------
+BottomSheet.txt                   - Bottom sheet modal
+Breadcrumb.txt                    - Breadcrumb navigation
+NavigationBar.txt                 - Bottom navigation bar
+NavigationDrawer.txt              - Side navigation drawer
+NavigationRail.txt                - Vertical navigation rail
+Tabs.txt                          - Tab bar with primary/secondary variants
+TopAppBar.txt                     - Top app bar with scroll behavior
+
+SEARCH
+------
+SearchBar.txt                     - Search bar with suggestions
+
+FAB
+---
+FAB.txt                           - Floating action button
+FABMenu.txt                       - FAB with expandable menu
+
+APPLICATION
+-----------
+ApplicationWindow.txt             - Frameless application window
+
+FEEDBACK
+--------
+Badge.txt                         - Notification badge
+EmptyState.txt                    - Empty/error state display
+Skeleton.txt                      - Loading skeleton
+Snackbar.txt                      - Temporary message bar
+
+CHIPS
+-----
+Chip.txt                          - Action/filter chip
+ChipGroup.txt                     - Group of chips
+
+DATA DISPLAY
+------------
+Avatar.txt                        - User avatar
+AvatarGroup.txt                   - Grouped avatars with overflow
+DataTable.txt                     - Data table with sorting
+TreeView.txt                      - Hierarchical tree view
+
+LISTS
+-----
+ListItem.txt                      - List item with variants
+
+NOTE: Some components are internal helpers or not main components.
+Not documented: SwipeListItem, FileTable, CodeBlock, ColorSwatch, 
+IconLabel, Kbd, Tag (these are either specialized or simple helpers)

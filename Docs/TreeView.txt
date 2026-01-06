@@ -1,0 +1,104 @@
+TREE VIEW
+=========
+
+PROPERTIES
+----------
+model: var = []
+indentSize: int = 20
+selectedItem: var = null
+selectedIndex: int = -1
+enabled: bool = true
+multiSelect: bool = false
+selectedIndices: var = []
+
+SIGNALS
+-------
+itemClicked(var item, int index, var path)
+itemDoubleClicked(var item, int index)
+itemToggled(var item, bool expanded)
+
+FUNCTIONS
+---------
+expandAll()
+collapseAll()
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic tree
+TreeView {
+    model: [
+        {
+            label: "Folder 1",
+            icon: "📁",
+            children: [
+                {label: "File 1.txt", icon: "📄"},
+                {label: "File 2.txt", icon: "📄"}
+            ]
+        },
+        {
+            label: "Folder 2",
+            icon: "📁",
+            expanded: true,
+            children: [
+                {label: "Subfolder", icon: "📁"}
+            ]
+        }
+    ]
+    
+    onItemClicked: (item, index, path) => {
+        console.log("Clicked:", item.label)
+    }
+}
+
+// With badges
+TreeView {
+    model: [
+        {
+            label: "Inbox",
+            badge: "5",
+            children: [
+                {label: "Important", badge: "2"},
+                {label: "Unread", badge: "3"}
+            ]
+        }
+    ]
+}
+
+// Multi-select
+TreeView {
+    multiSelect: true
+    
+    onItemClicked: (item, index, path) => {
+        console.log("Selected indices:", selectedIndices)
+    }
+}
+
+// Programmatic control
+Button {
+    text: "Expand All"
+    onClicked: treeView.expandAll()
+}
+
+Button {
+    text: "Collapse All"
+    onClicked: treeView.collapseAll()
+}
+
+// File explorer style
+TreeView {
+    model: fileSystemModel
+    
+    onItemDoubleClicked: (item, index) => {
+        if (item.type === "file") {
+            openFile(item.path)
+        }
+    }
+    
+    onItemToggled: (item, expanded) => {
+        if (expanded) {
+            loadChildren(item)
+        }
+    }
+}

@@ -16,9 +16,8 @@ Item {
     property int layout: Carousel.Hero
     property var model: null
     property int currentIndex: 0
-    property alias count: repeater.count
+    property int count: repeater.count
     property bool interactive: true
-
     property bool autoPlay: false
     property bool autoPlayPaused: false
     property int autoPlayInterval: 5000
@@ -47,23 +46,19 @@ Item {
 
     function goToIndex(idx) {
         idx = Math.max(0, Math.min(idx, count - 1))
-        progressAnim.stop()
-        progressAnim.from = priv.progress
-        progressAnim.to = idx
-        progressAnim.start()
         currentIndex = idx
         indexChanged(idx)
+        scrollAnim.to = spec.getScrollTarget(idx)
+        scrollAnim.restart()
     }
 
     QtObject {
-        id: priv
+        id: spec
         
-        property real progress: 0.0
+        readonly property real viewWidth: root.width - root.horizontalPadding * 2
+        readonly property real viewHeight: root.height - root.verticalPadding * 2
         
-        property real viewWidth: root.width - root.horizontalPadding * 2
-        property real viewHeight: root.height - root.verticalPadding * 2
-        
-        property real largeItemWidth: {
+        readonly property real largeWidth: {
             switch (root.layout) {
                 case Carousel.FullScreen:
                     return root.width
@@ -76,230 +71,133 @@ Item {
                 case Carousel.Uncontained:
                     var cols = Math.max(2, Math.min(4, Math.floor((viewWidth + root.itemSpacing) / 180)))
                     return (viewWidth - (root.itemSpacing * (cols - 1))) / cols
-                default:
-                    return viewWidth * 0.7
             }
+            return viewWidth * 0.7
         }
         
-        // Maximum scroll progress - prevents gaps at end
-        property real maxProgress: {
+        // Scroll unit - distance to scroll for one item
+        readonly property real scrollUnit: largeWidth + root.itemSpacing
+        
+        function getScrollTarget(idx) {
+            if (root.layout === Carousel.CenterAlignedHero) {
+                // Center the item
+                return idx * scrollUnit
+            }
+            return idx * scrollUnit
+        }
+        
+        function getMaxScroll() {
             if (root.count <= 1) return 0
             
-            switch (root.layout) {
-                case Carousel.Uncontained:
-                    // Calculate how many items fit, don't allow scrolling past last item
-                    var totalWidth = root.count * largeItemWidth + (root.count - 1) * root.itemSpacing
-                    var maxScroll = totalWidth - viewWidth
-                    if (maxScroll <= 0) return 0
-                    return maxScroll / (largeItemWidth + root.itemSpacing)
-                    
-                case Carousel.CenterAlignedHero:
-                case Carousel.Hero:
-                case Carousel.MultiBrowse:
-                case Carousel.FullScreen:
-                    return root.count - 1
+            // Calculate total content width at rest position
+            var total = largeWidth // First item is large
+            for (var i = 1; i < root.count; i++) {
+                total += root.smallItemWidth + root.itemSpacing
             }
-            return root.count - 1
+            
+            // Max scroll = content - view, but ensure last item fills properly
+            var maxScroll = (root.count - 1) * scrollUnit
+            
+            // For uncontained, limit scroll so last item stays at edge
+            if (root.layout === Carousel.Uncontained) {
+                var uncontainedTotal = root.count * largeWidth + (root.count - 1) * root.itemSpacing
+                maxScroll = Math.max(0, uncontainedTotal - viewWidth)
+            }
+            
+            return maxScroll
         }
         
-        function clamp(val, min, max) {
-            return Math.max(min, Math.min(max, val))
-        }
-        
-        function lerp(a, b, t) {
-            return a + (b - a) * clamp(t, 0, 1)
-        }
-        
-        function getItemWidth(index) {
-            var diff = index - progress
+        // Get width for item based on scroll position (continuous)
+        function getItemWidth(index, scrollX) {
+            if (root.layout === Carousel.FullScreen) return root.width
+            if (root.layout === Carousel.Uncontained) return largeWidth
+            
+            // Focal position (which item is "current" based on scroll)
+            var focalPos = scrollX / scrollUnit
+            var diff = index - focalPos
             
             switch (root.layout) {
-                case Carousel.FullScreen:
-                    return root.width
-                    
-                case Carousel.Uncontained:
-                    return largeItemWidth
-                    
                 case Carousel.Hero:
-                    // At edges, keep proper sizes
-                    if (progress <= 0 && index === 0) return largeItemWidth
-                    if (progress >= root.count - 1 && index === root.count - 1) return largeItemWidth
-                    
-                    if (diff >= 0 && diff < 1) {
-                        return lerp(largeItemWidth, root.smallItemWidth, diff)
-                    } else if (diff > -1 && diff < 0) {
-                        return lerp(largeItemWidth, root.smallItemWidth, -diff)
-                    }
-                    return root.smallItemWidth
-                    
                 case Carousel.CenterAlignedHero:
-                    if (progress <= 0 && index === 0) return largeItemWidth
-                    if (progress >= root.count - 1 && index === root.count - 1) return largeItemWidth
-                    
                     if (diff >= 0 && diff < 1) {
-                        return lerp(largeItemWidth, root.smallItemWidth, diff)
-                    } else if (diff > -1 && diff < 0) {
-                        return lerp(largeItemWidth, root.smallItemWidth, -diff)
+                        return lerp(largeWidth, root.smallItemWidth, diff)
+                    } else if (diff >= -1 && diff < 0) {
+                        return lerp(largeWidth, root.smallItemWidth, -diff)
                     }
                     return root.smallItemWidth
                     
                 case Carousel.MultiBrowse:
-                    if (progress <= 0 && index === 0) return largeItemWidth
-                    if (progress >= root.count - 1 && index === root.count - 1) return largeItemWidth
-                    
                     if (diff >= 0 && diff < 1) {
-                        return lerp(largeItemWidth, root.mediumItemWidth, diff)
+                        return lerp(largeWidth, root.mediumItemWidth, diff)
                     } else if (diff >= 1 && diff < 2) {
                         return lerp(root.mediumItemWidth, root.smallItemWidth, diff - 1)
-                    } else if (diff > -1 && diff < 0) {
-                        return lerp(largeItemWidth, root.smallItemWidth, -diff)
+                    } else if (diff >= -1 && diff < 0) {
+                        return lerp(largeWidth, root.mediumItemWidth, -diff)
+                    } else if (diff >= -2 && diff < -1) {
+                        return lerp(root.mediumItemWidth, root.smallItemWidth, -diff - 1)
                     }
                     return root.smallItemWidth
             }
             return root.smallItemWidth
         }
         
-        function getItemX(index) {
-            switch (root.layout) {
-                case Carousel.Uncontained:
-                    return getUncontainedX(index)
-                case Carousel.CenterAlignedHero:
-                    return getCenterAlignedX(index)
-                case Carousel.Hero:
-                case Carousel.MultiBrowse:
-                    return getHeroX(index)
-                case Carousel.FullScreen:
-                    return getFullScreenX(index)
-            }
-            return 0
-        }
-        
-        function getUncontainedX(index) {
-            var x = index * (largeItemWidth + root.itemSpacing)
-            var scrollOffset = progress * (largeItemWidth + root.itemSpacing)
-            
-            // Clamp scroll so last item stays at right edge
-            var totalWidth = root.count * largeItemWidth + (root.count - 1) * root.itemSpacing
-            var maxScrollOffset = Math.max(0, totalWidth - viewWidth)
-            scrollOffset = Math.min(scrollOffset, maxScrollOffset)
-            
-            return x - scrollOffset
-        }
-        
-        function getCenterAlignedX(index) {
-            // Sum widths before this item
+        // Get X position for item
+        function getItemX(index, scrollX) {
             var x = 0
             for (var i = 0; i < index; i++) {
-                x += getItemWidth(i) + root.itemSpacing
+                x += getItemWidth(i, scrollX) + root.itemSpacing
             }
             
-            // Calculate where focal item should be centered
-            var focalWidth = getItemWidth(Math.round(progress))
-            var sideSpace = (viewWidth - focalWidth) / 2
-            
-            // Scroll offset
-            var scrollOffset = 0
-            var floorP = Math.floor(progress)
-            var fracP = progress - floorP
-            
-            for (var j = 0; j < floorP; j++) {
-                scrollOffset += getItemWidth(j) + root.itemSpacing
-            }
-            scrollOffset += fracP * (getItemWidth(floorP) + root.itemSpacing)
-            
-            // Base position
-            var baseX = x - scrollOffset + sideSpace
-            
-            // At first item - align to left edge (no gap on left)
-            if (progress <= 0) {
-                return index * (root.smallItemWidth + root.itemSpacing)
-                       + (index === 0 ? 0 : (largeItemWidth - root.smallItemWidth))
-            }
-            
-            // At last item - no gap on right
-            if (progress >= root.count - 1) {
-                var totalW = 0
-                for (var k = 0; k < root.count; k++) {
-                    totalW += getItemWidth(k) + (k < root.count - 1 ? root.itemSpacing : 0)
+            // Apply centering offset for CenterAlignedHero
+            if (root.layout === Carousel.CenterAlignedHero) {
+                var focalIdx = Math.round(scrollX / scrollUnit)
+                focalIdx = clamp(focalIdx, 0, root.count - 1)
+                var focalWidth = getItemWidth(focalIdx, scrollX)
+                var centerOffset = (viewWidth - focalWidth) / 2
+                
+                // Calculate where focal item currently is
+                var focalX = 0
+                for (var j = 0; j < focalIdx; j++) {
+                    focalX += getItemWidth(j, scrollX) + root.itemSpacing
                 }
-                var rightAlignOffset = viewWidth - totalW
-                var px = rightAlignOffset
-                for (var m = 0; m < index; m++) {
-                    px += getItemWidth(m) + root.itemSpacing
-                }
-                return px
+                
+                // Adjust all positions to center the focal item
+                var adjustment = centerOffset - focalX + scrollX
+                x += adjustment
             }
             
-            return baseX
+            return x - scrollX
         }
         
-        function getHeroX(index) {
-            var x = 0
-            for (var i = 0; i < index; i++) {
-                x += getItemWidth(i) + root.itemSpacing
-            }
-            
-            var scrollOffset = 0
-            var floorP = Math.floor(progress)
-            var fracP = progress - floorP
-            
-            for (var j = 0; j < floorP; j++) {
-                scrollOffset += getItemWidth(j) + root.itemSpacing
-            }
-            scrollOffset += fracP * (getItemWidth(floorP) + root.itemSpacing)
-            
-            // At last item - ensure it fills to right edge
-            if (progress >= root.count - 1) {
-                var totalW = 0
-                for (var k = 0; k < root.count; k++) {
-                    totalW += getItemWidth(k) + (k < root.count - 1 ? root.itemSpacing : 0)
-                }
-                scrollOffset = totalW - viewWidth
-            }
-            
-            // At first item - no scroll
-            if (progress <= 0) {
-                scrollOffset = 0
-            }
-            
-            return x - scrollOffset
+        function lerp(a, b, t) {
+            return a + (b - a) * clamp(t, 0, 1)
         }
         
-        function getFullScreenX(index) {
-            return (index - progress) * root.width
+        function clamp(v, min, max) {
+            return Math.max(min, Math.min(max, v))
         }
         
         function getItemSize(width) {
-            var ratio = width / largeItemWidth
-            if (ratio > 0.65) return "large"
-            if (ratio > 0.3) return "medium"
+            var ratio = width / largeWidth
+            if (ratio > 0.7) return "large"
+            if (ratio > 0.35) return "medium"
             return "small"
         }
-        
-        function getParallax(x, width, containerWidth) {
-            if (root.layout === Carousel.FullScreen || root.layout === Carousel.Uncontained) {
-                return 0
-            }
-            var center = x + width / 2
-            var viewCenter = containerWidth / 2
-            return (center - viewCenter) / containerWidth * 0.4
-        }
     }
-    
-    NumberAnimation {
-        id: progressAnim
-        target: priv
-        property: "progress"
-        duration: 320
-        easing.type: Easing.OutCubic
-    }
-    
+
     Timer {
-        running: root.autoPlay && !root.autoPlayPaused && root.count > 1 && 
-                 !dragHandler.active && !progressAnim.running
+        running: root.autoPlay && !root.autoPlayPaused && root.count > 1 && !dragArea.pressed && !scrollAnim.running
         interval: root.autoPlayInterval
         repeat: true
         onTriggered: root.next()
+    }
+
+    NumberAnimation {
+        id: scrollAnim
+        target: flickable
+        property: "contentX"
+        duration: 350
+        easing.type: Easing.OutCubic
     }
 
     Item {
@@ -311,96 +209,152 @@ Item {
         anchors.bottomMargin: root.verticalPadding
         clip: true
 
-        DragHandler {
-            id: dragHandler
-            target: null
-            xAxis.enabled: true
-            yAxis.enabled: false
+        // Use Flickable for smooth scrolling
+        Flickable {
+            id: flickable
+            anchors.fill: parent
             
-            property real startProgress: 0
+            contentWidth: parent.width * 2 // Will be managed manually
+            contentHeight: height
+            boundsBehavior: Flickable.StopAtBounds
             
-            onActiveChanged: {
-                if (active) {
-                    progressAnim.stop()
-                    startProgress = priv.progress
-                    if (root.autoPlay) root.autoPlayPaused = true
-                } else {
-                    var targetIdx
-                    
-                    if (root.layout === Carousel.Uncontained) {
-                        // For uncontained, snap based on scroll position
-                        targetIdx = Math.round(priv.progress)
-                        if (Math.abs(centroid.velocity.x) > 300) {
-                            if (centroid.velocity.x > 0) targetIdx = Math.floor(priv.progress)
-                            else targetIdx = Math.ceil(priv.progress)
-                        }
-                    } else {
-                        targetIdx = Math.round(priv.progress)
-                        if (Math.abs(centroid.velocity.x) > 300) {
-                            if (centroid.velocity.x > 0) targetIdx = Math.floor(priv.progress)
-                            else targetIdx = Math.ceil(priv.progress)
+            // Disable Flickable's own interaction - we handle it manually
+            interactive: false
+
+            Item {
+                id: itemContainer
+                width: flickable.contentWidth
+                height: flickable.height
+
+                Repeater {
+                    id: repeater
+                    model: root.model
+
+                    delegate: Item {
+                        id: del
+                        
+                        required property int index
+                        required property var modelData
+                        
+                        // Computed based on scroll position
+                        property real scrollX: flickable.contentX
+                        property real itemWidth: spec.getItemWidth(index, scrollX)
+                        property real itemX: spec.getItemX(index, scrollX)
+                        
+                        x: itemX
+                        y: 0
+                        width: itemWidth
+                        height: itemContainer.height
+                        
+                        visible: x + width > -50 && x < container.width + 50
+
+                        CarouselItem {
+                            anchors.fill: parent
+                            
+                            itemIndex: del.index
+                            itemData: del.modelData
+                            radius: root.itemCornerRadius
+                            itemSize: spec.getItemSize(del.itemWidth)
+                            
+                            parallaxOffset: {
+                                if (root.layout === Carousel.FullScreen || root.layout === Carousel.Uncontained) return 0
+                                var center = del.x + del.width / 2
+                                var viewCenter = container.width / 2
+                                return (center - viewCenter) / container.width * 0.4
+                            }
+
+                            onClicked: {
+                                var targetIdx = Math.round(flickable.contentX / spec.scrollUnit)
+                                if (del.index === targetIdx) {
+                                    root.itemClicked(del.index, del.modelData)
+                                } else {
+                                    root.goToIndex(del.index)
+                                }
+                            }
                         }
                     }
-                    
-                    root.goToIndex(targetIdx)
                 }
-            }
-            
-            onTranslationChanged: {
-                if (!active) return
-                var dragScale = priv.largeItemWidth + root.itemSpacing
-                var delta = -translation.x / dragScale
-                var newProgress = startProgress + delta
-                
-                // Clamp progress based on layout
-                priv.progress = priv.clamp(newProgress, 0, priv.maxProgress)
             }
         }
 
-        Repeater {
-            id: repeater
-            model: root.model
+        // Manual drag handling for better control
+        MouseArea {
+            id: dragArea
+            anchors.fill: parent
+            enabled: root.interactive
+            
+            property real startX: 0
+            property real startContentX: 0
+            property real velocity: 0
+            property real lastX: 0
+            property real lastTime: 0
 
-            delegate: CarouselItem {
-                id: itemDelegate
+            onPressed: function(mouse) {
+                scrollAnim.stop()
+                startX = mouse.x
+                startContentX = flickable.contentX
+                lastX = mouse.x
+                lastTime = Date.now()
+                velocity = 0
                 
-                required property int index
-                required property var modelData
+                if (root.autoPlay) root.autoPlayPaused = true
+            }
 
-                property real itemWidth: priv.getItemWidth(index)
-                property real itemX: priv.getItemX(index)
-
-                x: itemX
-                y: 0
-                width: itemWidth
-                height: container.height
+            onPositionChanged: function(mouse) {
+                var now = Date.now()
+                var dt = now - lastTime
+                if (dt > 0) {
+                    velocity = (mouse.x - lastX) / dt * 1000
+                }
+                lastX = mouse.x
+                lastTime = now
                 
-                visible: itemX > -itemWidth - 50 && itemX < container.width + 50
+                var dx = startX - mouse.x
+                var newX = startContentX + dx
+                
+                // Clamp with rubber band effect
+                var maxScroll = spec.getMaxScroll()
+                if (newX < 0) {
+                    newX = newX * 0.3
+                } else if (newX > maxScroll) {
+                    newX = maxScroll + (newX - maxScroll) * 0.3
+                }
+                
+                flickable.contentX = newX
+            }
 
-                itemIndex: index
-                itemData: modelData
-                itemSize: priv.getItemSize(itemWidth)
-                radius: root.itemCornerRadius
-                parallaxOffset: priv.getParallax(itemX, itemWidth, container.width)
-
-                onClicked: {
-                    if (Math.abs(index - priv.progress) < 0.35) {
-                        root.itemClicked(index, modelData)
+            onReleased: {
+                var targetIdx = Math.round(flickable.contentX / spec.scrollUnit)
+                
+                // Velocity-based fling
+                if (Math.abs(velocity) > 300) {
+                    if (velocity > 0) {
+                        targetIdx = Math.floor(flickable.contentX / spec.scrollUnit)
                     } else {
-                        root.goToIndex(index)
+                        targetIdx = Math.ceil(flickable.contentX / spec.scrollUnit)
                     }
                 }
+                
+                // Clamp and snap
+                targetIdx = spec.clamp(targetIdx, 0, root.count - 1)
+                root.goToIndex(targetIdx)
+            }
+
+            onCanceled: {
+                var targetIdx = Math.round(flickable.contentX / spec.scrollUnit)
+                targetIdx = spec.clamp(targetIdx, 0, root.count - 1)
+                root.goToIndex(targetIdx)
             }
         }
     }
 
+    // Indicators
     Row {
-        id: indicators
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 14
         spacing: 8
-        visible: showIndicators && root.count > 1
+        visible: showIndicators && root.count > 1 && root.count <= 10
         
         property bool showIndicators: root.layout === Carousel.Hero || 
                                       root.layout === Carousel.CenterAlignedHero || 
@@ -419,10 +373,10 @@ Item {
                 opacity: index === root.currentIndex ? 1 : 0.38
 
                 Behavior on width { 
-                    NumberAnimation { duration: 220; easing.type: Easing.OutCubic } 
+                    NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
                 }
                 Behavior on opacity { 
-                    NumberAnimation { duration: 180 } 
+                    NumberAnimation { duration: 150 } 
                 }
 
                 MouseArea {
@@ -435,6 +389,7 @@ Item {
         }
     }
 
+    // Auto-play button
     Rectangle {
         anchors.right: parent.right
         anchors.bottom: parent.bottom

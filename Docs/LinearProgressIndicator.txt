@@ -1,0 +1,83 @@
+LINEAR PROGRESS INDICATOR
+=========================
+
+PROPERTIES
+----------
+progress: real = 0.0              // 0.0 to 1.0
+variant: string = "flat"          // flat, wave
+thickness: string = "small"       // small (4dp), medium (8dp)
+size: string = "medium"           // small, medium, large, xlarge
+showStop: bool = true
+indeterminate: bool = false
+enabled: bool = true
+animated: bool = true
+animationDuration: int = 300
+
+FUNCTIONS
+---------
+setProgress(real value, bool animate = true)
+reset()
+complete()
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic progress bar
+LinearProgressIndicator {
+    progress: 0.5
+    size: "medium"
+}
+
+// Wave variant
+LinearProgressIndicator {
+    progress: 0.7
+    variant: "wave"
+    thickness: "medium"
+}
+
+// Indeterminate loading
+LinearProgressIndicator {
+    indeterminate: true
+}
+
+// Different sizes
+LinearProgressIndicator {
+    progress: 0.3
+    size: "small"
+}
+
+LinearProgressIndicator {
+    progress: 0.6
+    size: "xlarge"
+    variant: "wave"
+}
+
+// Without stop indicator
+LinearProgressIndicator {
+    progress: 0.8
+    showStop: false
+}
+
+// Programmatic control
+LinearProgressIndicator {
+    id: progressBar
+}
+
+Button {
+    text: "Start"
+    onClicked: {
+        progressBar.setProgress(0.0, false)
+        progressBar.setProgress(1.0, true)
+    }
+}
+
+Button {
+    text: "Reset"
+    onClicked: progressBar.reset()
+}
+
+Button {
+    text: "Complete"
+    onClicked: progressBar.complete()
+}

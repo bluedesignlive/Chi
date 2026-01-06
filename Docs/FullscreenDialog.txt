@@ -1,0 +1,67 @@
+FULLSCREEN DIALOG
+=================
+
+PROPERTIES
+----------
+Same as Dialog with:
+type: "fullscreen" (pre-set)
+closeOnOverlayClick: false (pre-set)
+showCloseButton: true (default)
+confirmText: "Save" (default)
+showHeaderDivider: true (default)
+
+SIGNALS
+-------
+Same as Dialog
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic fullscreen dialog
+FullscreenDialog {
+    id: editor
+    title: "Edit Profile"
+    confirmText: "Save"
+    
+    content: Component {
+        Column {
+            spacing: 24
+            width: parent.width
+            
+            TextField {
+                label: "Name"
+                width: parent.width
+            }
+            
+            TextField {
+                label: "Bio"
+                width: parent.width
+            }
+        }
+    }
+    
+    onAccepted: saveProfile()
+}
+
+Button {
+    text: "Edit Profile"
+    onClicked: editor.show()
+}
+
+// Fullscreen with custom header
+FullscreenDialog {
+    title: "Compose Email"
+    confirmText: "Send"
+    showHeaderDivider: true
+    
+    content: Component {
+        Column {
+            spacing: 16
+            
+            TextField { label: "To"; width: parent.width }
+            TextField { label: "Subject"; width: parent.width }
+            TextArea { width: parent.width; height: 300 }
+        }
+    }
+}

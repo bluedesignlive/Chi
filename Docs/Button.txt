@@ -1,0 +1,42 @@
+BUTTON
+======
+
+PROPERTIES
+----------
+text: string = "Button"
+variant: string = "filled"        // filled, elevated, tonal, outlined, text
+size: string = "small"            // xsmall, small, medium, large, xlarge
+shape: string = "round"           // round, square
+showIcon: bool = false
+icon: string = ""                 // Material icon code or image path (.svg, .png, qrc:/)
+enabled: bool = true
+loading: bool = false
+
+SIGNALS
+-------
+clicked()
+
+USAGE
+-----
+import SmartUIBeta
+
+Button {
+    text: "Save"
+    variant: "filled"
+    size: "medium"
+    onClicked: console.log("clicked")
+}
+
+Button {
+    text: "Delete"
+    variant: "tonal"
+    showIcon: true
+    icon: "\ue872"
+}
+
+Button {
+    text: "Cancel"
+    variant: "outlined"
+    shape: "square"
+    enabled: false
+}

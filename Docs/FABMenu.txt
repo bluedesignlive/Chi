@@ -1,0 +1,69 @@
+FAB MENU
+========
+
+PROPERTIES
+----------
+variant: string = "primary"       // primary, secondary, tertiary
+open: bool = false
+menuItems: var = []               // Array of {text, icon, enabled?}
+
+CHILD COMPONENTS
+----------------
+FABMenuItem (internal)
+
+SIGNALS
+-------
+itemClicked(int index, string text)
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic FAB menu
+FABMenu {
+    variant: "primary"
+    
+    menuItems: [
+        { text: "Create File", icon: "\ue24d" },
+        { text: "Create Folder", icon: "\ue2cc" },
+        { text: "Upload", icon: "\ue2c6" }
+    ]
+    
+    onItemClicked: (index, text) => {
+        console.log("Clicked:", text)
+    }
+}
+
+// Positioned in corner
+Item {
+    FABMenu {
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.margins: 16
+        
+        menuItems: [
+            { text: "New Note", icon: "\ue873" },
+            { text: "New Task", icon: "\ue145" },
+            { text: "New Event", icon: "\ue878" }
+        ]
+    }
+}
+
+// With disabled items
+FABMenu {
+    menuItems: [
+        { text: "Action 1", icon: "\ue145", enabled: true },
+        { text: "Action 2", icon: "\ue872", enabled: false },
+        { text: "Action 3", icon: "\ue3c9", enabled: true }
+    ]
+}
+
+// Different variants
+FABMenu {
+    variant: "secondary"
+    
+    menuItems: [
+        { text: "Edit", icon: "\ue3c9" },
+        { text: "Share", icon: "\ue80d" }
+    ]
+}

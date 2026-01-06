@@ -1,0 +1,61 @@
+SEGMENTED BUTTON
+================
+
+PROPERTIES
+----------
+size: string = "small"            // xsmall, small, medium, large, xlarge
+shape: string = "round"           // round, square
+selectionMode: string = "single"  // single, multi, required
+enabled: bool = true
+items: var = []                   // Array of strings or {text: "", icon: ""} objects
+selectedIndex: int = -1           // First selected index
+selectedIndices: var = []         // All selected indices
+
+SIGNALS
+-------
+selectionChanged(var indices)
+itemClicked(int index)
+
+USAGE
+-----
+import SmartUIBeta
+
+// Simple text segments
+SegmentedButton {
+    size: "medium"
+    selectionMode: "single"
+    items: ["Day", "Week", "Month", "Year"]
+    selectedIndices: [0]
+    
+    onSelectionChanged: (indices) => {
+        console.log("Selected:", indices)
+    }
+}
+
+// With icons
+SegmentedButton {
+    selectionMode: "multi"
+    items: [
+        {text: "List", icon: "\ue896"},
+        {text: "Grid", icon: "\ue3ec"},
+        {text: "Table", icon: "\ue265"}
+    ]
+    selectedIndices: [0, 1]
+}
+
+// Icon only (no text)
+SegmentedButton {
+    items: [
+        {icon: "\ue236"},
+        {icon: "\ue234"},
+        {icon: "\ue237"}
+    ]
+    selectedIndices: [1]
+}
+
+// Required mode
+SegmentedButton {
+    selectionMode: "required"
+    items: ["Small", "Medium", "Large"]
+    selectedIndices: [1]
+}

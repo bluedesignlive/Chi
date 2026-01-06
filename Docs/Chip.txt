@@ -1,0 +1,68 @@
+CHIP
+====
+
+PROPERTIES
+----------
+text: string = "Chip"
+variant: string = "assist"        // assist, filter, input, suggestion
+size: string = "medium"           // small, medium, large
+leadingIcon: string = ""
+trailingIcon: string = ""
+selected: bool = false
+enabled: bool = true
+elevated: bool = false
+
+SIGNALS
+-------
+clicked()
+trailingIconClicked()
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic chip
+Chip {
+    text: "Category"
+    onClicked: console.log("Chip clicked")
+}
+
+// Filter chip
+Chip {
+    text: "Active"
+    variant: "filter"
+    selected: true
+}
+
+// With icons
+Chip {
+    text: "Location"
+    leadingIcon: "\ue0c8"
+}
+
+// With trailing icon (removable)
+Chip {
+    text: "Tag"
+    trailingIcon: "\ue5cd"
+    
+    onTrailingIconClicked: {
+        removeTag()
+    }
+}
+
+// Elevated
+Chip {
+    text: "Featured"
+    elevated: true
+}
+
+// Different sizes
+Chip {
+    text: "Small"
+    size: "small"
+}
+
+Chip {
+    text: "Large"
+    size: "large"
+}

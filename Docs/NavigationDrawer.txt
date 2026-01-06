@@ -1,0 +1,132 @@
+NAVIGATION DRAWER
+=================
+
+PROPERTIES
+----------
+open: bool = false
+variant: string = "standard"      // standard, modal
+position: string = "left"         // left, right
+drawerWidth: real = 360
+headline: string = ""
+
+CHILD COMPONENTS
+----------------
+NavigationDrawerItem { }
+NavigationDrawerDivider { }
+
+SIGNALS
+-------
+closed()
+
+FUNCTIONS
+---------
+show()
+close()
+toggle()
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic navigation drawer
+NavigationDrawer {
+    id: drawer
+    headline: "Menu"
+    
+    NavigationDrawerItem {
+        text: "Home"
+        icon: "\ue88a"
+        selected: true
+    }
+    
+    NavigationDrawerItem {
+        text: "Settings"
+        icon: "\ue8b8"
+    }
+    
+    NavigationDrawerDivider { }
+    
+    NavigationDrawerItem {
+        text: "Logout"
+        icon: "\ue9ba"
+    }
+}
+
+Button {
+    text: "Menu"
+    onClicked: drawer.toggle()
+}
+
+// Modal drawer
+NavigationDrawer {
+    variant: "modal"
+    position: "left"
+    
+    NavigationDrawerItem {
+        text: "Profile"
+        icon: "\ue7fd"
+        onClicked: {
+            navigateToProfile()
+            close()
+        }
+    }
+}
+
+// Right-side drawer
+NavigationDrawer {
+    position: "right"
+    headline: "Details"
+    
+    // Content...
+}
+
+// With custom header
+NavigationDrawer {
+    id: customDrawer
+    
+    // Header items (goes in header area)
+    Rectangle {
+        width: parent.width
+        height: 100
+        color: "blue"
+        
+        Text {
+            anchors.centerIn: parent
+            text: "Custom Header"
+            color: "white"
+        }
+    }
+    
+    // Navigation items
+    NavigationDrawerItem {
+        text: "Item 1"
+    }
+}
+
+// With badges and trailing text
+NavigationDrawer {
+    NavigationDrawerItem {
+        text: "Messages"
+        icon: "\ue0be"
+        badge: "5"
+    }
+    
+    NavigationDrawerItem {
+        text: "Settings"
+        icon: "\ue8b8"
+        trailingText: "⌘,"
+    }
+}
+
+// With sections
+NavigationDrawer {
+    headline: "Navigation"
+    
+    NavigationDrawerItem { text: "Home"; icon: "\ue88a" }
+    NavigationDrawerItem { text: "Search"; icon: "\ue8b6" }
+    
+    NavigationDrawerDivider { label: "Settings" }
+    
+    NavigationDrawerItem { text: "Profile"; icon: "\ue7fd" }
+    NavigationDrawerItem { text: "Preferences"; icon: "\ue8b8" }
+}

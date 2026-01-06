@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/">
+    <file alias="/testui">/home/lufuno/Desktop/smartui-beta/testui/testui/testui</file>
+
+  </qresource>
+</RCC>

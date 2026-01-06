@@ -22,13 +22,6 @@ Item {
     signal clicked()
     signal pressAndHold()
 
-    // Computed visibility for text animation
-    property real textVisibility: {
-        if (itemSize === "large") return 1.0
-        if (itemSize === "medium") return 0.5
-        return 0.0
-    }
-
     Rectangle {
         id: mask
         anchors.fill: parent
@@ -51,18 +44,16 @@ Item {
         }
 
         Rectangle {
-            id: bg
             anchors.fill: parent
             color: ChiTheme.colors.surfaceContainerLow
         }
 
         Image {
             id: img
-            
-            x: -25 + (root.parallaxOffset * root.width * 0.15)
-            y: -15
-            width: parent.width + 50
-            height: parent.height + 30
+            width: parent.width + 60
+            height: parent.height + 40
+            x: -30 + (root.parallaxOffset * -60)
+            y: -20
             
             source: root.imageSource
             fillMode: Image.PreserveAspectCrop
@@ -70,7 +61,7 @@ Item {
             cache: true
 
             Behavior on x {
-                NumberAnimation { duration: 80; easing.type: Easing.OutQuad }
+                NumberAnimation { duration: 100; easing.type: Easing.OutQuad }
             }
         }
 
@@ -129,124 +120,70 @@ Item {
             anchors.right: parent.right
             anchors.bottom: parent.bottom
             height: parent.height * 0.55
-            visible: root.textVisibility > 0 && (root.title.length > 0 || root.subtitle.length > 0)
-            opacity: root.textVisibility
+            visible: root.itemSize !== "small" && (root.title.length > 0 || root.subtitle.length > 0)
 
             gradient: Gradient {
                 GradientStop { position: 0.0; color: "transparent" }
                 GradientStop { position: 0.45; color: Qt.rgba(0, 0, 0, 0.2) }
                 GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.7) }
             }
-            
-            Behavior on opacity {
-                NumberAnimation { duration: 250; easing.type: Easing.OutQuad }
-            }
         }
 
-        // Text container with path-based animation
-        Item {
-            id: textContainer
+        Column {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
             anchors.margins: 14
-            height: textColumn.height
-            
-            opacity: root.textVisibility
-            visible: opacity > 0.01
-            
-            // Slide up from bottom as it reveals
-            transform: Translate {
-                y: (1 - root.textVisibility) * 20
+            spacing: 3
+
+            opacity: root.itemSize === "small" ? 0 : 1
+            scale: root.itemSize === "small" ? 0.9 : 1
+            transformOrigin: Item.BottomLeft
+            visible: opacity > 0
+
+            Behavior on opacity { 
+                NumberAnimation { duration: 200; easing.type: Easing.OutQuad } 
             }
-            
-            Behavior on opacity {
-                NumberAnimation { 
-                    duration: 280
-                    easing.type: Easing.OutCubic
-                }
+            Behavior on scale { 
+                NumberAnimation { duration: 200; easing.type: Easing.OutQuad } 
             }
 
-            Column {
-                id: textColumn
+            Text {
                 width: parent.width
-                spacing: 3
+                text: root.label.toUpperCase()
+                color: Qt.rgba(1, 1, 1, 0.85)
+                font.pixelSize: 10
+                font.weight: Font.Bold
+                font.letterSpacing: 1.2
+                elide: Text.ElideRight
+                visible: root.itemSize === "large" && root.label.length > 0
+            }
 
-                // Label
-                Text {
-                    id: labelText
-                    width: parent.width
-                    text: root.label.toUpperCase()
-                    color: Qt.rgba(1, 1, 1, 0.85)
-                    font.pixelSize: 10
-                    font.weight: Font.Bold
-                    font.letterSpacing: 1.2
-                    elide: Text.ElideRight
-                    
-                    opacity: root.itemSize === "large" && root.label.length > 0 ? 1 : 0
-                    height: opacity > 0 ? implicitHeight : 0
-                    visible: height > 0
-                    
-                    transform: Translate {
-                        y: (1 - labelText.opacity) * 8
-                    }
-                    
-                    Behavior on opacity {
-                        NumberAnimation { 
-                            duration: 220
-                            easing.type: Easing.OutCubic
-                        }
-                    }
+            Text {
+                width: parent.width
+                text: root.title
+                color: "#FFFFFF"
+                font.pixelSize: root.itemSize === "large" ? 18 : 13
+                font.weight: Font.DemiBold
+                lineHeight: 1.15
+                elide: Text.ElideRight
+                maximumLineCount: root.itemSize === "large" ? 2 : 1
+                wrapMode: Text.Wrap
+                visible: root.title.length > 0
+
+                Behavior on font.pixelSize { 
+                    NumberAnimation { duration: 150 } 
                 }
+            }
 
-                // Title
-                Text {
-                    id: titleText
-                    width: parent.width
-                    text: root.title
-                    color: "#FFFFFF"
-                    font.pixelSize: root.itemSize === "large" ? 18 : 13
-                    font.weight: Font.DemiBold
-                    lineHeight: 1.15
-                    elide: Text.ElideRight
-                    maximumLineCount: root.itemSize === "large" ? 2 : 1
-                    wrapMode: Text.Wrap
-                    visible: root.title.length > 0
-                    
-                    transform: Translate {
-                        y: (1 - root.textVisibility) * 6
-                    }
-
-                    Behavior on font.pixelSize { 
-                        NumberAnimation { duration: 200; easing.type: Easing.OutCubic } 
-                    }
-                }
-
-                // Subtitle
-                Text {
-                    id: subtitleText
-                    width: parent.width
-                    text: root.subtitle
-                    color: Qt.rgba(1, 1, 1, 0.75)
-                    font.pixelSize: 12
-                    elide: Text.ElideRight
-                    maximumLineCount: 1
-                    
-                    opacity: root.itemSize === "large" && root.subtitle.length > 0 ? 1 : 0
-                    height: opacity > 0 ? implicitHeight : 0
-                    visible: height > 0
-                    
-                    transform: Translate {
-                        y: (1 - subtitleText.opacity) * 6
-                    }
-                    
-                    Behavior on opacity {
-                        NumberAnimation { 
-                            duration: 200
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-                }
+            Text {
+                width: parent.width
+                text: root.subtitle
+                color: Qt.rgba(1, 1, 1, 0.75)
+                font.pixelSize: 12
+                elide: Text.ElideRight
+                maximumLineCount: 1
+                visible: root.itemSize === "large" && root.subtitle.length > 0
             }
         }
 
@@ -291,29 +228,29 @@ Item {
         property real pressX: 0
         property real pressY: 0
         property real startX: 0
-        property bool moved: false
+        property bool dragged: false
 
         onPressed: function(mouse) {
             pressX = mouse.x
             pressY = mouse.y
             startX = mouse.x
-            moved = false
+            dragged = false
         }
-
+        
         onPositionChanged: function(mouse) {
-            if (Math.abs(mouse.x - startX) > 15) {
-                moved = true
+            if (Math.abs(mouse.x - startX) > 10) {
+                dragged = true
             }
         }
 
         onReleased: {
-            if (!moved) {
+            if (!dragged) {
                 root.clicked()
             }
         }
-
+        
         onPressAndHold: {
-            if (!moved) {
+            if (!dragged) {
                 root.pressAndHold()
             }
         }

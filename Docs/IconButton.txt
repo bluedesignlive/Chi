@@ -1,0 +1,41 @@
+ICON BUTTON
+===========
+
+PROPERTIES
+----------
+icon: string = ""                 // Material icon code or image path
+variant: string = "filled"        // filled, tonal, outlined, standard
+size: string = "small"            // xsmall, small, medium, large, xlarge
+widthMode: string = "default"     // narrow, default, wide
+shape: string = "round"           // round, square
+enabled: bool = true
+tooltip: string = ""
+iconFont: string = ""             // Custom icon font family (defaults to Material Icons)
+
+SIGNALS
+-------
+clicked()
+
+USAGE
+-----
+import SmartUIBeta
+
+IconButton {
+    icon: "\ue5d2"
+    variant: "filled"
+    size: "medium"
+    onClicked: console.log("send")
+}
+
+IconButton {
+    icon: "qrc:/icons/settings.svg"
+    variant: "standard"
+    tooltip: "Settings"
+}
+
+IconButton {
+    icon: "\ue872"
+    variant: "tonal"
+    widthMode: "wide"
+    shape: "square"
+}

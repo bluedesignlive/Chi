@@ -1,0 +1,59 @@
+FLOATING ACTION BUTTON (FAB)
+=============================
+
+PROPERTIES
+----------
+icon: string = "+"
+variant: string = "primary"       // primary, secondary, tertiary, surface
+enabled: bool = true
+menuOpen: bool = false
+
+SIGNALS
+-------
+clicked()
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic FAB
+FAB {
+    icon: "\ue145"
+    onClicked: createNew()
+}
+
+// Different variants
+FAB {
+    icon: "\ue3c9"
+    variant: "secondary"
+}
+
+FAB {
+    icon: "\ue150"
+    variant: "tertiary"
+}
+
+FAB {
+    icon: "\ue8b8"
+    variant: "surface"
+}
+
+// Positioned in bottom-right
+Item {
+    FAB {
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.margins: 16
+        
+        icon: "\ue145"
+        onClicked: createNew()
+    }
+}
+
+// With menu rotation
+FAB {
+    id: fab
+    icon: "+"
+    menuOpen: menu.open
+    onClicked: menu.toggle()
+}

@@ -1,0 +1,100 @@
+NAVIGATION RAIL
+===============
+
+PROPERTIES
+----------
+variant: string = "rail"          // rail, expanded
+alignment: string = "top"         // top, middle, bottom
+iconFont: string = ""             // Custom icon font
+showMenuButton: bool = true
+menuIcon: string = "menu"
+showFab: bool = true
+fabIcon: string = "+"
+fabText: string = "New"
+selectedIndex: int = 0
+enabled: bool = true
+items: ListModel { }
+
+SIGNALS
+-------
+itemClicked(int index)
+fabClicked()
+menuClicked()
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic rail
+NavigationRail {
+    id: rail
+    variant: "rail"
+    
+    items: ListModel {
+        ListElement { icon: "\ue88a"; label: "Home" }
+        ListElement { icon: "\ue8b6"; label: "Search" }
+        ListElement { icon: "\ue7fd"; label: "Profile" }
+    }
+    
+    onItemClicked: (index) => {
+        console.log("Item:", index)
+    }
+    
+    onFabClicked: {
+        console.log("FAB clicked")
+    }
+    
+    onMenuClicked: {
+        console.log("Menu clicked")
+    }
+}
+
+// Expanded rail
+NavigationRail {
+    variant: "expanded"
+    fabText: "New Item"
+    
+    items: ListModel {
+        ListElement { icon: "\ue88a"; label: "Home" }
+        ListElement { icon: "\ue2c7"; label: "Documents" }
+    }
+}
+
+// Middle alignment
+NavigationRail {
+    alignment: "middle"
+    
+    items: ListModel {
+        ListElement { icon: "\ue88a"; label: "Home" }
+        ListElement { icon: "\ue8b6"; label: "Search" }
+    }
+}
+
+// Without FAB
+NavigationRail {
+    showFab: false
+    
+    items: ListModel {
+        ListElement { icon: "\ue88a"; label: "Home" }
+    }
+}
+
+// With active icons
+NavigationRail {
+    items: ListModel {
+        ListElement {
+            icon: "\ue88a"
+            activeIcon: "\ue88a"  // Filled
+            label: "Home"
+        }
+    }
+}
+
+// With custom icon font
+NavigationRail {
+    iconFont: "Font Awesome"
+    
+    items: ListModel {
+        ListElement { icon: ""; label: "Home" }
+    }
+}

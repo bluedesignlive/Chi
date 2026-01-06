@@ -1,0 +1,121 @@
+LIST ITEM
+=========
+
+PROPERTIES
+----------
+text: string = ""
+secondaryText: string = ""
+tertiaryText: string = ""
+leadingIcon: string = ""
+trailingIcon: string = ""
+trailingText: string = ""
+showAvatar: bool = false
+avatarSource: string = ""
+avatarText: string = ""
+showCheckbox: bool = false
+checked: bool = false
+showSwitch: bool = false
+switchChecked: bool = false
+showRadio: bool = false
+radioChecked: bool = false
+enabled: bool = true
+selected: bool = false
+size: string = "medium"           // small, medium, large
+
+SIGNALS
+-------
+clicked()
+checkboxToggled(bool checked)
+switchToggled(bool checked)
+radioToggled()
+trailingClicked()
+
+USAGE
+-----
+import SmartUIBeta
+
+// Basic list item
+ListItem {
+    text: "Primary text"
+    secondaryText: "Secondary text"
+    onClicked: console.log("Clicked")
+}
+
+// With avatar
+ListItem {
+    text: "John Doe"
+    secondaryText: "john@example.com"
+    showAvatar: true
+    avatarText: "JD"
+}
+
+// With avatar image
+ListItem {
+    text: "Contact Name"
+    showAvatar: true
+    avatarSource: "qrc:/images/avatar.png"
+}
+
+// With checkbox
+ListItem {
+    text: "Todo item"
+    showCheckbox: true
+    checked: false
+    
+    onCheckboxToggled: (checked) => {
+        console.log("Checked:", checked)
+    }
+}
+
+// With switch
+ListItem {
+    text: "Enable notifications"
+    showSwitch: true
+    switchChecked: true
+    
+    onSwitchToggled: (checked) => {
+        console.log("Switch:", checked)
+    }
+}
+
+// With icons
+ListItem {
+    text: "Settings"
+    leadingIcon: "\ue8b8"
+    trailingIcon: "\ue5cc"
+    
+    onTrailingClicked: {
+        navigateToSettings()
+    }
+}
+
+// Three-line item
+ListItem {
+    size: "large"
+    text: "Title"
+    secondaryText: "Subtitle"
+    tertiaryText: "Supporting text"
+}
+
+// With trailing text
+ListItem {
+    text: "Message"
+    trailingText: "2 min ago"
+}
+
+// Radio button
+ListItem {
+    text: "Option 1"
+    showRadio: true
+    radioChecked: false
+    
+    onRadioToggled: {
+        // Handle radio selection
+    }
+}
+
+// Selected state
+ListItem {
+    text: "Selected item"
+    selected: true
+}
