@@ -2,6 +2,7 @@ module SmartUIBeta
 plugin SmartUIBeta
 
 singleton ChiTheme 1.0 theme/ChiTheme.qml
+singleton IconFont 1.0 theme/IconFont.qml
 
 # Buttons
 Button 1.0 ui/Buttons/Button.qml

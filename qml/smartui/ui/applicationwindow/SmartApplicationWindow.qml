@@ -13,7 +13,6 @@ Window {
     color: "transparent"
     flags: Qt.Window | Qt.FramelessWindowHint
 
-    // Strict minimum width - never smaller than mobile phone
     minimumWidth: 320
     minimumHeight: 400
 
@@ -35,7 +34,7 @@ Window {
     property bool autoHideTitle: true
     property int toolbarHeight: 48
     property bool toolbarVisible: true
-    property string toolbarBehavior: "visible"  // visible | autoHide
+    property string toolbarBehavior: "visible"
 
     property list<QtObject> toolbarActions: []
 
@@ -43,8 +42,8 @@ Window {
     // MENU SYSTEM
     // ═══════════════════════════════════════════════════════════════
 
-    property string menuStyle: "auto"  // auto | traditional | collapsed
-    property string collapsedMenuIcon: "menu"  // menu | more_horiz
+    property string menuStyle: "auto"
+    property string collapsedMenuIcon: "menu"
     property var customMenus: []
     property bool showDefaultMenus: true
     property bool showMenuButton: true
@@ -57,7 +56,7 @@ Window {
     property bool sidebarOpen: false
 
     // ═══════════════════════════════════════════════════════════════
-    // WINDOW CONTROLS STYLE - macOS is DEFAULT
+    // WINDOW CONTROLS STYLE
     // ═══════════════════════════════════════════════════════════════
 
     property string controlsStyle: "macOS"
@@ -80,7 +79,7 @@ Window {
     signal breakpointChanged(string breakpoint)
 
     // ═══════════════════════════════════════════════════════════════
-    // CONTEXT - Platform & Breakpoint Detection
+    // CONTEXT
     // ═══════════════════════════════════════════════════════════════
 
     readonly property QtObject context: QtObject {
@@ -122,21 +121,15 @@ Window {
     readonly property real windowRadius: isMaximized ? 0 : 24
     readonly property real windowMargin: isMaximized ? 0 : 12
 
-    // Menu style - stays traditional as long as physically possible
-    // Only collapses when there's truly no space for the menu itself
     readonly property string _effectiveMenuStyle: {
         if (menuStyle === "collapsed") return "collapsed"
         if (menuStyle === "traditional") return "traditional"
-        // Auto mode - stay traditional as long as menu fits
-        // Menu collapses only when window is too narrow for menu + right actions
         let minSpaceForMenu = _estimatedMenuWidth + _estimatedRightWidth + 60
         if (root.width < minSpaceForMenu) return "collapsed"
         return "traditional"
     }
 
-    // Estimate menu width (roughly 60px per menu item)
     readonly property real _estimatedMenuWidth: _allMenus.length * 60
-    // Estimate right section width
     readonly property real _estimatedRightWidth: (toolbarActions.length * 40) + (controlsOnLeft ? 0 : 110)
 
     property bool _toolbarAutoHidden: false
@@ -147,7 +140,7 @@ Window {
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // DEFAULT MENUS - with Auto option in View
+    // DEFAULT MENUS
     // ═══════════════════════════════════════════════════════════════
 
     readonly property var _defaultMenus: [
@@ -267,10 +260,6 @@ Window {
             color: colors.background
         }
 
-        // ═════════════════════════════════════════════════════════
-        // AUTO-HIDE HOVER AREA
-        // ═════════════════════════════════════════════════════════
-
         MouseArea {
             id: toolbarHoverArea
             anchors.top: parent.top
@@ -302,7 +291,6 @@ Window {
                 NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
             }
 
-            // Drag area
             MouseArea {
                 anchors.fill: parent
                 z: -1
@@ -327,7 +315,6 @@ Window {
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 4
 
-                    // Window controls (macOS - left)
                     WindowControls {
                         visible: root.showControls && root.controlsOnLeft && root.context.showWindowControls
                         targetWindow: root
@@ -335,16 +322,15 @@ Window {
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
-                    Item { 
+                    Item {
                         width: 8
                         height: 1
-                        visible: root.controlsOnLeft && root.showControls && root.context.showWindowControls 
+                        visible: root.controlsOnLeft && root.showControls && root.context.showWindowControls
                     }
 
-                    // Menu button (collapsed mode)
                     ToolbarIconButton {
                         visible: root.showMenuButton && root._effectiveMenuStyle === "collapsed"
-                        icon: root.collapsedMenuIcon
+                        iconName: root.collapsedMenuIcon
                         onClicked: overflowMenu.open()
 
                         OverflowMenu {
@@ -355,22 +341,19 @@ Window {
                         }
                     }
 
-                    // Sidebar button
                     ToolbarIconButton {
                         visible: root.showSidebarButton
-                        icon: "view_sidebar"
+                        iconName: "view_sidebar"
                         checked: root.sidebarOpen
                         onClicked: root.sidebarButtonClicked()
                     }
 
-                    // Leading action
                     ToolbarIconButton {
                         visible: root.leadingIcon !== ""
-                        icon: root.leadingIcon
+                        iconName: root.leadingIcon
                         onClicked: root.leadingActionTriggered()
                     }
 
-                    // Traditional menu bar - stays as long as physically possible
                     Row {
                         id: traditionalMenuRow
                         visible: root._effectiveMenuStyle === "traditional"
@@ -407,7 +390,7 @@ Window {
                         model: root.toolbarActions
 
                         ToolbarIconButton {
-                            icon: modelData.icon || ""
+                            iconName: modelData.icon || ""
                             checked: modelData.checked || false
                             enabled: modelData.enabled !== false
 
@@ -418,13 +401,12 @@ Window {
                         }
                     }
 
-                    Item { 
+                    Item {
                         width: 8
                         height: 1
-                        visible: !root.controlsOnLeft && root.showControls && root.context.showWindowControls 
+                        visible: !root.controlsOnLeft && root.showControls && root.context.showWindowControls
                     }
 
-                    // Window controls (Windows - right)
                     WindowControls {
                         visible: root.showControls && !root.controlsOnLeft && root.context.showWindowControls
                         targetWindow: root
@@ -434,13 +416,11 @@ Window {
                 }
             }
 
-            // ═══ CENTER TITLE - Hides when close to menu, menu stays ═══
+            // ═══ CENTER TITLE ═══
             Text {
                 id: titleText
-                // Title hides when it gets close to menu - menu is more important
                 visible: root.showTitle && !_titleTooCloseToMenu
 
-                // True center or left-aligned after left section
                 x: root.centerTitle ? Math.max(leftEdge, (parent.width - implicitWidth) / 2) : leftEdge
                 anchors.verticalCenter: parent.verticalCenter
 
@@ -455,19 +435,12 @@ Window {
                 readonly property real rightEdge: rightSection.x - 16
                 readonly property real availableSpace: Math.max(0, rightEdge - leftEdge)
 
-                // Title hides when too close to menu/left section
                 readonly property bool _titleTooCloseToMenu: {
                     if (!root.autoHideTitle) return false
-                    
-                    // Not enough space
                     if (availableSpace < 80) return true
-                    
-                    // For centered title, check if it would get close to left section
                     if (root.centerTitle) {
                         let centeredX = (toolbar.width - implicitWidth) / 2
-                        // Too close to left section (within 20px)?
                         if (centeredX < leftEdge + 20) return true
-                        // Too close to right section?
                         if (centeredX + implicitWidth > rightEdge - 20) return true
                     }
                     return false
@@ -537,12 +510,12 @@ Window {
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // TOOLBAR ICON BUTTON
+    // TOOLBAR ICON BUTTON - Uses Icon component now!
     // ═══════════════════════════════════════════════════════════════
 
     component ToolbarIconButton: Item {
         id: toolBtn
-        property string icon: ""
+        property string iconName: ""
         property bool checked: false
         property alias enabled: toolBtnMouse.enabled
         signal clicked()
@@ -564,9 +537,10 @@ Window {
             }
         }
 
+        // USE THE ICON COMPONENT - this uses embedded font!
         Icon {
             anchors.centerIn: parent
-            source: toolBtn.icon
+            source: toolBtn.iconName
             size: 20
             color: toolBtn.checked ? colors.onSecondaryContainer : colors.onSurfaceVariant
         }
@@ -581,7 +555,7 @@ Window {
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // MENU BAR BUTTON (Traditional)
+    // MENU BAR BUTTON
     // ═══════════════════════════════════════════════════════════════
 
     component MenuBarButton: Item {

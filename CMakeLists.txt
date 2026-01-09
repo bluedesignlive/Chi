@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 project(smartui-beta VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -24,8 +25,10 @@ message(STATUS "Installing to: ${QT_QML_INSTALL_DIR}/SmartUIBeta")
 add_library(SmartUIBeta SHARED
     smartui.cpp
     smartui.h
+    resources.qrc
 
     qml/smartui/theme/ChiTheme.qml
+    qml/smartui/theme/IconFont.qml
 
     # Buttons
     qml/smartui/ui/Buttons/Button.qml
@@ -190,5 +193,6 @@ install(DIRECTORY qml/smartui/
 )
 
 install(FILES smartui.h
+    resources.qrc
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/SmartUIBeta
 )
