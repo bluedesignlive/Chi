@@ -15,7 +15,7 @@ Item {
     property bool wrap: false
     property string size: "medium"           // "small", "medium", "large"
 
-    signal valueChanged()
+    signal valueModified()
 
     readonly property var sizeSpecs: ({
         small: { height: 32, width: 100, fontSize: 13, buttonSize: 28 },
@@ -119,7 +119,7 @@ Item {
                         var newVal = parseFloat(text)
                         if (!isNaN(newVal)) {
                             value = Math.max(from, Math.min(to, newVal))
-                            valueChanged()
+                            valueModified()
                         }
                         text = Qt.binding(function() { return value.toFixed(decimals) })
                     }
@@ -182,7 +182,7 @@ Item {
         } else {
             value += stepSize
         }
-        valueChanged()
+        valueModified()
     }
 
     function decrease() {
@@ -191,7 +191,7 @@ Item {
         } else {
             value -= stepSize
         }
-        valueChanged()
+        valueModified()
     }
 
     Keys.onUpPressed: if (enabled) increase()
@@ -199,5 +199,5 @@ Item {
 
     Accessible.role: Accessible.SpinBox
     Accessible.name: "Number input"
-    Accessible.value: value.toString()
+    Accessible.description: "Current value: " + value.toString()
 }

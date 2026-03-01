@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls.Basic
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import "../../theme" as Theme
 import "../common"
 
@@ -16,18 +16,17 @@ Popup {
     padding: 8
 
     background: Rectangle {
-        color: colors.surfaceContainerHigh
+        color: root.colors.surfaceContainerHigh
         radius: 12
         border.width: 1
-        border.color: colors.outlineVariant
+        border.color: root.colors.outlineVariant
 
         layer.enabled: true
-        layer.effect: DropShadow {
-            horizontalOffset: 0
-            verticalOffset: 4
-            radius: 12
-            samples: 25
-            color: Qt.rgba(0, 0, 0, 0.12)
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowColor: Qt.rgba(0, 0, 0, 0.12)
+            shadowVerticalOffset: 4
+            shadowBlur: 0.35
         }
     }
 
@@ -41,11 +40,11 @@ Popup {
                 width: parent.width
                 height: modelData.type === "divider" ? 9 : 40
 
-                property string itemId: modelData.id || ""
-                property string itemText: modelData.text || ""
-                property string itemIcon: modelData.icon || ""
+                property string itemId:       modelData.id || ""
+                property string itemText:     modelData.text || ""
+                property string itemIcon:     modelData.icon || ""
                 property string itemShortcut: modelData.shortcut || ""
-                property bool isDivider: modelData.type === "divider"
+                property bool   isDivider:    modelData.type === "divider"
 
                 // Divider
                 Rectangle {
@@ -53,7 +52,7 @@ Popup {
                     anchors.centerIn: parent
                     width: parent.width - 16
                     height: 1
-                    color: colors.outlineVariant
+                    color: root.colors.outlineVariant
                 }
 
                 // Menu item
@@ -62,9 +61,10 @@ Popup {
                     anchors.fill: parent
                     anchors.margins: 2
                     radius: 10
-                    color: dropdownItemMouse.containsMouse ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.08) : "transparent"
+                    color: dropdownItemMouse.containsMouse
+                        ? Qt.rgba(root.colors.onSurface.r, root.colors.onSurface.g, root.colors.onSurface.b, 0.08)
+                        : "transparent"
 
-                    // Left side - icon and text
                     Row {
                         anchors.left: parent.left
                         anchors.leftMargin: 12
@@ -75,7 +75,7 @@ Popup {
                             anchors.verticalCenter: parent.verticalCenter
                             source: itemIcon
                             size: 18
-                            color: colors.onSurfaceVariant
+                            color: root.colors.onSurfaceVariant
                             visible: itemIcon !== ""
                         }
 
@@ -84,11 +84,10 @@ Popup {
                             text: itemText
                             font.family: "Roboto"
                             font.pixelSize: 13
-                            color: colors.onSurface
+                            color: root.colors.onSurface
                         }
                     }
 
-                    // Right side - shortcut (anchored to right)
                     Text {
                         anchors.right: parent.right
                         anchors.rightMargin: 12
@@ -96,7 +95,7 @@ Popup {
                         text: itemShortcut
                         font.family: "Roboto"
                         font.pixelSize: 11
-                        color: colors.onSurfaceVariant
+                        color: root.colors.onSurfaceVariant
                         opacity: 0.6
                         visible: itemShortcut !== ""
                     }

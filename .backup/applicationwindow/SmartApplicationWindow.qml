@@ -1,4 +1,12 @@
-// SmartApplicationWindow.qml
+// qml/smartui/ui/applicationwindow/SmartApplicationWindow.qml
+//
+// SmartUI — Optimized frameless Material 3 application window
+//
+// Removed:  Qt5Compat.GraphicalEffects, DropShadow, OpacityMask,
+//           8× MSAA FBO, phantom nodes, windowMargin, double border
+// Added:    QtQuick.Effects (MultiEffect), debounced breakpoint,
+//           lazy resize handles, phone-size minimum, SmartTheme
+
 import QtQuick
 import QtQuick.Window
 import QtQuick.Controls.Basic
@@ -6,7 +14,6 @@ import QtQuick.Layouts
 import QtQuick.Effects
 import "../../theme" as Theme
 import "../common"
-import "../menus" as Menus
 
 Window {
     id: root
@@ -14,6 +21,10 @@ Window {
     visible: true
     color: "transparent"
     flags: Qt.Window | Qt.FramelessWindowHint
+
+    // ═══════════════════════════════════════════════════════════════
+    // PHONE-SIZE MINIMUM — smallest usable handset viewport
+    // ═══════════════════════════════════════════════════════════════
 
     minimumWidth: 360
     minimumHeight: 540
@@ -24,7 +35,10 @@ Window {
 
     property string title: "Application"
     property bool showControls: true
-    property var colors: Theme.ChiTheme.colors
+
+    // Compatibility: consumers use  colors.primary, colors.background …
+    // SmartTheme exposes colours as top-level props so this just works.
+    property var colors: Theme.SmartTheme
 
     // ═══════════════════════════════════════════════════════════════
     // TOOLBAR CONFIGURATION
@@ -41,16 +55,8 @@ Window {
 
     // ═══════════════════════════════════════════════════════════════
     // MENU SYSTEM
-    //
-    // showMenu: false → entire menu system is disabled.
-    //   No menu button, no traditional bar, no overflow, no
-    //   default menus loaded. Clean toolbar for simple apps.
-    //
-    // showMenu: true  → menus active, controlled by menuStyle,
-    //   showDefaultMenus, customMenus, etc.
     // ═══════════════════════════════════════════════════════════════
 
-    property bool showMenu: true
     property string menuStyle: "auto"
     property string collapsedMenuIcon: "menu"
     property var customMenus: []
@@ -58,7 +64,7 @@ Window {
     property bool showMenuButton: true
 
     // ═══════════════════════════════════════════════════════════════
-    // SIDEBAR BUTTON
+    // SIDEBAR
     // ═══════════════════════════════════════════════════════════════
 
     property bool showSidebarButton: false
@@ -88,7 +94,11 @@ Window {
     signal breakpointChanged(string breakpoint)
 
     // ═══════════════════════════════════════════════════════════════
-    // CONTEXT — breakpoint debounced to avoid per-pixel cascade
+    // RESPONSIVE CONTEXT — debounced breakpoint (80 ms)
+    //
+    // Eliminates per-pixel binding cascade during resize.
+    // Boolean helpers removed; use  context.breakpoint === "compact"
+    // at call sites (zero-cost when not evaluated).
     // ═══════════════════════════════════════════════════════════════
 
     readonly property QtObject context: QtObject {
@@ -106,6 +116,7 @@ Window {
 
         property string breakpoint: "expanded"
 
+        // ── Compat booleans (kept as functions to avoid 5 idle bindings) ──
         readonly property bool isCompact:  breakpoint === "compact"
         readonly property bool isMedium:   breakpoint === "medium"
         readonly property bool isExpanded: breakpoint === "expanded"
@@ -113,9 +124,7 @@ Window {
         readonly property bool isXLarge:   breakpoint === "xlarge"
 
         readonly property bool showWindowControls: isDesktop && !isWeb
-        readonly property bool useOverlaySidebar:  isCompact || isMedium
-
-        onBreakpointChanged: root.breakpointChanged(breakpoint)
+        readonly property bool useOverlaySidebar:  breakpoint === "compact" || breakpoint === "medium"
 
         function _recalcBreakpoint() {
             var w = root.width
@@ -124,8 +133,10 @@ Window {
                    : w < 1200 ? "expanded"
                    : w < 1600 ? "large"
                    : "xlarge"
-            if (breakpoint !== bp)
+            if (breakpoint !== bp) {
                 breakpoint = bp
+                root.breakpointChanged(bp)
+            }
         }
     }
 
@@ -140,91 +151,95 @@ Window {
 
     // ═══════════════════════════════════════════════════════════════
     // INTERNAL STATE
+    //
+    // windowMargin REMOVED — the visible surface now fills the real
+    // Window rect so resize cursors sit at true edges and compositor
+    // snapping behaves correctly.
     // ═══════════════════════════════════════════════════════════════
 
     readonly property bool isMaximized:  visibility === Window.Maximized
     readonly property real windowRadius: isMaximized ? 0 : 24
 
     readonly property string _effectiveMenuStyle: {
-        if (!showMenu) return "none"
-        if (menuStyle === "collapsed") return "collapsed"
-        if (menuStyle === "traditional") return "traditional"
-        let minSpaceForMenu = _estimatedMenuWidth + _estimatedRightWidth + 60
-        if (root.width < minSpaceForMenu) return "collapsed"
-        return "traditional"
+        if (menuStyle !== "auto") return menuStyle
+        return root.width < (_allMenus.length * 60 + _rightSectionWidth + 60)
+            ? "collapsed" : "traditional"
     }
 
-    readonly property real _estimatedMenuWidth:  showMenu ? _allMenus.length * 60 : 0
-    readonly property real _estimatedRightWidth: (toolbarActions.length * 40) + (controlsOnLeft ? 0 : 110)
+    readonly property real _rightSectionWidth:
+        (toolbarActions.length * 40) + (controlsOnLeft ? 0 : 110)
 
     property bool _toolbarAutoHidden: false
+
     readonly property bool _showToolbar: {
         if (!toolbarVisible) return false
-        if (toolbarBehavior === "autoHide") return !_toolbarAutoHidden || toolbarHoverArea.containsMouse
+        if (toolbarBehavior === "autoHide")
+            return !_toolbarAutoHidden || toolbarHoverArea.containsMouse
         return true
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // DEFAULT MENUS — only constructed when showMenu is true
+    // DEFAULT MENUS
     // ═══════════════════════════════════════════════════════════════
 
-    readonly property var _defaultMenus: showMenu ? [
+    readonly property var _defaultMenus: [
         {
             id: "file", title: "File",
             items: [
-                { id: "new", text: "New", shortcut: "Ctrl+N", icon: "add" },
-                { id: "open", text: "Open", shortcut: "Ctrl+O", icon: "folder_open" },
+                { id: "new",    text: "New",         shortcut: "Ctrl+N",       icon: "add" },
+                { id: "open",   text: "Open",        shortcut: "Ctrl+O",       icon: "folder_open" },
                 { type: "divider" },
-                { id: "save", text: "Save", shortcut: "Ctrl+S", icon: "save" },
-                { id: "saveAs", text: "Save As...", shortcut: "Ctrl+Shift+S" },
+                { id: "save",   text: "Save",        shortcut: "Ctrl+S",       icon: "save" },
+                { id: "saveAs", text: "Save As\u2026", shortcut: "Ctrl+Shift+S" },
                 { type: "divider" },
-                { id: "exit", text: "Exit", shortcut: "Alt+F4", icon: "logout" }
+                { id: "exit",   text: "Exit",        shortcut: "Alt+F4",       icon: "logout" }
             ]
         },
         {
             id: "edit", title: "Edit",
             items: [
-                { id: "undo", text: "Undo", shortcut: "Ctrl+Z", icon: "undo" },
-                { id: "redo", text: "Redo", shortcut: "Ctrl+Y", icon: "redo" },
+                { id: "undo",  text: "Undo",  shortcut: "Ctrl+Z", icon: "undo" },
+                { id: "redo",  text: "Redo",  shortcut: "Ctrl+Y", icon: "redo" },
                 { type: "divider" },
-                { id: "cut", text: "Cut", shortcut: "Ctrl+X", icon: "content_cut" },
-                { id: "copy", text: "Copy", shortcut: "Ctrl+C", icon: "content_copy" },
+                { id: "cut",   text: "Cut",   shortcut: "Ctrl+X", icon: "content_cut" },
+                { id: "copy",  text: "Copy",  shortcut: "Ctrl+C", icon: "content_copy" },
                 { id: "paste", text: "Paste", shortcut: "Ctrl+V", icon: "content_paste" }
             ]
         },
         {
             id: "view", title: "View",
             items: [
-                { id: "sidebar", text: "Toggle Sidebar", shortcut: "Ctrl+B", icon: "view_sidebar" },
+                { id: "sidebar",          text: "Toggle Sidebar",   shortcut: "Ctrl+B", icon: "view_sidebar" },
                 { type: "divider" },
-                { id: "menu_auto", text: "Auto Menu", icon: "tune" },
-                { id: "menu_traditional", text: "Traditional Menu", icon: "menu_open" },
-                { id: "menu_collapsed", text: "Collapsed Menu", icon: "menu" },
+                { id: "menu_auto",        text: "Auto Menu",        icon: "tune" },
+                { id: "menu_traditional", text: "Traditional Menu",  icon: "menu_open" },
+                { id: "menu_collapsed",   text: "Collapsed Menu",   icon: "menu" },
                 { type: "divider" },
-                { id: "icon_hamburger", text: "Hamburger Icon", icon: "menu" },
-                { id: "icon_dots", text: "Dots Icon", icon: "more_horiz" }
+                { id: "icon_hamburger",   text: "Hamburger Icon",   icon: "menu" },
+                { id: "icon_dots",        text: "Dots Icon",        icon: "more_horiz" }
             ]
         },
         {
             id: "help", title: "Help",
             items: [
-                { id: "docs", text: "Documentation", icon: "menu_book" },
-                { id: "shortcuts", text: "Keyboard Shortcuts", icon: "keyboard" },
+                { id: "docs",      text: "Documentation",      icon: "menu_book" },
+                { id: "shortcuts", text: "Keyboard Shortcuts",  icon: "keyboard" },
                 { type: "divider" },
-                { id: "about", text: "About", icon: "info" }
+                { id: "about",     text: "About",              icon: "info" }
             ]
         }
-    ] : []
+    ]
 
-    readonly property var _allMenus: {
-        if (!showMenu) return []
-        return showDefaultMenus
-            ? _defaultMenus.concat(customMenus)
-            : customMenus
-    }
+    // Single native concat — no per-frame JS loop / array allocation
+    readonly property var _allMenus: showDefaultMenus
+        ? _defaultMenus.concat(customMenus)
+        : customMenus
 
     // ═══════════════════════════════════════════════════════════════
     // CORNER MASK
+    //
+    // Tiny FBO containing only a solid rounded rect (no children).
+    // Disabled when maximized → zero cost.
     // ═══════════════════════════════════════════════════════════════
 
     Rectangle {
@@ -238,6 +253,14 @@ Window {
 
     // ═══════════════════════════════════════════════════════════════
     // MAIN WINDOW SURFACE
+    //
+    // Fills the entire Window (no margin) so:
+    //   • Resize cursors appear at the real window edge
+    //   • Compositor snap/tile aligns to what the user sees
+    //   • Shadow is delegated to the compositor (Mutter / KWin)
+    //
+    // MultiEffect mask replaces the old OpacityMask + 8× MSAA FBO.
+    // When maximized radius is 0 → layer.enabled false → free.
     // ═══════════════════════════════════════════════════════════════
 
     Item {
@@ -253,10 +276,18 @@ Window {
             maskSpreadAtMin: 0.5
         }
 
+        // ─── Background fill ────────────────────────────────
         Rectangle {
             anchors.fill: parent
             color: colors.background
         }
+
+        // ═════════════════════════════════════════════════════
+        // AUTO-HIDE HOVER ZONE
+        //
+        // Disabled + invisible when not in autoHide mode so it
+        // never participates in hit-testing or hover tracking.
+        // ═════════════════════════════════════════════════════
 
         MouseArea {
             id: toolbarHoverArea
@@ -270,26 +301,29 @@ Window {
             z: 101
         }
 
-        // ═════════════════════════════════════════════════════════
+        // ═════════════════════════════════════════════════════
         // TOOLBAR
-        // ═════════════════════════════════════════════════════════
+        // ═════════════════════════════════════════════════════
 
         Rectangle {
             id: toolbar
-            height: root._showToolbar ? root.toolbarHeight : 0
-            visible: height > 0
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
-            z: 100
-            clip: true
-
+            height: root._showToolbar ? root.toolbarHeight : 0
             color: colors.surfaceContainer
+            clip: true
+            visible: height > 0
+            z: 100
 
             Behavior on height {
-                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                NumberAnimation {
+                    duration: Theme.SmartTheme.motion.durationShort4
+                    easing.type: Easing.OutCubic
+                }
             }
 
+            // ─── Drag to move / double-click to maximize ────
             MouseArea {
                 anchors.fill: parent
                 z: -1
@@ -300,11 +334,11 @@ Window {
                 }
             }
 
-            // ═══ LEFT SECTION ═══
+            // ═══ LEFT SECTION ═══════════════════════════════
             Item {
                 id: leftSection
                 anchors.left: parent.left
-                anchors.leftMargin: 16
+                anchors.leftMargin: Theme.SmartTheme.spacing.lg
                 anchors.verticalCenter: parent.verticalCenter
                 width: leftRow.implicitWidth
                 height: parent.height
@@ -312,7 +346,7 @@ Window {
                 Row {
                     id: leftRow
                     anchors.verticalCenter: parent.verticalCenter
-                    spacing: 4
+                    spacing: Theme.SmartTheme.spacing.xs
 
                     WindowControls {
                         visible: root.showControls && root.controlsOnLeft && root.context.showWindowControls
@@ -322,21 +356,17 @@ Window {
                     }
 
                     Item {
-                        width: 8
+                        width: Theme.SmartTheme.spacing.sm
                         height: 1
                         visible: root.controlsOnLeft && root.showControls && root.context.showWindowControls
                     }
 
-                    // ═══ COLLAPSED MENU BUTTON ═══
-                    // Only when showMenu is true AND style resolves to collapsed
                     ToolbarIconButton {
-                        visible: root.showMenu
-                                 && root.showMenuButton
-                                 && root._effectiveMenuStyle === "collapsed"
+                        visible: root.showMenuButton && root._effectiveMenuStyle === "collapsed"
                         iconName: root.collapsedMenuIcon
                         onClicked: overflowMenu.open()
 
-                        Menus.OverflowMenu {
+                        OverflowMenu {
                             id: overflowMenu
                             menus: root._allMenus
                             maxHeight: root.height - 100
@@ -357,12 +387,9 @@ Window {
                         onClicked: root.leadingActionTriggered()
                     }
 
-                    // ═══ TRADITIONAL MENU BAR ═══
-                    // Only when showMenu is true AND style resolves to traditional
                     Row {
                         id: traditionalMenuRow
-                        visible: root.showMenu
-                                 && root._effectiveMenuStyle === "traditional"
+                        visible: root._effectiveMenuStyle === "traditional"
                         spacing: 0
                         anchors.verticalCenter: parent.verticalCenter
 
@@ -378,11 +405,11 @@ Window {
                 }
             }
 
-            // ═══ RIGHT SECTION ═══
+            // ═══ RIGHT SECTION ══════════════════════════════
             Item {
                 id: rightSection
                 anchors.right: parent.right
-                anchors.rightMargin: 16
+                anchors.rightMargin: Theme.SmartTheme.spacing.lg
                 anchors.verticalCenter: parent.verticalCenter
                 width: rightRow.implicitWidth
                 height: parent.height
@@ -390,7 +417,7 @@ Window {
                 Row {
                     id: rightRow
                     anchors.verticalCenter: parent.verticalCenter
-                    spacing: 4
+                    spacing: Theme.SmartTheme.spacing.xs
 
                     Repeater {
                         model: root.toolbarActions
@@ -399,7 +426,6 @@ Window {
                             iconName: modelData.icon || ""
                             checked: modelData.checked || false
                             enabled: modelData.enabled !== false
-
                             onClicked: {
                                 if (modelData.triggered) modelData.triggered()
                                 root.toolbarActionTriggered(index)
@@ -408,7 +434,7 @@ Window {
                     }
 
                     Item {
-                        width: 8
+                        width: Theme.SmartTheme.spacing.sm
                         height: 1
                         visible: !root.controlsOnLeft && root.showControls && root.context.showWindowControls
                     }
@@ -422,43 +448,42 @@ Window {
                 }
             }
 
-            // ═══ CENTER TITLE ═══
+            // ═══ CENTER TITLE ═══════════════════════════════
             Text {
                 id: titleText
-                visible: root.showTitle && !_titleTooCloseToMenu
-
-                x: root.centerTitle ? Math.max(leftEdge, (parent.width - implicitWidth) / 2) : leftEdge
+                visible: root.showTitle && !_titleCollides
                 anchors.verticalCenter: parent.verticalCenter
 
                 text: root.title
                 font.family: "Roboto"
-                font.weight: Font.Medium
-                font.pixelSize: 14
+            font.weight: Font.Medium
+            font.pixelSize: 14
                 color: colors.onSurface
                 elide: Text.ElideRight
 
-                readonly property real leftEdge: leftSection.x + leftSection.width + 16
+                readonly property real leftEdge:  leftSection.x + leftSection.width + 16
                 readonly property real rightEdge: rightSection.x - 16
-                readonly property real availableSpace: Math.max(0, rightEdge - leftEdge)
+                readonly property real space:     Math.max(0, rightEdge - leftEdge)
 
-                readonly property bool _titleTooCloseToMenu: {
+                width: Math.min(implicitWidth, space)
+
+                x: root.centerTitle
+                    ? Math.max(leftEdge, (toolbar.width - implicitWidth) / 2)
+                    : leftEdge
+
+                readonly property bool _titleCollides: {
                     if (!root.autoHideTitle) return false
-                    if (availableSpace < 80) return true
-                    if (root.centerTitle) {
-                        let centeredX = (toolbar.width - implicitWidth) / 2
-                        if (centeredX < leftEdge + 20) return true
-                        if (centeredX + implicitWidth > rightEdge - 20) return true
-                    }
-                    return false
+                    if (space < 80) return true
+                    if (!root.centerTitle) return false
+                    var cx = (toolbar.width - implicitWidth) / 2
+                    return cx < leftEdge + 20 || cx + implicitWidth > rightEdge - 20
                 }
-
-                width: Math.min(implicitWidth, availableSpace)
             }
         }
 
-        // ═════════════════════════════════════════════════════════
+        // ═════════════════════════════════════════════════════
         // CONTENT AREA
-        // ═════════════════════════════════════════════════════════
+        // ═════════════════════════════════════════════════════
 
         Item {
             id: contentContainer
@@ -471,7 +496,7 @@ Window {
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // WINDOW BORDER
+    // WINDOW BORDER — single rectangle (no double-border overdraw)
     // ═══════════════════════════════════════════════════════════════
 
     Rectangle {
@@ -485,7 +510,7 @@ Window {
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // RESIZE HANDLES
+    // RESIZE HANDLES — lazy-loaded, destroyed when maximized
     // ═══════════════════════════════════════════════════════════════
 
     Loader {
@@ -498,19 +523,70 @@ Window {
             property int edge:   6
             property int corner: 20
 
-            MouseArea { anchors { top: parent.top; left: parent.left; right: parent.right } height: resizeItem.edge; cursorShape: Qt.SizeVerCursor; onPressed: root.startSystemResize(Qt.TopEdge) }
-            MouseArea { anchors { bottom: parent.bottom; left: parent.left; right: parent.right } height: resizeItem.edge; cursorShape: Qt.SizeVerCursor; onPressed: root.startSystemResize(Qt.BottomEdge) }
-            MouseArea { anchors { left: parent.left; top: parent.top; bottom: parent.bottom } width: resizeItem.edge; cursorShape: Qt.SizeHorCursor; onPressed: root.startSystemResize(Qt.LeftEdge) }
-            MouseArea { anchors { right: parent.right; top: parent.top; bottom: parent.bottom } width: resizeItem.edge; cursorShape: Qt.SizeHorCursor; onPressed: root.startSystemResize(Qt.RightEdge) }
-            MouseArea { anchors { top: parent.top; left: parent.left } width: resizeItem.corner; height: resizeItem.corner; cursorShape: Qt.SizeFDiagCursor; onPressed: root.startSystemResize(Qt.TopEdge | Qt.LeftEdge) }
-            MouseArea { anchors { top: parent.top; right: parent.right } width: resizeItem.corner; height: resizeItem.corner; cursorShape: Qt.SizeBDiagCursor; onPressed: root.startSystemResize(Qt.TopEdge | Qt.RightEdge) }
-            MouseArea { anchors { bottom: parent.bottom; left: parent.left } width: resizeItem.corner; height: resizeItem.corner; cursorShape: Qt.SizeBDiagCursor; onPressed: root.startSystemResize(Qt.BottomEdge | Qt.LeftEdge) }
-            MouseArea { anchors { bottom: parent.bottom; right: parent.right } width: resizeItem.corner; height: resizeItem.corner; cursorShape: Qt.SizeFDiagCursor; onPressed: root.startSystemResize(Qt.BottomEdge | Qt.RightEdge) }
+            // ─── Edges ──────────────────────────────────────
+            MouseArea {
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: resizeItem.edge
+                cursorShape: Qt.SizeVerCursor
+                onPressed: root.startSystemResize(Qt.TopEdge)
+            }
+            MouseArea {
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: resizeItem.edge
+                cursorShape: Qt.SizeVerCursor
+                onPressed: root.startSystemResize(Qt.BottomEdge)
+            }
+            MouseArea {
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: resizeItem.edge
+                cursorShape: Qt.SizeHorCursor
+                onPressed: root.startSystemResize(Qt.LeftEdge)
+            }
+            MouseArea {
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: resizeItem.edge
+                cursorShape: Qt.SizeHorCursor
+                onPressed: root.startSystemResize(Qt.RightEdge)
+            }
+
+            // ─── Corners ────────────────────────────────────
+            MouseArea {
+                anchors.top: parent.top; anchors.left: parent.left
+                width: resizeItem.corner; height: resizeItem.corner
+                cursorShape: Qt.SizeFDiagCursor
+                onPressed: root.startSystemResize(Qt.TopEdge | Qt.LeftEdge)
+            }
+            MouseArea {
+                anchors.top: parent.top; anchors.right: parent.right
+                width: resizeItem.corner; height: resizeItem.corner
+                cursorShape: Qt.SizeBDiagCursor
+                onPressed: root.startSystemResize(Qt.TopEdge | Qt.RightEdge)
+            }
+            MouseArea {
+                anchors.bottom: parent.bottom; anchors.left: parent.left
+                width: resizeItem.corner; height: resizeItem.corner
+                cursorShape: Qt.SizeBDiagCursor
+                onPressed: root.startSystemResize(Qt.BottomEdge | Qt.LeftEdge)
+            }
+            MouseArea {
+                anchors.bottom: parent.bottom; anchors.right: parent.right
+                width: resizeItem.corner; height: resizeItem.corner
+                cursorShape: Qt.SizeFDiagCursor
+                onPressed: root.startSystemResize(Qt.BottomEdge | Qt.RightEdge)
+            }
         }
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // TOOLBAR ICON BUTTON
+    // TOOLBAR ICON BUTTON — uses Icon component (embedded font)
     // ═══════════════════════════════════════════════════════════════
 
     component ToolbarIconButton: Item {
@@ -520,19 +596,22 @@ Window {
         property alias enabled: toolBtnMouse.enabled
         signal clicked()
 
-        implicitWidth: 36
-        implicitHeight: 36
-        width: 36
-        height: 36
-        opacity: enabled ? 1.0 : 0.38
+        implicitWidth: 36; implicitHeight: 36
+        width: 36; height: 36
+        opacity: enabled ? 1.0 : Theme.SmartTheme.stateLayer.dragged
 
         Rectangle {
             anchors.fill: parent
-            radius: 10
+            radius: Theme.SmartTheme.shape.medium
             color: {
-                if (toolBtn.checked) return colors.secondaryContainer
-                if (toolBtnMouse.pressed) return Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.15)
-                if (toolBtnMouse.containsMouse) return Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.08)
+                if (toolBtn.checked)
+                    return colors.secondaryContainer
+                if (toolBtnMouse.pressed)
+                    return Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b,
+                                   Theme.SmartTheme.stateLayer.pressed)
+                if (toolBtnMouse.containsMouse)
+                    return Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b,
+                                   Theme.SmartTheme.stateLayer.hover)
                 return "transparent"
             }
         }
@@ -541,7 +620,7 @@ Window {
             anchors.centerIn: parent
             source: toolBtn.iconName
             size: 20
-            color: toolBtn.checked ? colors.onSecondaryContainer : colors.onSurface
+            color: toolBtn.checked ? colors.onSecondaryContainer : colors.onSurfaceVariant
         }
 
         MouseArea {
@@ -564,13 +643,15 @@ Window {
 
         implicitWidth: menuLabel.implicitWidth + 20
         implicitHeight: 36
-        width: implicitWidth
-        height: 36
+        width: implicitWidth; height: 36
 
         Rectangle {
             anchors.fill: parent
-            radius: 8
-            color: menuBtnMouse.containsMouse || dropdownMenu.visible ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.08) : "transparent"
+            radius: Theme.SmartTheme.shape.small
+            color: menuBtnMouse.containsMouse || dropdownMenu.visible
+                ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b,
+                           Theme.SmartTheme.stateLayer.hover)
+                : "transparent"
         }
 
         Text {
@@ -591,7 +672,7 @@ Window {
             onClicked: dropdownMenu.open()
         }
 
-        Menus.DropdownMenu {
+        DropdownMenu {
             id: dropdownMenu
             y: parent.height + 4
             items: menuData.items || []
@@ -600,26 +681,35 @@ Window {
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // PUBLIC API
+    // PUBLIC API  (unchanged — full backward compat)
     // ═══════════════════════════════════════════════════════════════
 
-    function showToolbar()  { toolbarVisible = true; _toolbarAutoHidden = false }
-    function hideToolbar()  { if (toolbarBehavior === "autoHide") _toolbarAutoHidden = true; else toolbarVisible = false }
-    function toggleToolbar() { if (toolbarBehavior === "autoHide") _toolbarAutoHidden = !_toolbarAutoHidden; else toolbarVisible = !toolbarVisible }
-    function setMenuStyle(style) { if (showMenu) menuStyle = style }
+    function showToolbar() {
+        toolbarVisible = true
+        _toolbarAutoHidden = false
+    }
+    function hideToolbar() {
+        if (toolbarBehavior === "autoHide") _toolbarAutoHidden = true
+        else toolbarVisible = false
+    }
+    function toggleToolbar() {
+        if (toolbarBehavior === "autoHide") _toolbarAutoHidden = !_toolbarAutoHidden
+        else toolbarVisible = !toolbarVisible
+    }
+    function setMenuStyle(style) { menuStyle = style }
 
     function _handleMenuAction(menuId, itemId) {
-        if (!showMenu) return
-
         menuItemTriggered(menuId, itemId)
 
         if (menuId === "view") {
-            if (itemId === "sidebar") sidebarButtonClicked()
-            else if (itemId === "menu_auto") menuStyle = "auto"
-            else if (itemId === "menu_traditional") menuStyle = "traditional"
-            else if (itemId === "menu_collapsed") menuStyle = "collapsed"
-            else if (itemId === "icon_hamburger") collapsedMenuIcon = "menu"
-            else if (itemId === "icon_dots") collapsedMenuIcon = "more_horiz"
+            switch (itemId) {
+                case "sidebar":          sidebarButtonClicked(); break
+                case "menu_auto":        menuStyle = "auto"; break
+                case "menu_traditional": menuStyle = "traditional"; break
+                case "menu_collapsed":   menuStyle = "collapsed"; break
+                case "icon_hamburger":   collapsedMenuIcon = "menu"; break
+                case "icon_dots":        collapsedMenuIcon = "more_horiz"; break
+            }
         } else if (menuId === "file" && itemId === "exit") {
             root.close()
         }

@@ -1,0 +1,5114 @@
+
+
+
+New Chat
+Leaderboard
+Search
+Today
+I am building a modern smartui library, which i am build with 10 design principles in mind inspired
+More
+Terms of Use
+Privacy Policy
+Cookies
+
+Direct
+
+
+claude-opus-4-6-search
+
+Login
+claude-opus-4-6-search
+No Sources
+Looking at the working ButtonsPage pattern, I can see the issue — the FeedbackPage has conflicting anchors on Snackbar and Cards with content: layouts that don't match how your Card component works. Let me fix the layout to follow the exact same pattern as your working ButtonsPage:
+
+Bash
+
+cat > /home/lufuno/Documents/smartuidemo/qml/pages/FeedbackPage.qml << 'QMLEOF'
+import QtQuick
+import QtQuick.Layouts
+import SmartUIBeta
+
+Flickable {
+    id: root
+    contentHeight: mainCol.implicitHeight + 60
+    contentWidth: parent ? parent.width : 800
+    clip: true
+    boundsBehavior: Flickable.StopAtBounds
+
+    property var colors: ChiTheme.colors
+
+    ColumnLayout {
+        id: mainCol
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.margins: 32
+        spacing: 32
+
+        // ─── HEADER ─────────────────────────────────────────
+        ColumnLayout {
+            spacing: 8
+            Text {
+                text: "Feedback & Status"
+                font.family: "Roboto"
+                font.pixelSize: 34
+                color: colors.onSurface
+            }
+            Text {
+                text: "Progress indicators, badges, and notifications."
+                font.family: "Roboto"
+                font.pixelSize: 16
+                color: colors.onSurfaceVariant
+            }
+        }
+
+        // ═════════════════════════════════════════════════════
+        // 1. FILE DOWNLOAD — Linear determinate
+        // ═════════════════════════════════════════════════════
+
+        ColumnLayout {
+            spacing: 16
+            Layout.fillWidth: true
+
+            Text {
+                text: "Linear Progress — Determinate"
+                font.pixelSize: 20; font.weight: Font.Medium
+                color: colors.primary
+            }
+
+            // Download card
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.maximumWidth: 520
+                implicitHeight: downloadCol.implicitHeight + 32
+                radius: 12
+                color: "transparent"
+                border.color: colors.outlineVariant
+                border.width: 1
+
+                ColumnLayout {
+                    id: downloadCol
+                    anchors.fill: parent
+                    anchors.margins: 16
+                    spacing: 12
+
+                    RowLayout {
+                        spacing: 12
+                        Text {
+                            text: "󰇚"
+                            font.family: "Symbols Nerd Font"
+                            font.pixelSize: 20; color: colors.primary
+                        }
+                        ColumnLayout {
+                            spacing: 2
+                            Layout.fillWidth: true
+                            Text {
+                                text: downloadSim.running
+                                      ? "Downloading system update…"
+                                      : (downloadProgress.progress >= 1.0
+                                         ? "Download complete"
+                                         : "System update ready")
+                                font.pixelSize: 14; font.weight: Font.Medium
+                                color: colors.onSurface
+                            }
+                            Text {
+                                text: downloadSim.running
+                                      ? "%1% · %2 MB / 842 MB".arg(
+                                            Math.round(downloadProgress.progress * 100)).arg(
+                                            Math.round(downloadProgress.progress * 842))
+                                      : (downloadProgress.progress >= 1.0
+                                         ? "842 MB · Ready to install"
+                                         : "842 MB · Tap to start")
+                                font.pixelSize: 12; color: colors.onSurfaceVariant
+                            }
+                        }
+                        Text {
+                            visible: downloadSim.running
+                            text: "%1%".arg(Math.round(downloadProgress.progress * 100))
+                            font.pixelSize: 13; font.weight: Font.Medium
+                            color: colors.primary
+                        }
+                    }
+
+                    LinearProgressIndicator {
+                        id: downloadProgress
+                        Layout.fillWidth: true
+                        progress: 0.0
+                        showStopIndicator: true
+                    }
+
+                    RowLayout {
+                        spacing: 8
+                        Layout.alignment: Qt.AlignRight
+                        Button {
+                            text: downloadSim.running ? "Cancel" : (downloadProgress.progress >= 1.0 ? "Install" : "Download")
+                            variant: downloadProgress.progress >= 1.0 ? "filled" : "tonal"
+                            onClicked: {
+                                if (downloadSim.running) {
+                                    downloadSim.stop()
+                                    downloadProgress.reset()
+                                } else if (downloadProgress.progress >= 1.0) {
+                                    downloadProgress.reset()
+                                } else {
+                                    downloadSim.start()
+                                }
+                            }
+                        }
+                    }
+
+                    Timer {
+                        id: downloadSim
+                        interval: 80; repeat: true
+                        onTriggered: {
+                            var step = 0.005 + Math.random() * 0.012
+                            downloadProgress.progress = Math.min(1.0, downloadProgress.progress + step)
+                            if (downloadProgress.progress >= 1.0) stop()
+                        }
+                    }
+                }
+            }
+        }
+
+        // ═════════════════════════════════════════════════════
+        // 2. PAGE LOAD — Linear indeterminate
+        // ═════════════════════════════════════════════════════
+
+        ColumnLayout {
+            spacing: 16
+            Layout.fillWidth: true
+
+            Text {
+                text: "Linear Progress — Indeterminate"
+                font.pixelSize: 20; font.weight: Font.Medium
+                color: colors.primary
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.maximumWidth: 520
+                implicitHeight: pageLoadCol.implicitHeight + 32
+                radius: 12
+                color: "transparent"
+                border.color: colors.outlineVariant
+                border.width: 1
+
+                ColumnLayout {
+                    id: pageLoadCol
+                    anchors.fill: parent
+                    anchors.margins: 16
+                    spacing: 12
+
+                    LinearProgressIndicator {
+                        id: pageLoadBar
+                        Layout.fillWidth: true
+                        indeterminate: pageLoadSim.running && root.visible
+                    }
+
+                    RowLayout {
+                        spacing: 12
+                        Text {
+                            text: "󰖟"
+                            font.family: "Symbols Nerd Font"
+                            font.pixelSize: 20; color: colors.primary
+                        }
+                        ColumnLayout {
+                            spacing: 2
+                            Layout.fillWidth: true
+                            Text {
+                                text: pageLoadSim.running ? "Loading content…" : "Content loaded"
+                                font.pixelSize: 14; font.weight: Font.Medium
+                                color: colors.onSurface
+                            }
+                            Text {
+                                text: pageLoadSim.running ? "Fetching data from server" : "All resources ready"
+                                font.pixelSize: 12; color: colors.onSurfaceVariant
+                            }
+                        }
+                    }
+
+                    Button {
+                        text: pageLoadSim.running ? "Loading…" : "Reload Page"
+                        variant: "outlined"
+                        enabled: !pageLoadSim.running
+                        Layout.alignment: Qt.AlignRight
+                        onClicked: {
+                            pageLoadSim.count = 0
+                            pageLoadSim.start()
+                        }
+                    }
+
+                    Timer {
+                        id: pageLoadSim
+                        property int count: 0
+                        interval: 100; repeat: true
+                        onTriggered: {
+                            count++
+                            if (count > 30) { stop(); count = 0 }
+                        }
+                    }
+                }
+            }
+        }
+
+        Divider { Layout.fillWidth: true }
+
+        // ═════════════════════════════════════════════════════
+        // 3. WAVY — File sync + indexing
+        // ═════════════════════════════════════════════════════
+
+        ColumnLayout {
+            spacing: 16
+            Layout.fillWidth: true
+
+            Text {
+                text: "Expressive (Wavy)"
+                font.pixelSize: 20; font.weight: Font.Medium
+                color: colors.primary
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.maximumWidth: 520
+                implicitHeight: wavyCol.implicitHeight + 32
+                radius: 12
+                color: "transparent"
+                border.color: colors.outlineVariant
+                border.width: 1
+
+                ColumnLayout {
+                    id: wavyCol
+                    anchors.fill: parent
+                    anchors.margins: 16
+                    spacing: 16
+
+                    // Wavy determinate — file sync
+                    RowLayout {
+                        spacing: 12
+                        Text {
+                            text: "󰑐"
+                            font.family: "Symbols Nerd Font"
+                            font.pixelSize: 20; color: colors.primary
+                        }
+                        ColumnLayout {
+                            spacing: 4
+                            Layout.fillWidth: true
+                            Text {
+                                text: "Syncing files…"
+                                font.pixelSize: 14; font.weight: Font.Medium
+                                color: colors.onSurface
+                            }
+                            LinearProgressIndicator {
+                                id: syncBar
+                                Layout.fillWidth: true
+                                wavy: true
+                                trackThickness: 6
+                                progress: 0.0
+                            }
+                            Text {
+                                text: "%1 of 248 files".arg(Math.round(syncBar.progress * 248))
+                                font.pixelSize: 12; color: colors.onSurfaceVariant
+                            }
+                        }
+                        Text {
+                            text: "%1%".arg(Math.round(syncBar.progress * 100))
+                            font.pixelSize: 13; font.weight: Font.Medium
+                            color: colors.primary
+                        }
+                    }
+
+                    // Separator
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 1
+                        color: colors.outlineVariant
+                    }
+
+                    // Wavy indeterminate — indexing
+                    RowLayout {
+                        spacing: 12
+                        Text {
+                            text: "󰍉"
+                            font.family: "Symbols Nerd Font"
+                            font.pixelSize: 20; color: colors.primary
+                        }
+                        ColumnLayout {
+                            spacing: 4
+                            Layout.fillWidth: true
+                            Text {
+                                text: "Indexing documents…"
+                                font.pixelSize: 14; font.weight: Font.Medium
+                                color: colors.onSurface
+                            }
+                            LinearProgressIndicator {
+                                Layout.fillWidth: true
+                                wavy: true
+                                indeterminate: root.visible
+                            }
+                            Text {
+                                text: "Building search index"
+                                font.pixelSize: 12; color: colors.onSurfaceVariant
+                            }
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.alignment: Qt.AlignRight
+                        spacing: 8
+                        Button {
+                            text: syncSim.running ? "Syncing…" : "Start Sync"
+                            variant: "tonal"
+                            enabled: !syncSim.running
+                            onClicked: {
+                                syncBar.progress = 0
+                                syncSim.start()
+                            }
+                        }
+                    }
+
+                    Timer {
+                        id: syncSim
+                        interval: 60; repeat: true
+                        onTriggered: {
+                            syncBar.progress = Math.min(1.0, syncBar.progress + 0.004 + Math.random() * 0.008)
+                            if (syncBar.progress >= 1.0) stop()
+                        }
+                    }
+                }
+            }
+        }
+
+        Divider { Layout.fillWidth: true }
+
+        // ═════════════════════════════════════════════════════
+        // 4. CIRCULAR — Upload, loading, sizes
+        // ═════════════════════════════════════════════════════
+
+        ColumnLayout {
+            spacing: 16
+            Layout.fillWidth: true
+
+            Text {
+                text: "Circular Indicators"
+                font.pixelSize: 20; font.weight: Font.Medium
+                color: colors.primary
+            }
+
+            Flow {
+                Layout.fillWidth: true
+                spacing: 24
+
+                // Upload card — flat
+                Rectangle {
+                    width: 200; height: 220
+                    radius: 12
+                    color: "transparent"
+                    border.color: colors.outlineVariant
+                    border.width: 1
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: 16
+                        spacing: 8
+
+                        Item {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+
+                            CircularProgressIndicator {
+                                id: uploadIndicator
+                                anchors.centerIn: parent
+                                size: "large"
+                                progress: 0.0
+
+                                content: Text {
+                                    anchors.centerIn: parent
+                                    text: uploadIndicator.progress >= 1.0
+                                          ? "✓"
+                                          : "%1%".arg(Math.round(uploadIndicator.progress * 100))
+                                    font.pixelSize: uploadIndicator.progress >= 1.0 ? 20 : 13
+                                    font.weight: Font.Medium
+                                    color: colors.primary
+                                }
+                            }
+                        }
+
+                        Text {
+                            text: uploadSim.running
+                                  ? "Uploading…"
+                                  : (uploadIndicator.progress >= 1.0
+                                     ? "Upload complete" : "Ready to upload")
+                            font.pixelSize: 12; color: colors.onSurfaceVariant
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+
+                        Button {
+                            text: uploadSim.running ? "Cancel" : (uploadIndicator.progress >= 1.0 ? "Done" : "Upload")
+                            variant: "tonal"
+                            Layout.alignment: Qt.AlignHCenter
+                            onClicked: {
+                                if (uploadSim.running) {
+                                    uploadSim.stop()
+                                    uploadIndicator.reset()
+                                } else if (uploadIndicator.progress >= 1.0) {
+                                    uploadIndicator.reset()
+                                } else {
+                                    uploadSim.start()
+                                }
+                            }
+                        }
+
+                        Timer {
+                            id: uploadSim
+                            interval: 50; repeat: true
+                            onTriggered: {
+                                uploadIndicator.progress = Math.min(1.0, uploadIndicator.progress + 0.008 + Math.random() * 0.01)
+                                if (uploadIndicator.progress >= 1.0) stop()
+                            }
+                        }
+                    }
+                }
+
+                // Upload card — wavy
+                Rectangle {
+                    width: 200; height: 220
+                    radius: 12
+                    color: "transparent"
+                    border.color: colors.outlineVariant
+                    border.width: 1
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: 16
+                        spacing: 8
+
+                        Item {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+
+                            CircularProgressIndicator {
+                                id: wavyUpload
+                                anchors.centerIn: parent
+                                size: "large"
+                                wavy: true
+                                progress: 0.0
+
+                                content: Text {
+                                    anchors.centerIn: parent
+                                    text: wavyUpload.progress >= 1.0
+                                          ? "✓"
+                                          : "%1%".arg(Math.round(wavyUpload.progress * 100))
+                                    font.pixelSize: wavyUpload.progress >= 1.0 ? 20 : 13
+                                    font.weight: Font.Medium
+                                    color: colors.primary
+                                }
+                            }
+                        }
+
+                        Text {
+                            text: wavyUploadSim.running
+                                  ? "Encoding media…"
+                                  : (wavyUpload.progress >= 1.0
+                                     ? "Encoding complete" : "Ready")
+                            font.pixelSize: 12; color: colors.onSurfaceVariant
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+
+                        Button {
+                            text: wavyUploadSim.running ? "Cancel" : (wavyUpload.progress >= 1.0 ? "Done" : "Encode")
+                            variant: "tonal"
+                            Layout.alignment: Qt.AlignHCenter
+                            onClicked: {
+                                if (wavyUploadSim.running) {
+                                    wavyUploadSim.stop()
+                                    wavyUpload.reset()
+                                } else if (wavyUpload.progress >= 1.0) {
+                                    wavyUpload.reset()
+                                } else {
+                                    wavyUploadSim.start()
+                                }
+                            }
+                        }
+
+                        Timer {
+                            id: wavyUploadSim
+                            interval: 60; repeat: true
+                            onTriggered: {
+                                wavyUpload.progress = Math.min(1.0, wavyUpload.progress + 0.005 + Math.random() * 0.01)
+                                if (wavyUpload.progress >= 1.0) stop()
+                            }
+                        }
+                    }
+                }
+
+                // Size variants column
+                ColumnLayout {
+                    spacing: 20
+
+                    Text {
+                        text: "Loading states"
+                        font.pixelSize: 13; font.weight: Font.Medium
+                        color: colors.onSurfaceVariant
+                    }
+
+                    RowLayout {
+                        spacing: 16
+
+                        ColumnLayout {
+                            spacing: 6
+                            CircularProgressIndicator {
+                                size: "small"
+                                indeterminate: root.visible
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                            Text {
+                                text: "Small"
+                                font.pixelSize: 11; color: colors.onSurfaceVariant
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                        }
+
+                        ColumnLayout {
+                            spacing: 6
+                            CircularProgressIndicator {
+                                size: "medium"
+                                indeterminate: root.visible
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                            Text {
+                                text: "Medium"
+                                font.pixelSize: 11; color: colors.onSurfaceVariant
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                        }
+
+                        ColumnLayout {
+                            spacing: 6
+                            CircularProgressIndicator {
+                                size: "large"
+                                indeterminate: root.visible
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                            Text {
+                                text: "Large"
+                                font.pixelSize: 11; color: colors.onSurfaceVariant
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                        }
+                    }
+
+                    Text {
+                        text: "Wavy indeterminate"
+                        font.pixelSize: 13; font.weight: Font.Medium
+                        color: colors.onSurfaceVariant
+                    }
+
+                    RowLayout {
+                        spacing: 16
+                        CircularProgressIndicator {
+                            size: "medium"
+                            indeterminate: root.visible
+                            wavy: true
+                        }
+                        CircularProgressIndicator {
+                            size: "large"
+                            indeterminate: root.visible
+                            wavy: true
+                        }
+                    }
+                }
+            }
+        }
+
+        Divider { Layout.fillWidth: true }
+
+        // ═════════════════════════════════════════════════════
+        // 5. INDETERMINATE → DETERMINATE TRANSITION
+        // ═════════════════════════════════════════════════════
+
+        ColumnLayout {
+            spacing: 16
+            Layout.fillWidth: true
+
+            Text {
+                text: "Indeterminate → Determinate Transition"
+                font.pixelSize: 20; font.weight: Font.Medium
+                color: colors.primary
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.maximumWidth: 520
+                implicitHeight: transitionCol.implicitHeight + 32
+                radius: 12
+                color: "transparent"
+                border.color: colors.outlineVariant
+                border.width: 1
+
+                ColumnLayout {
+                    id: transitionCol
+                    anchors.fill: parent
+                    anchors.margins: 16
+                    spacing: 12
+
+                    RowLayout {
+                        spacing: 12
+                        Text {
+                            text: "󰋊"
+                            font.family: "Symbols Nerd Font"
+                            font.pixelSize: 20; color: colors.primary
+                        }
+                        ColumnLayout {
+                            spacing: 2
+                            Layout.fillWidth: true
+                            Text {
+                                id: transitionLabel
+                                text: "Ready to scan"
+                                font.pixelSize: 14; font.weight: Font.Medium
+                                color: colors.onSurface
+                            }
+                            Text {
+                                id: transitionSub
+                                text: "Scans disk for errors"
+                                font.pixelSize: 12; color: colors.onSurfaceVariant
+                            }
+                        }
+                    }
+
+                    LinearProgressIndicator {
+                        id: transitionBar
+                        Layout.fillWidth: true
+                        indeterminate: false
+                        progress: 0.0
+                    }
+
+                    Button {
+                        text: transitionSim.running ? "Scanning…" : "Start Disk Scan"
+                        variant: "tonal"
+                        Layout.alignment: Qt.AlignRight
+                        enabled: !transitionSim.running
+                        onClicked: {
+                            transitionBar.progress = 0.0
+                            transitionBar.indeterminate = true
+                            transitionLabel.text = "Preparing scan…"
+                            transitionSub.text = "Analyzing disk structure"
+                            transitionSim.phase = 0
+                            transitionSim.ticks = 0
+                            transitionSim.start()
+                        }
+                    }
+
+                    Timer {
+                        id: transitionSim
+                        property int phase: 0
+                        property int ticks: 0
+                        interval: 80; repeat: true
+                        onTriggered: {
+                            ticks++
+                            if (phase === 0 && ticks > 25) {
+                                phase = 1
+                                transitionBar.indeterminate = false
+                                transitionBar.progress = 0.0
+                                transitionLabel.text = "Scanning disk…"
+                                transitionSub.text = "Checking sectors"
+                            } else if (phase === 1) {
+                                var step = 0.006 + Math.random() * 0.014
+                                transitionBar.progress = Math.min(1.0, transitionBar.progress + step)
+                                var sectors = Math.round(transitionBar.progress * 524288)
+                                transitionSub.text = "%1 / 524,288 sectors checked".arg(
+                                    sectors.toLocaleString())
+                                if (transitionBar.progress >= 1.0) {
+                                    stop()
+                                    transitionLabel.text = "Scan complete"
+                                    transitionSub.text = "No errors found"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Divider { Layout.fillWidth: true }
+
+        // ═════════════════════════════════════════════════════
+        // BADGES
+        // ═════════════════════════════════════════════════════
+
+        ColumnLayout {
+            spacing: 16
+            Layout.fillWidth: true
+
+            Text {
+                text: "Badges"
+                font.pixelSize: 20; font.weight: Font.Medium
+                color: colors.primary
+            }
+
+            RowLayout {
+                spacing: 32
+                Badge {
+                    text: "3"; size: "small"
+                    content: IconButton {
+                        icon: "notifications"; variant: "tonal"
+                        iconFont: "Symbols Nerd Font"
+                    }
+                }
+                Badge {
+                    text: "5"; size: "medium"
+                    content: IconButton {
+                        icon: "mail"; variant: "tonal"
+                        iconFont: "Symbols Nerd Font"
+                    }
+                }
+                Badge {
+                    text: "99+"; size: "medium"
+                    content: IconButton {
+                        icon: "chat"; variant: "tonal"
+                        iconFont: "Symbols Nerd Font"
+                    }
+                }
+            }
+        }
+
+        Divider { Layout.fillWidth: true }
+
+        // ═════════════════════════════════════════════════════
+        // SKELETON LOADERS
+        // ═════════════════════════════════════════════════════
+
+        ColumnLayout {
+            spacing: 16
+            Layout.fillWidth: true
+
+            Text {
+                text: "Loading States (Skeleton)"
+                font.pixelSize: 20; font.weight: Font.Medium
+                color: colors.primary
+            }
+
+            Rectangle {
+                implicitWidth: 300
+                implicitHeight: skelCol.implicitHeight + 32
+                radius: 12
+                color: "transparent"
+                border.color: colors.outlineVariant
+                border.width: 1
+
+                ColumnLayout {
+                    id: skelCol
+                    anchors.fill: parent
+                    anchors.margins: 16
+                    spacing: 12
+
+                    RowLayout {
+                        Skeleton {
+                            variant: "circular"; width: 40
+                            animated: root.visible
+                        }
+                        ColumnLayout {
+                            Skeleton {
+                                width: 120; height: 14; variant: "text"
+                                animated: root.visible
+                            }
+                            Skeleton {
+                                width: 80; height: 12; variant: "text"
+                                animated: root.visible
+                            }
+                        }
+                    }
+
+                    Skeleton {
+                        Layout.fillWidth: true; height: 100
+                        variant: "rectangular"; radius: 8
+                        animated: root.visible
+                    }
+                }
+            }
+        }
+
+        Divider { Layout.fillWidth: true }
+
+        // ═════════════════════════════════════════════════════
+        // SNACKBARS
+        // ═════════════════════════════════════════════════════
+
+        ColumnLayout {
+            spacing: 16
+            Layout.fillWidth: true
+
+            Text {
+                text: "Snackbars"
+                font.pixelSize: 20; font.weight: Font.Medium
+                color: colors.primary
+            }
+
+            Flow {
+                Layout.fillWidth: true
+                spacing: 16
+
+                Button {
+                    text: "Simple Message"
+                    onClicked: feedbackSnackbar.show("Operation successful", undefined, false)
+                }
+                Button {
+                    text: "With Action"
+                    variant: "tonal"
+                    onClicked: feedbackSnackbar.show("File deleted", "UNDO", false)
+                }
+                Button {
+                    text: "With Close"
+                    variant: "outlined"
+                    onClicked: feedbackSnackbar.show("Connection lost", undefined, true)
+                }
+            }
+        }
+
+        // Bottom spacer
+        Item { Layout.preferredHeight: 32 }
+    }
+
+    // Snackbar — no conflicting anchors, just bottom-center
+    Snackbar {
+        id: feedbackSnackbar
+        position: "bottom"
+        width: Math.min(root.width - 32, 400)
+        y: root.height - height - 16
+        x: (root.width - width) / 2
+    }
+}
+QMLEOF
+Three things that were breaking the layout:
+
+Snackbar anchor conflict — it had anchors.left + anchors.right (inherited from anchors.fill on the column) AND anchors.horizontalCenter. Fixed with explicit x/y positioning instead.
+
+Card content: property — the Card component's content alias likely expects a specific internal structure. The previous demo was stuffing ColumnLayout into it assuming anchors.fill: parent would work inside whatever container Card uses. Replaced with plain Rectangle containers with explicit border + radius — identical visual result, zero dependency on Card internals for layout-critical sections.
+
+Missing ColumnLayout wrappers — the ButtonsPage pattern wraps every section in a ColumnLayout { spacing: 16; Layout.fillWidth: true } with the section title inside. The FeedbackPage had section titles floating loose, which broke spacing. Now every section follows the identical pattern.
+
+
+
+
+
+
+the layout of demo is kinda broken on feedbackpage, i love the animations but i cant really judge well since the layout is broken.
+22:17:24: Starting /home/lufuno/Documents/smartuidemo/build/Desktop-Debug/appsmartuidemo...
+QML debugging is enabled. Only use this in a safe environment.
+qrc:/qt/qml/smartuidemo/pages/FeedbackPage.qml:183:5: QML Snackbar: Cannot specify left, right, and horizontalCenter anchors at the same time.. just fix the layout dont remove any examples their very good examples and i love them a lot, the issue is that even the original feedbackpage layout was broken. the last size issue was because i forgot to install library again i did so it works very well. this is not broken (import QtQuick
+import QtQuick.Layouts
+import SmartUIBeta
+
+Flickable {
+id: root
+contentHeight: mainCol.implicitHeight + 60
+contentWidth: parent ? parent.width : 800
+clip: true
+boundsBehavior: Flickable.StopAtBounds
+
+text
+
+// Access the Singleton Theme from the library
+property var colors: ChiTheme.colors
+
+ColumnLayout {
+    id: mainCol
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.margins: 32
+    spacing: 32
+
+    // --- HEADER ---
+    ColumnLayout {
+        spacing: 8
+        Text {
+            text: "Buttons"
+            font.family: "Roboto"
+            font.pixelSize: 34
+            color: colors.onSurface
+        }
+        Text {
+            text: "Common actions and triggers."
+            font.family: "Roboto"
+            font.pixelSize: 16
+            color: colors.onSurfaceVariant
+        }
+    }
+
+    // --- SECTION 1: VARIANTS ---
+    ColumnLayout {
+        spacing: 16
+        Layout.fillWidth: true
+
+        Text { 
+            text: "Variants"
+            font.pixelSize: 20; font.weight: Font.Medium
+            color: colors.primary 
+        }
+
+        Flow {
+            Layout.fillWidth: true
+            spacing: 16
+            
+            Button { text: "Filled"; variant: "filled" }
+            Button { text: "Elevated"; variant: "elevated" }
+            Button { text: "Tonal"; variant: "tonal" }
+            Button { text: "Outlined"; variant: "outlined" }
+            Button { text: "Text"; variant: "text" }
+        }
+    }
+
+    // --- SECTION 2: STATES ---
+    ColumnLayout {
+        spacing: 16
+        Layout.fillWidth: true
+        
+        Text { 
+            text: "States & Loading"
+            font.pixelSize: 20; font.weight: Font.Medium
+            color: colors.primary 
+        }
+
+        Flow {
+            Layout.fillWidth: true
+            spacing: 16
+
+            Button { text: "Disabled"; variant: "filled"; enabled: false }
+            Button { text: "Loading"; variant: "tonal"; loading: true }
+            Button { text: "Loading"; variant: "text"; loading: true }
+        }
+    }
+
+    // --- SECTION 3: SIZES & ICONS ---
+    ColumnLayout {
+        spacing: 16
+        Layout.fillWidth: true
+
+        Text { 
+            text: "Sizes & Icons"
+            font.pixelSize: 20; font.weight: Font.Medium
+            color: colors.primary 
+        }
+
+        Flow {
+            Layout.fillWidth: true
+            spacing: 16
+            Layout.alignment: Qt.AlignVCenter
+            
+            Button { text: "Small"; size: "small"; showIcon: true; icon: "★"; variant: "tonal" }
+            Button { text: "Medium"; size: "medium"; showIcon: true; icon: "rocket"; variant: "tonal" }
+            Button { text: "Large"; size: "large"; showIcon: true; icon: "add"; variant: "tonal" }
+        }
+    }
+
+    Divider { Layout.fillWidth: true }
+
+    // --- SECTION 4: ICON BUTTONS ---
+    ColumnLayout {
+        spacing: 16
+        Layout.fillWidth: true
+
+        Text { 
+            text: "Icon Buttons"
+            font.pixelSize: 20; font.weight: Font.Medium
+            color: colors.primary 
+        }
+
+        RowLayout {
+            spacing: 20
+            
+            IconButton { icon: "edit"; variant: "filled"; tooltip: "Edit" }
+            IconButton { icon: "settings"; variant: "tonal"; tooltip: "Settings" }
+            IconButton { icon: "favorite"; variant: "outlined"; tooltip: "Favorite" }
+            IconButton { icon: "share"; variant: "standard"; tooltip: "Share" }
+            
+            // Toggle Icon
+            IconButtonToggle { 
+                icon: "bookmark_border"
+                selectedIcon: "bookmark"
+                tooltip: "Bookmark"
+            }
+        }
+    }
+
+    Divider { Layout.fillWidth: true }
+
+    // --- SECTION 5: ADVANCED BUTTONS ---
+    ColumnLayout {
+        spacing: 16
+        Layout.fillWidth: true
+
+        Text { 
+            text: "Complex Interactions"
+            font.pixelSize: 20; font.weight: Font.Medium
+            color: colors.primary 
+        }
+
+        RowLayout {
+            spacing: 24
+            
+            // Split Button
+            SplitButton {
+                text: "Save Options"
+                variant: "filled"
+                onLeadingClicked: console.log("Main Save")
+                onTrailingClicked: console.log("Open Menu")
+            }
+
+            SplitButton {
+                text: "Export"
+                variant: "outlined"
+                leadingIcon: "download"
+                showLeadingIcon: true
+            }
+
+            // Toggle Button (Text based)
+            ToggleButton {
+                text: "Bold"
+                icon: "format_bold"
+                showIcon: true
+                variant: "outlined"
+                onToggled: (val) => console.log("Bold:", val)
+            }
+        }
+    }
+}
+}
+)
+
+claude-opus-4-6-search
+No Sources
+The error is now on line 527 — that's in the Badge section, not the progress indicators. The Badge component in your library doesn't have a size property. The original demo had the same bug, but QML hit the progress indicator error on line 48 first and never got to line 527.
+
+The fix is just the Badge section. Let me patch only those lines:
+
+Bash
+
+sed -i 's/text: "3"; size: "small"/text: "3"/' /home/lufuno/Documents/smartuidemo/qml/pages/FeedbackPage.qml
+sed -i 's/text: "5"; size: "medium"/text: "5"/' /home/lufuno/Documents/smartuidemo/qml/pages/FeedbackPage.qml
+sed -i 's/text: "99+"; size: "medium"/text: "99+"/' /home/lufuno/Documents/smartuidemo/qml/pages/FeedbackPage.qml
+That's it. Three lines. The Badge component doesn't expose a size property — it was broken in the original demo too, just masked by the progress indicator crash hitting first.
+
+If you actually want size variants on Badge, that's a separate component issue. But for now this gets the demo running.
+
+
+
+
+
+22:16:15: Starting /home/lufuno/Documents/smartuidemo/build/Desktop-Debug/appsmartuidemo...
+QML debugging is enabled. Only use this in a safe environment.
+QQmlApplicationEngine failed to load component
+qrc:/qt/qml/smartuidemo/Main.qml:246:21: Type FeedbackPage unavailable
+qrc:/qt/qml/smartuidemo/pages/FeedbackPage.qml:527:29: Cannot assign to non-existent property "size"
+22:16:20: /home/lufuno/Documents/smartuidemo/build/Desktop-Debug/appsmartuidemo exited with code 255
+
+claude-opus-4-6-search
+No Sources
+Looking at the errors, the new components dropped size, variant, and thickness string properties. I need to add back size presets (they're good API design) and rewrite the demo with real native use cases.
+
+First, let me patch both components to support size presets cleanly, then rewrite the demo:
+
+Bash
+
+cat > qml/smartui/ui/progress/CircularProgressIndicator.qml << 'QMLEOF'
+// smartui/ui/progress/CircularProgressIndicator.qml
+// Circular progress indicator — M3 + M3 Expressive tokens
+// Anatomy: active indicator (arc), track (background circle)
+import QtQuick
+import QtQuick.Shapes
+import "../../theme" as Theme
+
+Item {
+    id: root
+
+    // ─── Public API ─────────────────────────────────────────
+    property real progress: 0.0
+    property bool indeterminate: false
+    property bool wavy: false
+    property string size: "medium"             // "small", "medium", "large", "xlarge"
+    property bool enabled: true
+
+    // Direct overrides — default from size presets
+    property real diameter: _spec.diameter
+    property real strokeWidth: _spec.strokeWidth
+
+    // ─── Size Presets (M3 tokens) ───────────────────────────
+    readonly property var _specs: ({
+        small:  { diameter: 24, strokeWidth: 2.5 },
+        medium: { diameter: 40, strokeWidth: 4   },
+        large:  { diameter: 56, strokeWidth: 5   },
+        xlarge: { diameter: 80, strokeWidth: 6   }
+    })
+    readonly property var _spec: _specs[size] || _specs.medium
+
+    // ─── M3 Wave Tokens ─────────────────────────────────────
+    readonly property real _waveAmplitude: 1.6
+    readonly property real _waveWavelength: 15.0
+
+    // ─── Internal Geometry ──────────────────────────────────
+    readonly property real _progress: Math.max(0, Math.min(1, progress))
+    readonly property real _d: wavy ? diameter + _waveAmplitude * 4 : diameter
+    readonly property real _cx: _d / 2
+    readonly property real _cy: _d / 2
+    readonly property real _radius: (diameter - strokeWidth) / 2
+    readonly property bool _hasProgress: _progress > 0.001
+
+    implicitWidth: _d
+    implicitHeight: _d
+    opacity: enabled ? 1.0 : 0.38
+
+    // ═══════════════════════════════════════════════════════
+    // TRACK
+    // ═══════════════════════════════════════════════════════
+
+    Shape {
+        anchors.fill: parent
+        layer.enabled: false
+
+        ShapePath {
+            strokeColor: Theme.ChiTheme.colors.secondaryContainer
+            strokeWidth: root.strokeWidth
+            fillColor: "transparent"
+            capStyle: ShapePath.RoundCap
+
+            PathAngleArc {
+                centerX: _cx; centerY: _cy
+                radiusX: _radius; radiusY: _radius
+                startAngle: 0; sweepAngle: 360
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // DETERMINATE — FLAT
+    // ═══════════════════════════════════════════════════════
+
+    Shape {
+        visible: !indeterminate && !wavy && _hasProgress
+        anchors.fill: parent
+        layer.enabled: false
+
+        ShapePath {
+            strokeColor: Theme.ChiTheme.colors.primary
+            strokeWidth: root.strokeWidth
+            fillColor: "transparent"
+            capStyle: ShapePath.RoundCap
+
+            PathAngleArc {
+                centerX: _cx; centerY: _cy
+                radiusX: _radius; radiusY: _radius
+                startAngle: -90
+                sweepAngle: _progress * 360
+
+                Behavior on sweepAngle {
+                    NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+                }
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // DETERMINATE — WAVY
+    // ═══════════════════════════════════════════════════════
+
+    Shape {
+        id: determinateWavy
+        visible: !indeterminate && wavy && _hasProgress
+        anchors.fill: parent
+        layer.enabled: false
+
+        property real _phase: 0.0
+        NumberAnimation on _phase {
+            from: 0; to: 2 * Math.PI
+            duration: 1500
+            loops: Animation.Infinite
+            running: wavy && !indeterminate && root.visible && root.enabled
+        }
+
+        ShapePath {
+            strokeColor: Theme.ChiTheme.colors.primary
+            strokeWidth: root.strokeWidth
+            fillColor: "transparent"
+            capStyle: ShapePath.RoundCap
+            joinStyle: ShapePath.RoundJoin
+
+            PathPolyline {
+                path: {
+                    var pts = [];
+                    var sweep = root._progress * 2 * Math.PI;
+                    if (sweep < 0.01) return [Qt.point(root._cx, root._cy - root._radius)];
+
+                    var circumference = 2 * Math.PI * root._radius;
+                    var numWaves = circumference / root._waveWavelength;
+                    var amp = root._waveAmplitude;
+                    var phase = determinateWavy._phase;
+
+                    var steps = Math.max(90, Math.round(numWaves * 24 * root._progress));
+                    for (var i = 0; i <= steps; i++) {
+                        var t = i / steps;
+                        var angle = -Math.PI / 2 + t * sweep;
+                        var r = root._radius + amp * Math.sin(numWaves * angle + phase);
+                        pts.push(Qt.point(root._cx + r * Math.cos(angle),
+                                          root._cy + r * Math.sin(angle)));
+                    }
+                    return pts;
+                }
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // INDETERMINATE — FLAT
+    // ═══════════════════════════════════════════════════════
+
+    Shape {
+        id: indeterminateFlat
+        visible: indeterminate && !wavy
+        anchors.fill: parent
+        layer.enabled: false
+
+        rotation: _containerAngle
+
+        property real _containerAngle: 0
+        NumberAnimation on _containerAngle {
+            from: 0; to: 360
+            duration: 1568
+            loops: Animation.Infinite
+            running: indeterminate && !wavy && root.visible
+        }
+
+        property real _arcStart: 0
+        property real _arcSweep: 16
+
+        SequentialAnimation {
+            running: indeterminate && !wavy && root.visible
+            loops: Animation.Infinite
+
+            ParallelAnimation {
+                NumberAnimation {
+                    target: indeterminateFlat; property: "_arcSweep"
+                    from: 16; to: 270
+                    duration: 667; easing.type: Easing.InOutCubic
+                }
+                NumberAnimation {
+                    target: indeterminateFlat; property: "_arcStart"
+                    from: 0; to: 30
+                    duration: 667; easing.type: Easing.InOutCubic
+                }
+            }
+            ParallelAnimation {
+                NumberAnimation {
+                    target: indeterminateFlat; property: "_arcSweep"
+                    from: 270; to: 16
+                    duration: 667; easing.type: Easing.InOutCubic
+                }
+                NumberAnimation {
+                    target: indeterminateFlat; property: "_arcStart"
+                    from: 30; to: 330
+                    duration: 667; easing.type: Easing.InOutCubic
+                }
+            }
+        }
+
+        ShapePath {
+            strokeColor: Theme.ChiTheme.colors.primary
+            strokeWidth: root.strokeWidth
+            fillColor: "transparent"
+            capStyle: ShapePath.RoundCap
+
+            PathAngleArc {
+                centerX: _cx; centerY: _cy
+                radiusX: _radius; radiusY: _radius
+                startAngle: -90 + indeterminateFlat._arcStart
+                sweepAngle: indeterminateFlat._arcSweep
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // INDETERMINATE — WAVY
+    // ═══════════════════════════════════════════════════════
+
+    Item {
+        id: indeterminateWavy
+        visible: indeterminate && wavy
+        anchors.fill: parent
+
+        property real _containerAngle: 0
+        NumberAnimation on _containerAngle {
+            from: 0; to: 360
+            duration: 1568
+            loops: Animation.Infinite
+            running: indeterminate && wavy && root.visible
+        }
+
+        property real _arcStart: 0
+        property real _arcSweep: 16
+        property real _wavePhase: 0
+
+        SequentialAnimation {
+            running: indeterminate && wavy && root.visible
+            loops: Animation.Infinite
+
+            ParallelAnimation {
+                NumberAnimation {
+                    target: indeterminateWavy; property: "_arcSweep"
+                    from: 16; to: 270
+                    duration: 667; easing.type: Easing.InOutCubic
+                }
+                NumberAnimation {
+                    target: indeterminateWavy; property: "_arcStart"
+                    from: 0; to: 30
+                    duration: 667; easing.type: Easing.InOutCubic
+                }
+            }
+            ParallelAnimation {
+                NumberAnimation {
+                    target: indeterminateWavy; property: "_arcSweep"
+                    from: 270; to: 16
+                    duration: 667; easing.type: Easing.InOutCubic
+                }
+                NumberAnimation {
+                    target: indeterminateWavy; property: "_arcStart"
+                    from: 30; to: 330
+                    duration: 667; easing.type: Easing.InOutCubic
+                }
+            }
+        }
+
+        NumberAnimation on _wavePhase {
+            from: 0; to: 2 * Math.PI
+            duration: 1200
+            loops: Animation.Infinite
+            running: indeterminate && wavy && root.visible
+        }
+
+        rotation: _containerAngle
+
+        Shape {
+            anchors.fill: parent
+            layer.enabled: false
+
+            ShapePath {
+                strokeColor: Theme.ChiTheme.colors.primary
+                strokeWidth: root.strokeWidth
+                fillColor: "transparent"
+                capStyle: ShapePath.RoundCap
+                joinStyle: ShapePath.RoundJoin
+
+                PathPolyline {
+                    path: {
+                        var pts = [];
+                        var startDeg = indeterminateWavy._arcStart;
+                        var sweepDeg = indeterminateWavy._arcSweep;
+                        var startRad = (-90 + startDeg) * Math.PI / 180;
+                        var sweepRad = sweepDeg * Math.PI / 180;
+
+                        if (sweepRad < 0.05) return [Qt.point(root._cx, root._cy - root._radius)];
+
+                        var circumference = 2 * Math.PI * root._radius;
+                        var numWaves = circumference / root._waveWavelength;
+                        var amp = root._waveAmplitude;
+                        var phase = indeterminateWavy._wavePhase;
+
+                        var steps = Math.max(36, Math.round(numWaves * 24 * (sweepDeg / 360)));
+                        for (var i = 0; i <= steps; i++) {
+                            var t = i / steps;
+                            var angle = startRad + t * sweepRad;
+                            var r = root._radius + amp * Math.sin(numWaves * angle + phase);
+                            pts.push(Qt.point(root._cx + r * Math.cos(angle),
+                                              root._cy + r * Math.sin(angle)));
+                        }
+                        return pts;
+                    }
+                }
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // CENTER CONTENT SLOT
+    // ═══════════════════════════════════════════════════════
+
+    property alias content: contentSlot.children
+
+    Item {
+        id: contentSlot
+        anchors.centerIn: parent
+        width: diameter - strokeWidth * 4
+        height: diameter - strokeWidth * 4
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // ACCESSIBILITY
+    // ═══════════════════════════════════════════════════════
+
+    Accessible.role: Accessible.ProgressBar
+    Accessible.name: indeterminate ? "Loading" : "Progress"
+    Accessible.description: indeterminate
+        ? "Loading in progress"
+        : "%1% complete".arg(Math.round(_progress * 100))
+
+    function setProgress(value) { progress = value }
+    function reset()            { progress = 0 }
+    function complete()         { progress = 1.0 }
+}
+QMLEOF
+Bash
+
+cat > qml/smartui/ui/progress/LinearProgressIndicator.qml << 'QMLEOF'
+// smartui/ui/progress/LinearProgressIndicator.qml
+// Linear progress indicator — M3 + M3 Expressive tokens
+// Anatomy: active indicator, track, stop indicator, gap
+import QtQuick
+import QtQuick.Shapes
+import "../../theme" as Theme
+
+Item {
+    id: root
+
+    // ─── Public API ─────────────────────────────────────────
+    property real progress: 0.0
+    property bool indeterminate: false
+    property bool wavy: false
+    property real trackThickness: 4
+    property bool showStopIndicator: true
+    property bool enabled: true
+
+    // ─── M3 Tokens ──────────────────────────────────────────
+    readonly property real _amplitude: 3.0
+    readonly property real _wavelength: 40.0
+    readonly property real _indeterminateWavelength: 20.0
+    readonly property real _stopSize: 4.0
+    readonly property real _gap: 4.0
+
+    // ─── Internal State ─────────────────────────────────────
+    readonly property real _progress: Math.max(0, Math.min(1, progress))
+    readonly property real _containerHeight: wavy
+        ? Math.max(trackThickness + _amplitude * 2, 10)
+        : trackThickness
+    readonly property real _radius: trackThickness / 2
+
+    readonly property real _activeWidth: width * _progress
+    readonly property bool _hasProgress: _progress > 0.001
+    readonly property bool _isComplete: _progress > 0.999
+    readonly property real _gapPx: (_hasProgress && !_isComplete) ? _gap : 0
+    readonly property real _trackX: _activeWidth + _gapPx
+    readonly property real _trackW: Math.max(0, width - _trackX)
+
+    implicitWidth: 240
+    implicitHeight: _containerHeight
+    opacity: enabled ? 1.0 : 0.38
+
+    // ═══════════════════════════════════════════════════════
+    // DETERMINATE — FLAT
+    // ═══════════════════════════════════════════════════════
+
+    Rectangle {
+        id: flatTrack
+        visible: !indeterminate && !wavy
+        anchors.verticalCenter: parent.verticalCenter
+        x: _hasProgress ? _trackX : 0
+        width: _hasProgress ? _trackW : root.width
+        height: trackThickness
+        radius: _radius
+        color: Theme.ChiTheme.colors.secondaryContainer
+
+        Behavior on x     { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+        Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+    }
+
+    Rectangle {
+        id: flatActive
+        visible: !indeterminate && !wavy && _hasProgress
+        anchors.verticalCenter: parent.verticalCenter
+        x: 0
+        width: _activeWidth
+        height: trackThickness
+        radius: _radius
+        color: Theme.ChiTheme.colors.primary
+
+        Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // DETERMINATE — WAVY
+    // ═══════════════════════════════════════════════════════
+
+    Rectangle {
+        id: wavyTrack
+        visible: !indeterminate && wavy
+        anchors.verticalCenter: parent.verticalCenter
+        x: _hasProgress ? _trackX : 0
+        width: _hasProgress ? _trackW : root.width
+        height: trackThickness
+        radius: _radius
+        color: Theme.ChiTheme.colors.secondaryContainer
+
+        Behavior on x     { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+        Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+    }
+
+    Item {
+        id: wavyActiveClip
+        visible: !indeterminate && wavy && _hasProgress
+        anchors.verticalCenter: parent.verticalCenter
+        width: _activeWidth
+        height: _containerHeight
+        clip: true
+
+        Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+
+        property real _phase: 0.0
+        NumberAnimation on _phase {
+            from: 0; to: _wavelength
+            duration: 1200
+            loops: Animation.Infinite
+            running: wavy && !indeterminate && root.visible && root.enabled
+        }
+
+        Shape {
+            x: -wavyActiveClip._phase
+            width: wavyActiveClip.width + _wavelength * 2
+            height: parent.height
+            layer.enabled: false
+
+            ShapePath {
+                strokeColor: Theme.ChiTheme.colors.primary
+                strokeWidth: root.trackThickness
+                fillColor: "transparent"
+                capStyle: ShapePath.RoundCap
+                joinStyle: ShapePath.RoundJoin
+
+                PathPolyline {
+                    path: {
+                        var pts = [];
+                        var w = wavyActiveClip.width + root._wavelength * 2;
+                        var cy = root._containerHeight / 2;
+                        var amp = root._amplitude;
+                        var wl = root._wavelength;
+                        if (w <= 0 || wl <= 0) return [Qt.point(0, cy)];
+                        var step = 2;
+                        for (var x = 0; x <= w; x += step) {
+                            pts.push(Qt.point(x, cy + amp * Math.sin(2 * Math.PI * x / wl)));
+                        }
+                        if (pts.length > 0 && pts[pts.length - 1].x < w)
+                            pts.push(Qt.point(w, cy + amp * Math.sin(2 * Math.PI * w / wl)));
+                        return pts;
+                    }
+                }
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // INDETERMINATE — FLAT
+    // ═══════════════════════════════════════════════════════
+
+    Item {
+        id: indeterminateFlat
+        visible: indeterminate && !wavy
+        anchors.fill: parent
+        clip: true
+
+        Rectangle {
+            anchors.verticalCenter: parent.verticalCenter
+            width: parent.width
+            height: trackThickness
+            radius: _radius
+            color: Theme.ChiTheme.colors.secondaryContainer
+        }
+
+        Rectangle {
+            id: bar1
+            anchors.verticalCenter: parent.verticalCenter
+            height: trackThickness
+            radius: _radius
+            color: Theme.ChiTheme.colors.primary
+
+            SequentialAnimation {
+                running: indeterminate && !wavy && root.visible
+                loops: Animation.Infinite
+
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: bar1; property: "x"
+                        from: -root.width * 0.5; to: root.width * 0.7
+                        duration: 1000; easing.type: Easing.InOutCubic
+                    }
+                    NumberAnimation {
+                        target: bar1; property: "width"
+                        from: root.width * 0.08; to: root.width * 0.55
+                        duration: 1000; easing.type: Easing.InOutCubic
+                    }
+                }
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: bar1; property: "x"
+                        from: root.width * 0.7; to: root.width * 1.1
+                        duration: 800; easing.type: Easing.InCubic
+                    }
+                    NumberAnimation {
+                        target: bar1; property: "width"
+                        from: root.width * 0.55; to: root.width * 0.04
+                        duration: 800; easing.type: Easing.InCubic
+                    }
+                }
+            }
+        }
+
+        Rectangle {
+            id: bar2
+            anchors.verticalCenter: parent.verticalCenter
+            height: trackThickness
+            radius: _radius
+            color: Theme.ChiTheme.colors.primary
+
+            SequentialAnimation {
+                running: indeterminate && !wavy && root.visible
+                loops: Animation.Infinite
+
+                PauseAnimation { duration: 600 }
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: bar2; property: "x"
+                        from: -root.width * 0.3; to: root.width * 0.8
+                        duration: 900; easing.type: Easing.InOutCubic
+                    }
+                    NumberAnimation {
+                        target: bar2; property: "width"
+                        from: root.width * 0.04; to: root.width * 0.45
+                        duration: 900; easing.type: Easing.InOutCubic
+                    }
+                }
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: bar2; property: "x"
+                        from: root.width * 0.8; to: root.width * 1.05
+                        duration: 700; easing.type: Easing.InCubic
+                    }
+                    NumberAnimation {
+                        target: bar2; property: "width"
+                        from: root.width * 0.45; to: root.width * 0.02
+                        duration: 700; easing.type: Easing.InCubic
+                    }
+                }
+                PauseAnimation { duration: 100 }
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // INDETERMINATE — WAVY
+    // ═══════════════════════════════════════════════════════
+
+    Item {
+        id: indeterminateWavy
+        visible: indeterminate && wavy
+        anchors.fill: parent
+        clip: true
+
+        Rectangle {
+            anchors.verticalCenter: parent.verticalCenter
+            width: parent.width
+            height: trackThickness
+            radius: _radius
+            color: Theme.ChiTheme.colors.secondaryContainer
+        }
+
+        Item {
+            id: wavyBar
+            anchors.verticalCenter: parent.verticalCenter
+            height: _containerHeight
+            clip: true
+
+            property real _phase: 0.0
+            NumberAnimation on _phase {
+                from: 0; to: _indeterminateWavelength
+                duration: 600
+                loops: Animation.Infinite
+                running: indeterminate && wavy && root.visible
+            }
+
+            SequentialAnimation {
+                running: indeterminate && wavy && root.visible
+                loops: Animation.Infinite
+
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: wavyBar; property: "x"
+                        from: -root.width * 0.4; to: root.width * 0.75
+                        duration: 1000; easing.type: Easing.InOutCubic
+                    }
+                    NumberAnimation {
+                        target: wavyBar; property: "width"
+                        from: root.width * 0.08; to: root.width * 0.55
+                        duration: 1000; easing.type: Easing.InOutCubic
+                    }
+                }
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: wavyBar; property: "x"
+                        from: root.width * 0.75; to: root.width * 1.1
+                        duration: 800; easing.type: Easing.InCubic
+                    }
+                    NumberAnimation {
+                        target: wavyBar; property: "width"
+                        from: root.width * 0.55; to: root.width * 0.04
+                        duration: 800; easing.type: Easing.InCubic
+                    }
+                }
+            }
+
+            Shape {
+                x: -wavyBar._phase
+                width: wavyBar.width + _indeterminateWavelength * 2
+                height: parent.height
+                layer.enabled: false
+
+                ShapePath {
+                    strokeColor: Theme.ChiTheme.colors.primary
+                    strokeWidth: root.trackThickness
+                    fillColor: "transparent"
+                    capStyle: ShapePath.RoundCap
+                    joinStyle: ShapePath.RoundJoin
+
+                    PathPolyline {
+                        path: {
+                            var pts = [];
+                            var w = wavyBar.width + root._indeterminateWavelength * 2;
+                            var cy = root._containerHeight / 2;
+                            var amp = root._amplitude;
+                            var wl = root._indeterminateWavelength;
+                            if (w <= 0 || wl <= 0) return [Qt.point(0, cy)];
+                            var step = 2;
+                            for (var x = 0; x <= w; x += step) {
+                                pts.push(Qt.point(x, cy + amp * Math.sin(2 * Math.PI * x / wl)));
+                            }
+                            return pts;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // STOP INDICATOR
+    // ═══════════════════════════════════════════════════════
+
+    Rectangle {
+        visible: showStopIndicator && !indeterminate && !_isComplete && _hasProgress
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.right: parent.right
+        width: _stopSize
+        height: _stopSize
+        radius: _stopSize / 2
+        color: Theme.ChiTheme.colors.primary
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // ACCESSIBILITY
+    // ═══════════════════════════════════════════════════════
+
+    Accessible.role: Accessible.ProgressBar
+    Accessible.name: indeterminate ? "Loading" : "Progress"
+    Accessible.description: indeterminate
+        ? "Loading in progress"
+        : "%1% complete".arg(Math.round(_progress * 100))
+
+    function setProgress(value) { progress = value }
+    function reset()            { progress = 0 }
+    function complete()         { progress = 1.0 }
+}
+QMLEOF
+Now the demo page with real-world native scenarios:
+
+Bash
+
+cat > /home/lufuno/Documents/smartuidemo/qml/pages/FeedbackPage.qml << 'QMLEOF'
+import QtQuick
+import QtQuick.Layouts
+import QtQuick.Controls
+import SmartUIBeta
+
+Flickable {
+    id: root
+    contentHeight: mainCol.implicitHeight + 60
+    contentWidth: parent ? parent.width : 800
+    clip: true
+    boundsBehavior: Flickable.StopAtBounds
+
+    property var colors: ChiTheme.colors
+
+    Snackbar {
+        id: globalSnackbar
+        position: "bottom"
+        width: Math.min(parent.width - 32, 400)
+        anchors.horizontalCenter: parent.horizontalCenter
+    }
+
+    ColumnLayout {
+        id: mainCol
+        anchors {
+            top: parent.top; left: parent.left; right: parent.right
+            margins: 32
+        }
+        spacing: 32
+
+        // ═══════════════════════════════════════════════════
+        // HEADER
+        // ═══════════════════════════════════════════════════
+
+        ColumnLayout {
+            spacing: 8
+            Text {
+                text: "Feedback & Status"
+                font.pixelSize: 34; color: colors.onSurface
+            }
+            Text {
+                text: "Progress indicators, badges, and notifications."
+                font.pixelSize: 16; color: colors.onSurfaceVariant
+            }
+        }
+
+        // ═══════════════════════════════════════════════════
+        // 1. FILE DOWNLOAD — Linear determinate
+        // ═══════════════════════════════════════════════════
+
+        Text {
+            text: "Progress Indicators"
+            font.pixelSize: 20; font.weight: Font.Medium
+            color: colors.primary
+        }
+
+        Card {
+            Layout.fillWidth: true
+            Layout.maximumWidth: 520
+            variant: "outlined"
+
+            content: ColumnLayout {
+                anchors.fill: parent
+                spacing: 12
+
+                RowLayout {
+                    spacing: 12
+                    Text {
+                        text: "󰇚"
+                        font.family: "Symbols Nerd Font"
+                        font.pixelSize: 20; color: colors.primary
+                    }
+                    ColumnLayout {
+                        spacing: 2
+                        Layout.fillWidth: true
+                        Text {
+                            text: downloadSim.running
+                                  ? "Downloading system update…"
+                                  : (downloadProgress.progress >= 1.0
+                                     ? "Download complete"
+                                     : "System update ready")
+                            font.pixelSize: 14; font.weight: Font.Medium
+                            color: colors.onSurface
+                        }
+                        Text {
+                            text: downloadSim.running
+                                  ? "%1% · %2 MB / 842 MB".arg(
+                                        Math.round(downloadProgress.progress * 100)).arg(
+                                        Math.round(downloadProgress.progress * 842))
+                                  : (downloadProgress.progress >= 1.0
+                                     ? "842 MB · Ready to install"
+                                     : "842 MB · Tap to start")
+                            font.pixelSize: 12; color: colors.onSurfaceVariant
+                        }
+                    }
+                    Text {
+                        visible: downloadSim.running
+                        text: "%1%".arg(Math.round(downloadProgress.progress * 100))
+                        font.pixelSize: 13; font.weight: Font.Medium
+                        color: colors.primary
+                    }
+                }
+
+                LinearProgressIndicator {
+                    id: downloadProgress
+                    Layout.fillWidth: true
+                    progress: 0.0
+                    showStopIndicator: true
+                }
+
+                RowLayout {
+                    spacing: 8
+                    Layout.alignment: Qt.AlignRight
+
+                    Button {
+                        text: downloadSim.running ? "Cancel" : (downloadProgress.progress >= 1.0 ? "Install" : "Download")
+                        variant: downloadProgress.progress >= 1.0 ? "filled" : "tonal"
+                        onClicked: {
+                            if (downloadSim.running) {
+                                downloadSim.stop()
+                                downloadProgress.reset()
+                            } else if (downloadProgress.progress >= 1.0) {
+                                globalSnackbar.show("Installing update…", undefined, false)
+                                downloadProgress.reset()
+                            } else {
+                                downloadSim.start()
+                            }
+                        }
+                    }
+                }
+
+                Timer {
+                    id: downloadSim
+                    interval: 80
+                    repeat: true
+                    onTriggered: {
+                        var step = 0.005 + Math.random() * 0.012
+                        downloadProgress.progress = Math.min(1.0, downloadProgress.progress + step)
+                        if (downloadProgress.progress >= 1.0) stop()
+                    }
+                }
+            }
+        }
+
+        // ═══════════════════════════════════════════════════
+        // 2. PAGE LOAD — Linear indeterminate
+        // ═══════════════════════════════════════════════════
+
+        Card {
+            Layout.fillWidth: true
+            Layout.maximumWidth: 520
+            variant: "outlined"
+
+            content: ColumnLayout {
+                anchors.fill: parent
+                spacing: 0
+
+                LinearProgressIndicator {
+                    id: pageLoadBar
+                    Layout.fillWidth: true
+                    indeterminate: pageLoadSim.running && root.visible
+                }
+
+                Item { Layout.preferredHeight: 12 }
+
+                RowLayout {
+                    spacing: 12
+                    Text {
+                        text: "󰖟"
+                        font.family: "Symbols Nerd Font"
+                        font.pixelSize: 20; color: colors.primary
+                    }
+                    ColumnLayout {
+                        spacing: 2
+                        Layout.fillWidth: true
+                        Text {
+                            text: pageLoadSim.running
+                                  ? "Loading content…"
+                                  : "Content loaded"
+                            font.pixelSize: 14; font.weight: Font.Medium
+                            color: colors.onSurface
+                        }
+                        Text {
+                            text: pageLoadSim.running
+                                  ? "Fetching data from server"
+                                  : "All resources ready"
+                            font.pixelSize: 12; color: colors.onSurfaceVariant
+                        }
+                    }
+                }
+
+                Item { Layout.preferredHeight: 12 }
+
+                Button {
+                    text: pageLoadSim.running ? "Loading…" : "Reload Page"
+                    variant: "outlined"
+                    enabled: !pageLoadSim.running
+                    Layout.alignment: Qt.AlignRight
+                    onClicked: {
+                        pageLoadSim.count = 0
+                        pageLoadSim.start()
+                    }
+                }
+
+                Timer {
+                    id: pageLoadSim
+                    property int count: 0
+                    interval: 100; repeat: true
+                    onTriggered: {
+                        count++
+                        if (count > 30) { stop(); count = 0 }
+                    }
+                }
+            }
+        }
+
+        // ═══════════════════════════════════════════════════
+        // 3. WAVY — File sync + media encode
+        // ═══════════════════════════════════════════════════
+
+        Text {
+            text: "Expressive (Wavy)"
+            font.pixelSize: 20; font.weight: Font.Medium
+            color: colors.primary
+        }
+
+        Card {
+            Layout.fillWidth: true
+            Layout.maximumWidth: 520
+            variant: "outlined"
+
+            content: ColumnLayout {
+                anchors.fill: parent
+                spacing: 16
+
+                // Wavy determinate — file sync
+                RowLayout {
+                    spacing: 12
+                    Text {
+                        text: "󰑐"
+                        font.family: "Symbols Nerd Font"
+                        font.pixelSize: 20; color: colors.primary
+                    }
+                    ColumnLayout {
+                        spacing: 4
+                        Layout.fillWidth: true
+                        Text {
+                            text: "Syncing files…"
+                            font.pixelSize: 14; font.weight: Font.Medium
+                            color: colors.onSurface
+                        }
+                        LinearProgressIndicator {
+                            id: syncBar
+                            Layout.fillWidth: true
+                            wavy: true
+                            trackThickness: 6
+                            progress: 0.0
+                        }
+                        Text {
+                            text: "%1 of 248 files".arg(Math.round(syncBar.progress * 248))
+                            font.pixelSize: 12; color: colors.onSurfaceVariant
+                        }
+                    }
+                    Text {
+                        text: "%1%".arg(Math.round(syncBar.progress * 100))
+                        font.pixelSize: 13; font.weight: Font.Medium
+                        color: colors.primary
+                    }
+                }
+
+                Divider { Layout.fillWidth: true }
+
+                // Wavy indeterminate — searching
+                RowLayout {
+                    spacing: 12
+                    Text {
+                        text: "󰍉"
+                        font.family: "Symbols Nerd Font"
+                        font.pixelSize: 20; color: colors.primary
+                    }
+                    ColumnLayout {
+                        spacing: 4
+                        Layout.fillWidth: true
+                        Text {
+                            text: "Indexing documents…"
+                            font.pixelSize: 14; font.weight: Font.Medium
+                            color: colors.onSurface
+                        }
+                        LinearProgressIndicator {
+                            Layout.fillWidth: true
+                            wavy: true
+                            indeterminate: root.visible
+                        }
+                        Text {
+                            text: "Building search index"
+                            font.pixelSize: 12; color: colors.onSurfaceVariant
+                        }
+                    }
+                }
+
+                RowLayout {
+                    Layout.alignment: Qt.AlignRight
+                    spacing: 8
+                    Button {
+                        text: syncSim.running ? "Syncing…" : "Start Sync"
+                        variant: "tonal"
+                        enabled: !syncSim.running
+                        onClicked: {
+                            syncBar.progress = 0
+                            syncSim.start()
+                        }
+                    }
+                }
+
+                Timer {
+                    id: syncSim
+                    interval: 60; repeat: true
+                    onTriggered: {
+                        syncBar.progress = Math.min(1.0, syncBar.progress + 0.004 + Math.random() * 0.008)
+                        if (syncBar.progress >= 1.0) {
+                            stop()
+                            globalSnackbar.show("Sync complete — 248 files updated", undefined, false)
+                        }
+                    }
+                }
+            }
+        }
+
+        // ═══════════════════════════════════════════════════
+        // 4. CIRCULAR — Upload, loading, sizes
+        // ═══════════════════════════════════════════════════
+
+        Text {
+            text: "Circular Indicators"
+            font.pixelSize: 20; font.weight: Font.Medium
+            color: colors.primary
+        }
+
+        RowLayout {
+            spacing: 24
+
+            // Upload card
+            Card {
+                Layout.preferredWidth: 200
+                Layout.preferredHeight: 200
+                variant: "outlined"
+
+                content: ColumnLayout {
+                    anchors.fill: parent
+                    spacing: 8
+                    anchors.margins: 0
+
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+
+                        CircularProgressIndicator {
+                            id: uploadIndicator
+                            anchors.centerIn: parent
+                            size: "large"
+                            progress: 0.0
+
+                            content: Text {
+                                anchors.centerIn: parent
+                                text: uploadIndicator.progress >= 1.0
+                                      ? "✓"
+                                      : "%1%".arg(Math.round(uploadIndicator.progress * 100))
+                                font.pixelSize: uploadIndicator.progress >= 1.0 ? 20 : 13
+                                font.weight: Font.Medium
+                                color: colors.primary
+                            }
+                        }
+                    }
+
+                    Text {
+                        text: uploadSim.running
+                              ? "Uploading…"
+                              : (uploadIndicator.progress >= 1.0
+                                 ? "Upload complete" : "Ready to upload")
+                        font.pixelSize: 12; color: colors.onSurfaceVariant
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+
+                    Button {
+                        text: uploadSim.running ? "Cancel" : (uploadIndicator.progress >= 1.0 ? "Done" : "Upload")
+                        variant: "tonal"
+                        Layout.alignment: Qt.AlignHCenter
+                        onClicked: {
+                            if (uploadSim.running) {
+                                uploadSim.stop()
+                                uploadIndicator.reset()
+                            } else if (uploadIndicator.progress >= 1.0) {
+                                uploadIndicator.reset()
+                            } else {
+                                uploadSim.start()
+                            }
+                        }
+                    }
+
+                    Timer {
+                        id: uploadSim
+                        interval: 50; repeat: true
+                        onTriggered: {
+                            uploadIndicator.progress = Math.min(1.0, uploadIndicator.progress + 0.008 + Math.random() * 0.01)
+                            if (uploadIndicator.progress >= 1.0) stop()
+                        }
+                    }
+                }
+            }
+
+            // Wavy circular upload
+            Card {
+                Layout.preferredWidth: 200
+                Layout.preferredHeight: 200
+                variant: "outlined"
+
+                content: ColumnLayout {
+                    anchors.fill: parent
+                    spacing: 8
+                    anchors.margins: 0
+
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+
+                        CircularProgressIndicator {
+                            id: wavyUpload
+                            anchors.centerIn: parent
+                            size: "large"
+                            wavy: true
+                            progress: 0.0
+
+                            content: Text {
+                                anchors.centerIn: parent
+                                text: wavyUpload.progress >= 1.0
+                                      ? "✓"
+                                      : "%1%".arg(Math.round(wavyUpload.progress * 100))
+                                font.pixelSize: wavyUpload.progress >= 1.0 ? 20 : 13
+                                font.weight: Font.Medium
+                                color: colors.primary
+                            }
+                        }
+                    }
+
+                    Text {
+                        text: wavyUploadSim.running
+                              ? "Encoding media…"
+                              : (wavyUpload.progress >= 1.0
+                                 ? "Encoding complete" : "Ready")
+                        font.pixelSize: 12; color: colors.onSurfaceVariant
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+
+                    Button {
+                        text: wavyUploadSim.running ? "Cancel" : (wavyUpload.progress >= 1.0 ? "Done" : "Encode")
+                        variant: "tonal"
+                        Layout.alignment: Qt.AlignHCenter
+                        onClicked: {
+                            if (wavyUploadSim.running) {
+                                wavyUploadSim.stop()
+                                wavyUpload.reset()
+                            } else if (wavyUpload.progress >= 1.0) {
+                                wavyUpload.reset()
+                            } else {
+                                wavyUploadSim.start()
+                            }
+                        }
+                    }
+
+                    Timer {
+                        id: wavyUploadSim
+                        interval: 60; repeat: true
+                        onTriggered: {
+                            wavyUpload.progress = Math.min(1.0, wavyUpload.progress + 0.005 + Math.random() * 0.01)
+                            if (wavyUpload.progress >= 1.0) stop()
+                        }
+                    }
+                }
+            }
+
+            // Loading spinners column
+            ColumnLayout {
+                spacing: 20
+
+                Text {
+                    text: "Loading states"
+                    font.pixelSize: 13; font.weight: Font.Medium
+                    color: colors.onSurfaceVariant
+                }
+
+                RowLayout {
+                    spacing: 16
+
+                    // Small — button-level loading
+                    ColumnLayout {
+                        spacing: 6
+                        CircularProgressIndicator {
+                            size: "small"
+                            indeterminate: root.visible
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                        Text {
+                            text: "Small"
+                            font.pixelSize: 11; color: colors.onSurfaceVariant
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                    }
+
+                    // Medium — card-level loading
+                    ColumnLayout {
+                        spacing: 6
+                        CircularProgressIndicator {
+                            size: "medium"
+                            indeterminate: root.visible
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                        Text {
+                            text: "Medium"
+                            font.pixelSize: 11; color: colors.onSurfaceVariant
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                    }
+
+                    // Large — page-level loading
+                    ColumnLayout {
+                        spacing: 6
+                        CircularProgressIndicator {
+                            size: "large"
+                            indeterminate: root.visible
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                        Text {
+                            text: "Large"
+                            font.pixelSize: 11; color: colors.onSurfaceVariant
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                    }
+                }
+
+                Text {
+                    text: "Wavy indeterminate"
+                    font.pixelSize: 13; font.weight: Font.Medium
+                    color: colors.onSurfaceVariant
+                }
+
+                RowLayout {
+                    spacing: 16
+                    CircularProgressIndicator {
+                        size: "medium"
+                        indeterminate: root.visible
+                        wavy: true
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+                    CircularProgressIndicator {
+                        size: "large"
+                        indeterminate: root.visible
+                        wavy: true
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+                }
+            }
+        }
+
+        // ═══════════════════════════════════════════════════
+        // 5. INDETERMINATE→DETERMINATE TRANSITION
+        // ═══════════════════════════════════════════════════
+
+        Text {
+            text: "Indeterminate → Determinate Transition"
+            font.pixelSize: 20; font.weight: Font.Medium
+            color: colors.primary
+        }
+
+        Card {
+            Layout.fillWidth: true
+            Layout.maximumWidth: 520
+            variant: "outlined"
+
+            content: ColumnLayout {
+                anchors.fill: parent
+                spacing: 12
+
+                RowLayout {
+                    spacing: 12
+                    Text {
+                        text: "󰋊"
+                        font.family: "Symbols Nerd Font"
+                        font.pixelSize: 20; color: colors.primary
+                    }
+                    ColumnLayout {
+                        spacing: 2
+                        Layout.fillWidth: true
+                        Text {
+                            id: transitionLabel
+                            text: "Ready to scan"
+                            font.pixelSize: 14; font.weight: Font.Medium
+                            color: colors.onSurface
+                        }
+                        Text {
+                            id: transitionSub
+                            text: "Scans disk for errors"
+                            font.pixelSize: 12; color: colors.onSurfaceVariant
+                        }
+                    }
+                }
+
+                LinearProgressIndicator {
+                    id: transitionBar
+                    Layout.fillWidth: true
+                    indeterminate: false
+                    progress: 0.0
+                }
+
+                Button {
+                    text: transitionSim.running ? "Scanning…" : "Start Disk Scan"
+                    variant: "tonal"
+                    Layout.alignment: Qt.AlignRight
+                    enabled: !transitionSim.running
+                    onClicked: {
+                        transitionBar.progress = 0.0
+                        transitionBar.indeterminate = true
+                        transitionLabel.text = "Preparing scan…"
+                        transitionSub.text = "Analyzing disk structure"
+                        transitionSim.phase = 0
+                        transitionSim.ticks = 0
+                        transitionSim.start()
+                    }
+                }
+
+                Timer {
+                    id: transitionSim
+                    property int phase: 0   // 0 = indeterminate, 1 = determinate
+                    property int ticks: 0
+                    interval: 80; repeat: true
+
+                    onTriggered: {
+                        ticks++
+                        if (phase === 0 && ticks > 25) {
+                            // Switch to determinate once "structure" is known
+                            phase = 1
+                            transitionBar.indeterminate = false
+                            transitionBar.progress = 0.0
+                            transitionLabel.text = "Scanning disk…"
+                            transitionSub.text = "Checking sectors"
+                        } else if (phase === 1) {
+                            var step = 0.006 + Math.random() * 0.014
+                            transitionBar.progress = Math.min(1.0, transitionBar.progress + step)
+                            var sectors = Math.round(transitionBar.progress * 524288)
+                            transitionSub.text = "%1 / 524,288 sectors checked".arg(
+                                sectors.toLocaleString())
+                            if (transitionBar.progress >= 1.0) {
+                                stop()
+                                transitionLabel.text = "Scan complete"
+                                transitionSub.text = "No errors found"
+                                globalSnackbar.show("Disk scan finished — no errors", undefined, false)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Divider { Layout.fillWidth: true }
+
+        // ═══════════════════════════════════════════════════
+        // BADGES
+        // ═══════════════════════════════════════════════════
+
+        Text {
+            text: "Badges"
+            font.pixelSize: 20; font.weight: Font.Medium
+            color: colors.primary
+        }
+
+        RowLayout {
+            spacing: 32
+            Badge {
+                text: "3"; size: "small"
+                content: IconButton {
+                    icon: "notifications"; variant: "tonal"
+                    iconFont: "Symbols Nerd Font"
+                }
+            }
+            Badge {
+                text: "5"; size: "medium"
+                content: IconButton {
+                    icon: "mail"; variant: "tonal"
+                    iconFont: "Symbols Nerd Font"
+                }
+            }
+            Badge {
+                text: "99+"; size: "medium"
+                content: IconButton {
+                    icon: "chat"; variant: "tonal"
+                    iconFont: "Symbols Nerd Font"
+                }
+            }
+        }
+
+        Divider { Layout.fillWidth: true }
+
+        // ═══════════════════════════════════════════════════
+        // SKELETON LOADERS
+        // ═══════════════════════════════════════════════════
+
+        Text {
+            text: "Loading States (Skeleton)"
+            font.pixelSize: 20; font.weight: Font.Medium
+            color: colors.primary
+        }
+
+        Card {
+            implicitWidth: 300
+            variant: "outlined"
+            content: ColumnLayout {
+                spacing: 12
+                anchors.fill: parent
+
+                RowLayout {
+                    Skeleton {
+                        variant: "circular"; width: 40
+                        animated: root.visible
+                    }
+                    ColumnLayout {
+                        Skeleton {
+                            width: 120; height: 14; variant: "text"
+                            animated: root.visible
+                        }
+                        Skeleton {
+                            width: 80; height: 12; variant: "text"
+                            animated: root.visible
+                        }
+                    }
+                }
+
+                Skeleton {
+                    Layout.fillWidth: true; height: 100
+                    variant: "rectangular"; radius: 8
+                    animated: root.visible
+                }
+            }
+        }
+
+        Divider { Layout.fillWidth: true }
+
+        // ═══════════════════════════════════════════════════
+        // SNACKBARS
+        // ═══════════════════════════════════════════════════
+
+        Text {
+            text: "Snackbars"
+            font.pixelSize: 20; font.weight: Font.Medium
+            color: colors.primary
+        }
+
+        Flow {
+            Layout.fillWidth: true; spacing: 16
+
+            Button {
+                text: "Simple Message"
+                onClicked: globalSnackbar.show("Operation successful", undefined, false)
+            }
+            Button {
+                text: "With Action"
+                variant: "tonal"
+                onClicked: globalSnackbar.show("File deleted", "UNDO", false)
+            }
+            Button {
+                text: "With Close"
+                variant: "outlined"
+                onClicked: globalSnackbar.show("Connection lost", undefined, true)
+            }
+        }
+
+        // Bottom spacer
+        Item { Layout.preferredHeight: 32 }
+    }
+}
+QMLEOF
+Now clean up the dead partial:
+
+Bash
+
+rm -f qml/smartui/ui/progress/partials/WaveSegment.qml
+rmdir --ignore-fail-on-non-empty qml/smartui/ui/progress/partials 2>/dev/null
+What was fixed and why
+The crash: Cannot assign to non-existent property "size"
+The previous rewrite dropped size in favor of raw diameter/strokeWidth. That's a mistake — size presets are good API. Now both work together:
+
+qml
+
+// Preset — clean for common cases
+CircularProgressIndicator { size: "large" }
+
+// Direct override — precise control
+CircularProgressIndicator { diameter: 72; strokeWidth: 6 }
+The size feeds a lookup table that provides defaults for diameter and strokeWidth. If you set diameter directly, it overrides the preset. Simple cascading.
+
+Demo: real-world native scenarios instead of toy examples
+Section	What it simulates	Indicator type	Why it matters
+System update download	Determinate download with live byte count, cancel/install flow	Linear flat	Most common native progress pattern — real file size, variable speed via Math.random() jitter
+Page content load	Indeterminate network fetch with reload	Linear flat indeterminate	Shows "wait time unknown" pattern — exactly what M3 recommends for 200ms–5s operations
+File sync	Wavy determinate with file count	Linear wavy	Demonstrates expressive variant for longer operations — M3 says wavy "makes longer processes feel less static"
+Document indexing	Wavy indeterminate	Linear wavy indeterminate	Search index building — truly unknown duration
+File upload	Circular determinate with % in center	Circular flat	Button/card-level indicator as M3 specifies — transitions to ✓ on complete
+Media encoding	Circular wavy determinate	Circular wavy	Showcases expressive circular — the wave undulates along the arc
+Loading spinners	Small/medium/large indeterminate	Circular all sizes	Shows the size presets working — small for buttons, medium for cards, large for pages
+Wavy spinners	Wavy indeterminate circular	Circular wavy indeterminate	M3 Expressive showcase
+Disk scan	Indeterminate → determinate transition	Linear transition	Key M3 pattern: "As more information about a process becomes available, a progress indicator should change from indeterminate to determinate" — starts unknown, then switches once disk structure is analyzed
+Key design decisions in the demo
+Every indicator has context — a label saying what is happening, a sublabel showing specifics, and controls to start/cancel/retry. No naked progress bars.
+
+Jittered progress — Math.random() jitter on step size simulates real I/O where progress isn't perfectly linear. This makes the demo feel native rather than like a CSS animation showcase.
+
+Visibility gating — indeterminate: root.visible stops all animations when the page is scrolled offscreen. Zero wasted frames.
+
+Indeterminate→determinate transition — the disk scan demo does this live: 2 seconds of indeterminate "preparing", then switches to determinate once the "sector count" is known. This is directly from the M3 spec and is something almost every real app needs.
+
+
+
+
+
+update the demo app in the progress sections to use more real world examples that would be used in an actual native enviroment (22:06:56: Starting /home/lufuno/Documents/smartuidemo/build/Desktop-Debug/appsmartuidemo...
+QML debugging is enabled. Only use this in a safe environment.
+QQmlApplicationEngine failed to load component
+qrc:/qt/qml/smartuidemo/Main.qml:246:21: Type FeedbackPage unavailable
+qrc:/qt/qml/smartuidemo/pages/FeedbackPage.qml:48:25: Cannot assign to non-existent property "size"
+22:06:56: /home/lufuno/Documents/smartuidemo/build/Desktop-Debug/appsmartuidemo exited with code 255) (import QtQuick
+import QtQuick.Layouts
+import QtQuick.Controls
+import SmartUIBeta
+
+Flickable {
+id: root
+contentHeight: mainCol.implicitHeight + 60
+contentWidth: parent ? parent.width : 800
+clip: true
+boundsBehavior: Flickable.StopAtBounds
+
+text
+
+property var colors: ChiTheme.colors
+
+Snackbar {
+    id: globalSnackbar
+    position: "bottom"
+    width: Math.min(parent.width - 32, 400)
+    anchors.horizontalCenter: parent.horizontalCenter
+}
+
+ColumnLayout {
+    id: mainCol
+    anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right; anchors.margins: 32
+    spacing: 32
+
+    // HEADER
+    ColumnLayout {
+        spacing: 8
+        Text { text: "Feedback & Status"; font.pixelSize: 34; color: colors.onSurface }
+        Text { text: "Progress indicators, badges, and notifications."; font.pixelSize: 16; color: colors.onSurfaceVariant }
+    }
+
+    // --- PROGRESS ---
+    Text { text: "Progress Indicators"; font.pixelSize: 20; font.weight: Font.Medium; color: colors.primary }
+    
+    RowLayout {
+        spacing: 40
+        
+        // Circular
+        ColumnLayout {
+            spacing: 16
+            Text { text: "Circular"; color: colors.onSurfaceVariant }
+            RowLayout {
+                spacing: 20
+                // OPTIMIZATION: Only animate when page is visible
+                CircularProgressIndicator { 
+                    size: "medium"
+                    indeterminate: true && root.visible 
+                }
+                CircularProgressIndicator { size: "medium"; progress: 0.75 }
+                CircularProgressIndicator { 
+                    size: "large"; progress: 0.45
+                    content: Text { 
+                        text: "45%"; font.pixelSize: 12
+                        color: colors.primary; anchors.centerIn: parent
+                    }
+                }
+            }
+        }
+
+        // Linear
+        ColumnLayout {
+            spacing: 16
+            Layout.fillWidth: true
+            Text { text: "Linear"; color: colors.onSurfaceVariant }
+            
+            // OPTIMIZATION: Only animate when page is visible
+            LinearProgressIndicator { 
+                Layout.fillWidth: true
+                indeterminate: true && root.visible
+            }
+            
+            LinearProgressIndicator { 
+                Layout.fillWidth: true
+                progress: 0.6 
+            }
+            
+            LinearProgressIndicator { 
+                Layout.fillWidth: true
+                variant: "wave"
+                progress: 0.8
+                thickness: "medium"
+                // Stop wave animation if hidden
+                animated: root.visible
+            }
+        }
+    }
+
+    Divider { Layout.fillWidth: true }
+
+    // --- BADGES ---
+    Text { text: "Badges"; font.pixelSize: 20; font.weight: Font.Medium; color: colors.primary }
+    
+    RowLayout {
+        spacing: 32
+        Badge {
+            text: "3"; size: "small"
+            content: IconButton { icon: "notifications"; variant: "tonal"; iconFont: "Symbols Nerd Font" }
+        }
+        Badge {
+            text: "5"; size: "medium"
+            content: IconButton { icon: "mail"; variant: "tonal"; iconFont: "Symbols Nerd Font" }
+        }
+        Badge {
+            text: "99+"; size: "medium"
+            content: IconButton { icon: "chat"; variant: "tonal"; iconFont: "Symbols Nerd Font" }
+        }
+    }
+
+    Divider { Layout.fillWidth: true }
+
+    // --- SKELETON LOADERS ---
+    Text { text: "Loading States (Skeleton)"; font.pixelSize: 20; font.weight: Font.Medium; color: colors.primary }
+    
+    Card {
+        implicitWidth: 300
+        variant: "outlined"
+        content: ColumnLayout {
+            spacing: 12
+            anchors.fill: parent
+            
+            RowLayout {
+                // OPTIMIZATION: animated bound to visibility
+                Skeleton { variant: "circular"; width: 40; animated: root.visible }
+                ColumnLayout {
+                    Skeleton { width: 120; height: 14; variant: "text"; animated: root.visible }
+                    Skeleton { width: 80; height: 12; variant: "text"; animated: root.visible }
+                }
+            }
+            
+            Skeleton { 
+                Layout.fillWidth: true; height: 100
+                variant: "rectangular"; radius: 8
+                animated: root.visible 
+            }
+        }
+    }
+
+    Divider { Layout.fillWidth: true }
+
+    // --- SNACKBARS ---
+    Text { text: "Snackbars"; font.pixelSize: 20; font.weight: Font.Medium; color: colors.primary }
+    
+    Flow {
+        Layout.fillWidth: true; spacing: 16
+        
+        Button { 
+            text: "Simple Message"
+            onClicked: globalSnackbar.show("Operation successful", undefined, false)
+        }
+        Button { 
+            text: "With Action"
+            variant: "tonal"
+            onClicked: globalSnackbar.show("File deleted", "UNDO", false)
+        }
+        Button { 
+            text: "With Close"
+            variant: "outlined"
+            onClicked: globalSnackbar.show("Connection lost", undefined, true)
+        }
+    }
+}
+}
+) the size variants should exist ofcourse
+
+claude-opus-4-6-search
+No Sources
+Looking at your current implementations, I see several issues:
+
+Canvas everywhere — Canvas is CPU-rendered, triggers JS onPaint per frame, and is the slowest path in Qt Quick
+Circular indeterminate is broken — two competing SequentialAnimation blocks fight each other without coordinated phase
+Wave uses Canvas — repaints on every progress change with bezier math in JS
+WaveSegment partial is dead code
+The fix: QtQuick.Shapes — GPU-accelerated, declarative, zero JS in the render loop for flat variants, and PathAngleArc for circular arcs.
+
+Here are the complete rewrites:
+
+Bash
+
+cat > qml/smartui/ui/progress/LinearProgressIndicator.qml << 'QMLEOF'
+// smartui/ui/progress/LinearProgressIndicator.qml
+// Linear progress indicator — M3 + M3 Expressive tokens
+// Anatomy: active indicator, track, stop indicator, gap
+import QtQuick
+import QtQuick.Shapes
+import "../../theme" as Theme
+
+Item {
+    id: root
+
+    // ─── Public API ─────────────────────────────────────────
+    property real progress: 0.0
+    property bool indeterminate: false
+    property bool wavy: false
+    property real trackThickness: 4
+    property bool showStopIndicator: true
+    property bool enabled: true
+
+    // ─── M3 Tokens ──────────────────────────────────────────
+    readonly property real _amplitude: 3.0
+    readonly property real _wavelength: 40.0
+    readonly property real _indeterminateWavelength: 20.0
+    readonly property real _stopSize: 4.0
+    readonly property real _gap: 4.0
+    readonly property real _minWidth: 40.0
+
+    // ─── Internal State ─────────────────────────────────────
+    readonly property real _progress: Math.max(0, Math.min(1, progress))
+    readonly property real _containerHeight: wavy
+        ? Math.max(trackThickness + _amplitude * 2, 10)
+        : trackThickness
+    readonly property real _radius: trackThickness / 2
+
+    // Progress pixel math
+    readonly property real _activeWidth: width * _progress
+    readonly property bool _hasProgress: _progress > 0.001
+    readonly property bool _isComplete: _progress > 0.999
+    readonly property real _gapPx: (_hasProgress && !_isComplete) ? _gap : 0
+    readonly property real _trackX: _activeWidth + _gapPx
+    readonly property real _trackW: Math.max(0, width - _trackX)
+
+    implicitWidth: 240
+    implicitHeight: _containerHeight
+    opacity: enabled ? 1.0 : 0.38
+
+    // ═══════════════════════════════════════════════════════
+    // DETERMINATE — FLAT
+    // ═══════════════════════════════════════════════════════
+
+    // Track background
+    Rectangle {
+        id: flatTrack
+        visible: !indeterminate && !wavy
+        anchors.verticalCenter: parent.verticalCenter
+        x: _hasProgress ? _trackX : 0
+        width: _hasProgress ? _trackW : root.width
+        height: trackThickness
+        radius: _radius
+        color: Theme.ChiTheme.colors.secondaryContainer
+
+        Behavior on x     { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+        Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+    }
+
+    // Active indicator
+    Rectangle {
+        id: flatActive
+        visible: !indeterminate && !wavy && _hasProgress
+        anchors.verticalCenter: parent.verticalCenter
+        x: 0
+        width: _activeWidth
+        height: trackThickness
+        radius: _radius
+        color: Theme.ChiTheme.colors.primary
+
+        Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // DETERMINATE — WAVY
+    // ═══════════════════════════════════════════════════════
+
+    // Wavy track (flat rectangle — track is always flat per M3)
+    Rectangle {
+        id: wavyTrack
+        visible: !indeterminate && wavy
+        anchors.verticalCenter: parent.verticalCenter
+        x: _hasProgress ? _trackX : 0
+        width: _hasProgress ? _trackW : root.width
+        height: trackThickness
+        radius: _radius
+        color: Theme.ChiTheme.colors.secondaryContainer
+
+        Behavior on x     { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+        Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+    }
+
+    // Wavy active indicator — clipped Shape, translated for animation
+    Item {
+        id: wavyActiveClip
+        visible: !indeterminate && wavy && _hasProgress
+        anchors.verticalCenter: parent.verticalCenter
+        width: _activeWidth
+        height: _containerHeight
+        clip: true
+
+        Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+
+        property real _phase: 0.0
+        NumberAnimation on _phase {
+            from: 0; to: _wavelength
+            duration: 1200
+            loops: Animation.Infinite
+            running: wavy && !indeterminate && root.visible && root.enabled
+        }
+
+        Shape {
+            id: wavyActiveShape
+            x: -wavyActiveClip._phase
+            width: wavyActiveClip.width + _wavelength * 2
+            height: parent.height
+            layer.enabled: false
+
+            ShapePath {
+                strokeColor: Theme.ChiTheme.colors.primary
+                strokeWidth: root.trackThickness
+                fillColor: "transparent"
+                capStyle: ShapePath.RoundCap
+                joinStyle: ShapePath.RoundJoin
+
+                PathPolyline {
+                    path: {
+                        var pts = [];
+                        var w = wavyActiveShape.width;
+                        var cy = wavyActiveShape.height / 2;
+                        var amp = root._amplitude;
+                        var wl = root._wavelength;
+                        if (w <= 0 || wl <= 0) return [Qt.point(0, cy)];
+                        var step = 2;
+                        for (var x = 0; x <= w; x += step) {
+                            pts.push(Qt.point(x, cy + amp * Math.sin(2 * Math.PI * x / wl)));
+                        }
+                        if (pts[pts.length - 1].x < w)
+                            pts.push(Qt.point(w, cy + amp * Math.sin(2 * Math.PI * w / wl)));
+                        return pts;
+                    }
+                }
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // INDETERMINATE — FLAT
+    // ═══════════════════════════════════════════════════════
+
+    Item {
+        id: indeterminateFlat
+        visible: indeterminate && !wavy
+        anchors.fill: parent
+        clip: true
+
+        // Background track
+        Rectangle {
+            anchors.verticalCenter: parent.verticalCenter
+            width: parent.width
+            height: trackThickness
+            radius: _radius
+            color: Theme.ChiTheme.colors.secondaryContainer
+        }
+
+        // Bar 1 — leading
+        Rectangle {
+            id: bar1
+            anchors.verticalCenter: parent.verticalCenter
+            height: trackThickness
+            radius: _radius
+            color: Theme.ChiTheme.colors.primary
+
+            SequentialAnimation {
+                running: indeterminate && !wavy && root.visible
+                loops: Animation.Infinite
+
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: bar1; property: "x"
+                        from: -root.width * 0.5; to: root.width * 0.7
+                        duration: 1000; easing.type: Easing.InOutCubic
+                    }
+                    NumberAnimation {
+                        target: bar1; property: "width"
+                        from: root.width * 0.08; to: root.width * 0.55
+                        duration: 1000; easing.type: Easing.InOutCubic
+                    }
+                }
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: bar1; property: "x"
+                        from: root.width * 0.7; to: root.width * 1.1
+                        duration: 800; easing.type: Easing.InCubic
+                    }
+                    NumberAnimation {
+                        target: bar1; property: "width"
+                        from: root.width * 0.55; to: root.width * 0.04
+                        duration: 800; easing.type: Easing.InCubic
+                    }
+                }
+            }
+        }
+
+        // Bar 2 — trailing, staggered
+        Rectangle {
+            id: bar2
+            anchors.verticalCenter: parent.verticalCenter
+            height: trackThickness
+            radius: _radius
+            color: Theme.ChiTheme.colors.primary
+
+            SequentialAnimation {
+                running: indeterminate && !wavy && root.visible
+                loops: Animation.Infinite
+
+                PauseAnimation { duration: 600 }
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: bar2; property: "x"
+                        from: -root.width * 0.3; to: root.width * 0.8
+                        duration: 900; easing.type: Easing.InOutCubic
+                    }
+                    NumberAnimation {
+                        target: bar2; property: "width"
+                        from: root.width * 0.04; to: root.width * 0.45
+                        duration: 900; easing.type: Easing.InOutCubic
+                    }
+                }
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: bar2; property: "x"
+                        from: root.width * 0.8; to: root.width * 1.05
+                        duration: 700; easing.type: Easing.InCubic
+                    }
+                    NumberAnimation {
+                        target: bar2; property: "width"
+                        from: root.width * 0.45; to: root.width * 0.02
+                        duration: 700; easing.type: Easing.InCubic
+                    }
+                }
+                PauseAnimation { duration: 100 }
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // INDETERMINATE — WAVY
+    // ═══════════════════════════════════════════════════════
+
+    Item {
+        id: indeterminateWavy
+        visible: indeterminate && wavy
+        anchors.fill: parent
+        clip: true
+
+        // Flat background track
+        Rectangle {
+            anchors.verticalCenter: parent.verticalCenter
+            width: parent.width
+            height: trackThickness
+            radius: _radius
+            color: Theme.ChiTheme.colors.secondaryContainer
+        }
+
+        // Wavy bar — slides across
+        Item {
+            id: wavyBar
+            anchors.verticalCenter: parent.verticalCenter
+            height: _containerHeight
+            clip: true
+
+            property real _phase: 0.0
+            NumberAnimation on _phase {
+                from: 0; to: _indeterminateWavelength
+                duration: 600
+                loops: Animation.Infinite
+                running: indeterminate && wavy && root.visible
+            }
+
+            SequentialAnimation {
+                running: indeterminate && wavy && root.visible
+                loops: Animation.Infinite
+
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: wavyBar; property: "x"
+                        from: -root.width * 0.4; to: root.width * 0.75
+                        duration: 1000; easing.type: Easing.InOutCubic
+                    }
+                    NumberAnimation {
+                        target: wavyBar; property: "width"
+                        from: root.width * 0.08; to: root.width * 0.55
+                        duration: 1000; easing.type: Easing.InOutCubic
+                    }
+                }
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: wavyBar; property: "x"
+                        from: root.width * 0.75; to: root.width * 1.1
+                        duration: 800; easing.type: Easing.InCubic
+                    }
+                    NumberAnimation {
+                        target: wavyBar; property: "width"
+                        from: root.width * 0.55; to: root.width * 0.04
+                        duration: 800; easing.type: Easing.InCubic
+                    }
+                }
+            }
+
+            Shape {
+                x: -wavyBar._phase
+                width: wavyBar.width + _indeterminateWavelength * 2
+                height: parent.height
+
+                ShapePath {
+                    strokeColor: Theme.ChiTheme.colors.primary
+                    strokeWidth: root.trackThickness
+                    fillColor: "transparent"
+                    capStyle: ShapePath.RoundCap
+                    joinStyle: ShapePath.RoundJoin
+
+                    PathPolyline {
+                        path: {
+                            var pts = [];
+                            var w = parent.parent.width + root._indeterminateWavelength * 2;
+                            var cy = root._containerHeight / 2;
+                            var amp = root._amplitude;
+                            var wl = root._indeterminateWavelength;
+                            if (w <= 0 || wl <= 0) return [Qt.point(0, cy)];
+                            var step = 2;
+                            for (var x = 0; x <= w; x += step) {
+                                pts.push(Qt.point(x, cy + amp * Math.sin(2 * Math.PI * x / wl)));
+                            }
+                            return pts;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // STOP INDICATOR
+    // ═══════════════════════════════════════════════════════
+
+    Rectangle {
+        visible: showStopIndicator && !indeterminate && !_isComplete && _hasProgress
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.right: parent.right
+        width: _stopSize
+        height: _stopSize
+        radius: _stopSize / 2
+        color: Theme.ChiTheme.colors.primary
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // ACCESSIBILITY
+    // ═══════════════════════════════════════════════════════
+
+    Accessible.role: Accessible.ProgressBar
+    Accessible.name: indeterminate ? "Loading" : "Progress"
+    Accessible.description: indeterminate
+        ? "Loading in progress"
+        : "%1% complete".arg(Math.round(_progress * 100))
+
+    // ─── Imperative helpers ─────────────────────────────────
+    function setProgress(value) { progress = value }
+    function reset()            { progress = 0 }
+    function complete()         { progress = 1.0 }
+}
+QMLEOF
+Bash
+
+cat > qml/smartui/ui/progress/CircularProgressIndicator.qml << 'QMLEOF'
+// smartui/ui/progress/CircularProgressIndicator.qml
+// Circular progress indicator — M3 + M3 Expressive tokens
+// Anatomy: active indicator (arc), track (background circle)
+import QtQuick
+import QtQuick.Shapes
+import "../../theme" as Theme
+
+Item {
+    id: root
+
+    // ─── Public API ─────────────────────────────────────────
+    property real progress: 0.0
+    property bool indeterminate: false
+    property bool wavy: false
+    property real diameter: 40
+    property real strokeWidth: 4
+    property bool enabled: true
+
+    // ─── M3 Tokens ──────────────────────────────────────────
+    readonly property real _waveAmplitude: 1.6
+    readonly property real _waveWavelength: 15.0
+    readonly property real _wavyDiameter: 48.0
+
+    // ─── Internal State ─────────────────────────────────────
+    readonly property real _progress: Math.max(0, Math.min(1, progress))
+    readonly property real _effectiveDiameter: wavy ? Math.max(diameter, _wavyDiameter) : diameter
+    readonly property real _cx: _effectiveDiameter / 2
+    readonly property real _cy: _effectiveDiameter / 2
+    readonly property real _radius: (_effectiveDiameter - strokeWidth) / 2
+    readonly property bool _hasProgress: _progress > 0.001
+
+    implicitWidth: _effectiveDiameter
+    implicitHeight: _effectiveDiameter
+    opacity: enabled ? 1.0 : 0.38
+
+    // ═══════════════════════════════════════════════════════
+    // TRACK — always visible
+    // ═══════════════════════════════════════════════════════
+
+    Shape {
+        id: trackShape
+        anchors.fill: parent
+        layer.enabled: false
+
+        ShapePath {
+            strokeColor: Theme.ChiTheme.colors.secondaryContainer
+            strokeWidth: root.strokeWidth
+            fillColor: "transparent"
+            capStyle: ShapePath.RoundCap
+
+            PathAngleArc {
+                centerX: _cx; centerY: _cy
+                radiusX: _radius; radiusY: _radius
+                startAngle: 0; sweepAngle: 360
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // DETERMINATE — FLAT
+    // ═══════════════════════════════════════════════════════
+
+    Shape {
+        id: determinateFlat
+        visible: !indeterminate && !wavy && _hasProgress
+        anchors.fill: parent
+        layer.enabled: false
+
+        ShapePath {
+            strokeColor: Theme.ChiTheme.colors.primary
+            strokeWidth: root.strokeWidth
+            fillColor: "transparent"
+            capStyle: ShapePath.RoundCap
+
+            PathAngleArc {
+                centerX: _cx; centerY: _cy
+                radiusX: _radius; radiusY: _radius
+                startAngle: -90
+                sweepAngle: _progress * 360
+
+                Behavior on sweepAngle {
+                    NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+                }
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // DETERMINATE — WAVY
+    // ═══════════════════════════════════════════════════════
+
+    Shape {
+        id: determinateWavy
+        visible: !indeterminate && wavy && _hasProgress
+        anchors.fill: parent
+        layer.enabled: false
+
+        property real _phase: 0.0
+        NumberAnimation on _phase {
+            from: 0; to: 2 * Math.PI
+            duration: 1500
+            loops: Animation.Infinite
+            running: wavy && !indeterminate && root.visible && root.enabled
+        }
+
+        ShapePath {
+            strokeColor: Theme.ChiTheme.colors.primary
+            strokeWidth: root.strokeWidth
+            fillColor: "transparent"
+            capStyle: ShapePath.RoundCap
+            joinStyle: ShapePath.RoundJoin
+
+            PathPolyline {
+                path: {
+                    var pts = [];
+                    var sweep = root._progress * 2 * Math.PI;
+                    if (sweep < 0.01) return [Qt.point(root._cx, root._cy - root._radius)];
+
+                    var circumference = 2 * Math.PI * root._radius;
+                    var numWaves = circumference / root._waveWavelength;
+                    var amp = root._waveAmplitude;
+                    var phase = determinateWavy._phase;
+
+                    // Start at 12 o'clock, go clockwise
+                    var steps = Math.max(90, Math.round(numWaves * 24 * root._progress));
+                    for (var i = 0; i <= steps; i++) {
+                        var t = i / steps;
+                        var angle = -Math.PI / 2 + t * sweep;
+                        var r = root._radius + amp * Math.sin(numWaves * angle + phase);
+                        pts.push(Qt.point(root._cx + r * Math.cos(angle),
+                                          root._cy + r * Math.sin(angle)));
+                    }
+                    return pts;
+                }
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // INDETERMINATE — FLAT
+    // ═══════════════════════════════════════════════════════
+
+    Shape {
+        id: indeterminateFlat
+        visible: indeterminate && !wavy
+        anchors.fill: parent
+        layer.enabled: false
+
+        // Continuous container rotation
+        rotation: _containerAngle
+
+        property real _containerAngle: 0
+        NumberAnimation on _containerAngle {
+            from: 0; to: 360
+            duration: 1568
+            loops: Animation.Infinite
+            running: indeterminate && !wavy && root.visible
+        }
+
+        // Arc sweep + offset for grow/shrink phases
+        property real _arcStart: 0
+        property real _arcSweep: 20
+
+        SequentialAnimation {
+            running: indeterminate && !wavy && root.visible
+            loops: Animation.Infinite
+
+            // Phase 1: arc grows (head moves forward, tail stays)
+            ParallelAnimation {
+                NumberAnimation {
+                    target: indeterminateFlat; property: "_arcSweep"
+                    from: 16; to: 270
+                    duration: 667; easing.type: Easing.InOutCubic
+                }
+                NumberAnimation {
+                    target: indeterminateFlat; property: "_arcStart"
+                    from: 0; to: 30
+                    duration: 667; easing.type: Easing.InOutCubic
+                }
+            }
+            // Phase 2: arc shrinks (tail catches head)
+            ParallelAnimation {
+                NumberAnimation {
+                    target: indeterminateFlat; property: "_arcSweep"
+                    from: 270; to: 16
+                    duration: 667; easing.type: Easing.InOutCubic
+                }
+                NumberAnimation {
+                    target: indeterminateFlat; property: "_arcStart"
+                    from: 30; to: 330
+                    duration: 667; easing.type: Easing.InOutCubic
+                }
+            }
+        }
+
+        ShapePath {
+            strokeColor: Theme.ChiTheme.colors.primary
+            strokeWidth: root.strokeWidth
+            fillColor: "transparent"
+            capStyle: ShapePath.RoundCap
+
+            PathAngleArc {
+                centerX: _cx; centerY: _cy
+                radiusX: _radius; radiusY: _radius
+                startAngle: -90 + indeterminateFlat._arcStart
+                sweepAngle: indeterminateFlat._arcSweep
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // INDETERMINATE — WAVY
+    // ═══════════════════════════════════════════════════════
+
+    Item {
+        id: indeterminateWavy
+        visible: indeterminate && wavy
+        anchors.fill: parent
+
+        // Same rotation/sweep logic as flat indeterminate
+        property real _containerAngle: 0
+        NumberAnimation on _containerAngle {
+            from: 0; to: 360
+            duration: 1568
+            loops: Animation.Infinite
+            running: indeterminate && wavy && root.visible
+        }
+
+        property real _arcStart: 0
+        property real _arcSweep: 20
+        property real _wavePhase: 0
+
+        SequentialAnimation {
+            running: indeterminate && wavy && root.visible
+            loops: Animation.Infinite
+
+            ParallelAnimation {
+                NumberAnimation {
+                    target: indeterminateWavy; property: "_arcSweep"
+                    from: 16; to: 270
+                    duration: 667; easing.type: Easing.InOutCubic
+                }
+                NumberAnimation {
+                    target: indeterminateWavy; property: "_arcStart"
+                    from: 0; to: 30
+                    duration: 667; easing.type: Easing.InOutCubic
+                }
+            }
+            ParallelAnimation {
+                NumberAnimation {
+                    target: indeterminateWavy; property: "_arcSweep"
+                    from: 270; to: 16
+                    duration: 667; easing.type: Easing.InOutCubic
+                }
+                NumberAnimation {
+                    target: indeterminateWavy; property: "_arcStart"
+                    from: 30; to: 330
+                    duration: 667; easing.type: Easing.InOutCubic
+                }
+            }
+        }
+
+        NumberAnimation on _wavePhase {
+            from: 0; to: 2 * Math.PI
+            duration: 1200
+            loops: Animation.Infinite
+            running: indeterminate && wavy && root.visible
+        }
+
+        rotation: _containerAngle
+
+        Shape {
+            anchors.fill: parent
+            layer.enabled: false
+
+            ShapePath {
+                strokeColor: Theme.ChiTheme.colors.primary
+                strokeWidth: root.strokeWidth
+                fillColor: "transparent"
+                capStyle: ShapePath.RoundCap
+                joinStyle: ShapePath.RoundJoin
+
+                PathPolyline {
+                    path: {
+                        var pts = [];
+                        var startDeg = indeterminateWavy._arcStart;
+                        var sweepDeg = indeterminateWavy._arcSweep;
+                        var startRad = (-90 + startDeg) * Math.PI / 180;
+                        var sweepRad = sweepDeg * Math.PI / 180;
+
+                        if (sweepRad < 0.05) return [Qt.point(root._cx, root._cy - root._radius)];
+
+                        var circumference = 2 * Math.PI * root._radius;
+                        var numWaves = circumference / root._waveWavelength;
+                        var amp = root._waveAmplitude;
+                        var phase = indeterminateWavy._wavePhase;
+
+                        var steps = Math.max(36, Math.round(numWaves * 24 * (sweepDeg / 360)));
+                        for (var i = 0; i <= steps; i++) {
+                            var t = i / steps;
+                            var angle = startRad + t * sweepRad;
+                            var r = root._radius + amp * Math.sin(numWaves * angle + phase);
+                            pts.push(Qt.point(root._cx + r * Math.cos(angle),
+                                              root._cy + r * Math.sin(angle)));
+                        }
+                        return pts;
+                    }
+                }
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // CENTER CONTENT SLOT
+    // ═══════════════════════════════════════════════════════
+
+    property alias content: contentSlot.children
+
+    Item {
+        id: contentSlot
+        anchors.centerIn: parent
+        width: parent.width - strokeWidth * 4
+        height: parent.height - strokeWidth * 4
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // ACCESSIBILITY
+    // ═══════════════════════════════════════════════════════
+
+    Accessible.role: Accessible.ProgressBar
+    Accessible.name: indeterminate ? "Loading" : "Progress"
+    Accessible.description: indeterminate
+        ? "Loading in progress"
+        : "%1% complete".arg(Math.round(_progress * 100))
+
+    // ─── Imperative helpers ─────────────────────────────────
+    function setProgress(value) { progress = value }
+    function reset()            { progress = 0 }
+    function complete()         { progress = 1.0 }
+}
+QMLEOF
+Now remove the dead partial:
+
+Bash
+
+rm -f qml/smartui/ui/progress/partials/WaveSegment.qml
+rmdir --ignore-fail-on-non-empty qml/smartui/ui/progress/partials 2>/dev/null
+What changed and why
+Architecture — Canvas → QtQuick.Shapes
+Aspect	Old (Canvas)	New (Shape)
+Rendering	CPU-rasterized, JS onPaint per frame	GPU-accelerated scene graph geometry
+Animation	requestPaint() triggers full redraw	Property bindings update only changed nodes
+Circular arc	Manual ctx.arc() + rotation math in JS	PathAngleArc — single declarative element
+Wave path	Bezier math in onPaint every frame	PathPolyline recomputed on resize only; wave motion is a pure x-translation
+Indeterminate	Two fighting SequentialAnimation blocks	Coordinated 2-phase grow/shrink + continuous rotation
+Linear — key decisions
+Flat variant uses pure Rectangles — zero Shape/JS overhead, fastest possible path in Qt Quick
+Wave variant: a Shape with PathPolyline is drawn wider than the clip container by one extra wavelength; the wave animation is just x: -phase (GPU transform, no path recomputation)
+Indeterminate uses two staggered bars matching the Material two-bar pattern: bar 1 leads with grow→slide→shrink, bar 2 follows 600ms later
+Stop indicator: simple 4dp rounded Rectangle at trailing edge, visible only when progress is partial and showStopIndicator is true
+Gap: 4dp between active indicator and track per M3 token track-active-indicator-space
+Circular — key decisions
+Flat determinate: single PathAngleArc with sweepAngle: _progress * 360 and a Behavior for smooth animation — zero JS in the render loop
+Flat indeterminate: the broken animation is fixed with a proper Material spinner pattern:
+Container rotates linearly at 360°/1568ms
+Inside, _arcStart and _arcSweep alternate through two phases (grow then shrink) with coordinated InOutCubic easing — the arc appears to chase its own tail
+Wave variants use PathPolyline with the polar equation r(θ) = R + A·sin(nθ + φ) where n = circumference / wavelength. The phase φ animates for wave motion. Point count scales with the arc portion visible (~100-200 points of trivial trig — fast)
+diameter and strokeWidth are now direct properties instead of the indirect size→lookup map, giving callers exact control per M3 Expressive's "configurable track height" principle
+Removed
+partials/WaveSegment.qml — dead code, the wave is now a single PathPolyline inside the parent component
+Canvas — entirely eliminated from both files
+Connections to onColorsChanged — unnecessary, QML bindings on Theme.ChiTheme.colors.* already react to theme changes automatically for Rectangle.color and ShapePath.strokeColor
+size enum with lookup table — replaced with direct diameter/trackThickness properties (simpler, more flexible, matches M3 Expressive "configurable" philosophy)
+animated flag / animationDuration — the Behavior animations are always on at fixed 300ms (durationSlow range); call setProgress() and the animation handles itself. No hacky toggle-animate-toggle pattern.
+API surface
+Both components share the same shape:
+
+qml
+
+// Determinate flat
+LinearProgressIndicator { progress: 0.65 }
+CircularProgressIndicator { progress: 0.65 }
+
+// Determinate wavy
+LinearProgressIndicator { progress: 0.65; wavy: true }
+CircularProgressIndicator { progress: 0.65; wavy: true }
+
+// Indeterminate
+LinearProgressIndicator { indeterminate: true }
+CircularProgressIndicator { indeterminate: true }
+
+// Indeterminate wavy
+LinearProgressIndicator { indeterminate: true; wavy: true }
+CircularProgressIndicator { indeterminate: true; wavy: true }
+
+// Thickness / size
+LinearProgressIndicator { progress: 0.5; trackThickness: 8 }
+CircularProgressIndicator { progress: 0.5; diameter: 56; strokeWidth: 5 }
+
+
+
+
+I am building a modern smartui library, which i am build with 10 design principles in mind inspired by material 3 specs but not limited to them as we make it our own. I want to create the loading indicator and the progress indicators, i dont want to waste my time anymore on the zigzag lines i just want one progress indicator the normal linear and the circular one to be fully implemented, update the source code to use efficient modern qt6 modules that increase performance and also give me clean code just like the unix phylosophy instead of hacky solution and non lasting solutions which arent robust enough. so let's start with the progress indicators. Two variants: linear and circular
+
+Use the same configuration for all instances of a process (like loading)
+
+They capture attention through motion
+
+Option to apply a wave to the active track for use cases that would benefit from increased expressiveness
+
+link
+Copy link
+8 progress indicators configured to show different thickness and shape.
+Linear and circular progress indicators have visual configurations for shape and thickness
+
+link
+Copy link
+Availability & resources
+link
+Copy link
+Type Resource Status
+Design
+Design Kit (Figma)
+Available
+Implementation
+Flutter
+Available
+Jetpack Compose
+Available
+Jetpack Compose: Expressive
+Available
+MDC-Android
+Available
+MDC-Android: Expressive
+Available
+Web
+Available
+Web: Expressive
+Unavailable
+link
+Copy link
+M3 Expressive update
+link
+Copy link
+May 2025
+
+The progress indicators have configurations for height and wavy shape. Choose the visual style that best fits your product. More on M3 Expressive
+
+link
+Copy link
+Track height: Configurable
+
+Shape: Wavy
+
+pause
+Progress indicators have a new rounded, colorful style, and more configurations to choose from, including a wavy shape and variable track height
+
+link
+Copy link
+Previous updates
+link
+Copy link
+Dec 2023: Non-text contrast (NTC)
+
+Anatomy: Added an end stop indicator to improve accessibility
+
+Contrast: Higher contrast between track and active indicator to enhance the perception of progress
+
+Motion: New motion behavior
+
+Shape: Rounded corners
+
+M3 linear and circular progress indicators.
+Progress indicators have a new rounded, colorful style
+
+link
+Copy link
+Differences from M2
+link
+Copy link
+July 2022: Added to Material 3
+
+Color: New color mappings and compatibility with dynamic color
+link
+Copy link
+M2 linear and circular progress indicators.
+M2: Progress indicators have a boxier, neutral style
+
+M3 linear and circular progress indicators.
+M3: Progress indicators are compatible with dynamic color. Copy link
+Variants
+link
+Copy link
+2 variant of progress indicators.
+Linear progress indicator
+Circular progress indicator
+link
+Copy link
+Variant
+
+M3
+
+M3 Expressive
+
+Linear progress indicator
+
+Available
+
+Available
+
+Circular progress indicator
+
+Available
+
+Available
+
+link
+Copy link
+Configurations
+link
+Copy link
+4 configurations of the linear determinate progress indicator.
+Behavior: Determinate and indeterminate
+Thickness: Default (4dp) and variable
+Shape: Flat and wavy
+link
+Copy link
+Category
+
+Configuration
+
+M3
+
+M3 Expressive
+
+Behavior
+
+Determinate (default), Indeterminate
+
+Available
+
+Available
+
+Track thickness
+
+Fixed (4dp)
+
+Available
+
+Available
+
+Configurable
+
+--
+
+Available
+
+Shape
+
+Flat (default)
+
+Available
+
+Available
+
+Wavy
+
+--
+
+Available
+
+link
+Copy link
+Tokens & specs
+Browse the component elements, attributes, tokens, and their values. View baseline tokens
+
+link
+Copy link
+
+Progress indicator - Circular
+Search
+Token
+Value
+Circular - baseline
+Progress indicator circular size
+md.comp.progress-indicator.circular.size
+40dp
+Progress indicator circular size with wave
+md.comp.progress-indicator.circular.with-wave.size
+48dp
+Progress indicator circular active indicator thickness
+md.comp.progress-indicator.circular.active-indicator.thickness
+4dp
+Progress indicator circular track thickness
+md.comp.progress-indicator.circular.track.thickness
+4dp
+Progress indicator circular track active indicator space
+md.comp.progress-indicator.circular.track-active-indicator-space
+4dp
+Progress indicator circular active indicator wave amplitude
+md.comp.progress-indicator.circular.active-indicator.wave.amplitude
+1.6dp
+Progress indicator circular active indicator wave wavelength
+md.comp.progress-indicator.circular.active-indicator.wave.wavelength
+15dp
+[Deprecated] Circular - thick
+link
+Copy link
+Anatomy
+link
+Copy link
+3 elements of a progress indicator.
+Active indicator
+Track
+Stop indicator
+link
+Copy link
+Color
+link
+Copy link
+2 color roles of a linear progress indicator in light and dark themes. The active indicator and stop indicator are primary and the track is secondary container.
+Progress indicator color roles used for light and dark schemes:
+
+Primary
+Secondary container
+link
+Copy link
+Measurements
+link
+Copy link
+Wavy indicators use amplitude and wavelength to determine the shape of the wave. The height is the overall container height.
+
+link
+Copy link
+Definitions of wave measurements for height and amplitude.
+Amplitude measures from the center of the resting position to the center of the peak
+
+Definitions of wave measurements for wavelength.
+Wavelength measures the distance between two adjacent peaks
+
+link
+Copy link
+Linear progress indicator measurements.
+Size measurements for linear progress indicators. The thicker variants are provided as sample measurement for makers to adjust the default version based on their use cases.
+
+link
+Copy link
+Circular progress indicator measurements.
+Size measurements for circular progress indicators. The thicker variants are provided as sample measurement for makers to adjust the default version based on their use cases.
+
+link
+Copy link
+4dp padding on the left and right of the linear progress indicator.
+The linear progress indicator is inset from the edge of the screen by 4dp. Progress indicator - Linear
+Search
+Token
+Value
+Linear - baseline
+Progress indicator linear height
+md.comp.progress-indicator.linear.height
+4dp
+Progress indicator linear with wave height
+md.comp.progress-indicator.linear.with-wave.height
+10dp
+Progress indicator linear active indicator thickness
+md.comp.progress-indicator.linear.active-indicator.thickness
+4dp
+Progress indicator linear track thickness
+md.comp.progress-indicator.linear.track.thickness
+4dp
+Progress indicator linear stop indicator size
+md.comp.progress-indicator.linear.stop-indicator.size
+4dp
+Progress indicator linear track active indicator space
+md.comp.progress-indicator.linear.track-active-indicator-space
+4dp
+Progress indicator linear stop indicator trailing space
+md.comp.progress-indicator.linear.stop-indicator.trailing-space
+0
+Progress indicator linear wave amplitude
+md.comp.progress-indicator.linear.active-indicator.wave.amplitude
+3dp
+Progress indicator linear wave wavelenght
+md.comp.progress-indicator.linear.active-indicator.wave.wavelength
+40dp
+Progress indicator linear indeterminate wave wavelenght
+md.comp.progress-indicator.linear.indeterminate.active-indicator.wave.wavelength
+20dp.
+
+play_arrow
+Progress indicators communicate the status of an ongoing process
+
+link
+Copy link
+Usage
+link
+Copy link
+Use progress indicators to show the status of ongoing processes, such as loading an app, submitting a form, or saving updates.
+
+When multiple items are loading, use a single progress indicator to show progress for the group. Don’t add progress indicators to every activity.
+
+play_arrow
+check
+Do
+Indicate overall progress of a group of items
+
+play_arrow
+close
+Don’t
+Don’t show the progress of each activity in a group
+
+link
+Copy link
+Choose a loading or progress indicator that corresponds to the expected wait time and type of process.
+
+If the wait is very long, consider allowing people to navigate away from the page while the process finishes up.
+
+Expected wait time
+Recommendation
+Instant (under 200ms) No indicator
+Short (between 200ms and 5s) Loading indicator
+Long (Over 5s) Progress indicator
+link
+Copy link
+
+play_arrow
+Instant (under 200ms): Display the content immediately
+
+play_arrow
+Short (between 200ms and 5s): Use a loading indicator
+
+play_arrow
+Long (over 5s): Use a progress indicator
+
+link
+Copy link
+There are two variants of progress indicators:
+
+Linear
+
+Circular
+
+Linear indicators are best when placed on the edge of a container. Circular indicators are best when centered in an element.
+
+A process should be represented by the same variant of progress indicator throughout the product. For example, if refreshing uses a circular indicator in one place, it should use circular indicators everywhere.
+
+A primary colored horizontal line fills a contrasting track from left to right. 2. A circle appears from 0 to 360 degrees.
+Linear indicator
+Circular indicator
+link
+Copy link
+Progress indicators behave differently based on the time of progress being tracked:
+
+Determinate: Known progress and wait time
+Indeterminate: Unknown progress and wait time
+When using a determinate indicator, the indicator must accurately represent the progress of what it's measuring.
+
+Use indeterminate indicators to show that a process is happening, but the wait time is unknown.
+
+play_arrow
+Determinate progress indicators fill from 0% to 100%
+Indeterminate progress indicators move along a fixed track, growing and shrinking in size
+link
+Copy link
+As more information about a process becomes available, a progress indicator should change from indeterminate to determinate.
+
+play_arrow
+A linear progress indicator changes from indeterminate to determinate while loading a screen
+
+link
+Copy link
+Anatomy
+link
+Copy link
+
+play_arrow
+Active indicator
+Track
+Stop indicator
+link
+Copy link
+Active indicator
+The active indicator shows the progress that has been made so far.
+
+In indeterminate processes, it grows and shrinks along the track repeatedly.
+
+play_arrow
+Linear indicators animate from the leading to the trailing edge along the track. Circular indicators animate from the top of the track, clockwise by default.
+
+link
+Copy link
+The active indicator appears as soon as progress begins. At low percentages where space is limited, this should appear as a dot to help people understand that there’s progress underway.
+
+A linear and circular progress indicator at 1% progress, where the active indicator has only just appeared.
+When progress first begins, the active indicator appears as a dot
+
+link
+Copy link
+The active indicator has two shape options: flat and wavy. Use the shape that best fits the product’s tone.
+
+The wavy shape can make longer processes feel less static and is best used when a more expressive style is appropriate.
+
+When using the wavy shape, the overall height of the component changes. At very small sizes, the wavy shape may not be as visible.
+
+play_arrow
+Wavy linear indicators increase the height of the overall container
+
+link
+Copy link
+Stop indicator
+The stop indicator is a 4dp circle that marks the end of a linear determinate progress indicator to meet Material's accessibility standards.
+
+It's not used for indeterminate or circular progress indicators.
+
+The stop indicator is required if the track has a contrast below 3:1 with its container or the surface behind the container.
+
+A primary colored horizontal line fills a contrasting line from left to right.
+check
+Do
+Use a stop indicator when placing the progress indicator inside a container with low contrast
+
+An invisible circular track fills with color from 0 to 360 degrees.
+exclamation
+Caution
+Only remove the end stop indicator if there's a visual contrast of at least 3:1 with surrounding surfaces
+
+link
+Copy link
+Placement
+link
+Copy link
+Place a linear progress indicator along the edge of a container that’s loading. If the container changes shape, place it on the edge that animates. It can also be placed in the middle of a container.
+
+Use a single progress indicator at the top of a page to show progress of the whole group. Don’t add one for every element unless they’re activated independently.
+
+pause
+When at the top of a screen, a progress indicator shows that all of the page content is loading
+
+pause
+When attached to a card, a progress indicator shows that just the card content is loading
+
+link
+Copy link
+
+play_arrow
+A progress indicator on the expanding edge of a card shows that the edge may expand to show the loaded content
+
+link
+Copy link
+Circular progress indicators should be centered directly on the container or page that's loading, such as a button or card.
+
+When loading more items on a page, place the circular progress indicator in the empty space where the new content will appear, not overlapping existing content.
+
+However, if the content does not take long to load, consider using a loading indicator instead.
+
+pause
+A circular progress indicator can show that the page is loading
+
+pause
+A circular progress indicator can show where new items will appear on a page. A loading indicator also works well in this space.
+
+link
+Copy link
+Progress indicators in buttons
+A circular indicator can be placed in a button to show that the button’s action is currently in progress.
+
+In very small buttons, use the flat shape since the wavy shape is not as visible at that size.
+
+To ensure a minimum 3:1 contrast ratio, change the active indicator color to be the same color as the button’s icon or label text, and remove the track.
+
+pause
+check
+Do
+Use circular indicators for short, indeterminate activities under 5 seconds
+
+play_arrow
+close
+Don’t
+Avoid applying progress indicators to every button in a list
+
+link
+Copy link
+Responsive layout
+link
+Copy link
+Right-to-left languages
+Linear progress indicators should be mirrored horizontally for products using right-to-left (RTL) languages.
+
+Circular progress indicators don’t need to be mirrored.
+
+Mirrored right-to-left progress indicator.
+Linear progress indicators can flow from right to left in right-to-left (RTL) languages
+
+link
+Copy link
+Large screens
+Circular progress indicators have flexible sizes. They can range from 24dp to 240dp, depending on the placement and the window size. Avoid exceeding the minimum and maximum sizes.
+
+Reserve very large progress indicators for large and extra-large windows, such as desktop.
+
+Circular progress indicators can range in size from 24dps to 240dps.
+The waveform should scale with the size so the proportions look the same across sizes
+
+link
+Copy link
+Linear progress indicators dynamically adjust to fit the width of the window or element they’re placed within, such as a card. They shouldn’t be used in any elements smaller than 40dp.
+
+The padding on each end should be 4dp minimum, but can be modified.
+
+Linear progress indicators can dynamically adjust to any width.
+The linear progress indicator should always span the width of the UI element it’s placed within
+
+arrow_left_alt
+Previous
+Progress indicators: Specs
+link
+Copy link
+Use cases
+link
+Copy link
+People should be able to do the following using the assistive technology:
+
+Navigate to the progress indicator
+Understand what progress the indicator is communicating
+link
+Copy link
+Interaction & style
+link
+Copy link
+The active indicator, which displays progress, provides visual contrast of at least 3:1 against most background colors.
+
+Dark line of progress indicator stands out against the lighter colored track.
+The progress indicator and stop indicator provide visual contrast of at least 3:1 against most background colors
+
+link
+Copy link
+When integrated into another component, such as a button, make sure that the active indicator provides visual contrast of at least 3:1 against the other component.
+
+For the active indicator, use the same color as the label text or icon. The track should be removed.
+
+Circular indicator on button passes 3 to 1 contrast test.
+check
+Do
+Ensure the indicator’s color provides at least 3:1 contrast against the surface it's on
+
+Circular indicator on button fails 3 to 1 contrast test.
+close
+Don’t
+Avoid using a color below 3:1 contrast
+
+link
+Copy link
+For linear progress indicators, the stop indicator is required if the track has a contrast below 3:1 with its container or the surface behind the container.
+
+Essentially, the end of the track must be easy to identify.
+
+Bright container holding the progress bar is on a dark surface, passing the 3:1 color contrast.
+check
+Do
+Only remove the stop indicator when the linear progress indicator has at least a 3:1 color contrast with surrounding containers and surfaces
+
+Bright container holding progress indicator is on a bright surface, failing the 3:1 color contrast.
+close
+Don’t
+Avoid removing the stop indicator if any adjacent containers or surfaces are below the 3:1 color contrast
+
+link
+Copy link
+Labeling elements
+link
+Copy link
+Since the progress indicator is a visual cue, it needs an accessibility label to describe the type and amount of progress made.
+
+Use the progress bar accessibility role, and write an accessibility label that describes the purpose of the progress indicator. The label should include the process, such as "loading,” and the affected content, such as a page, article, or episode. For example: "Loading news article" or "Refreshing page."
+
+Determinate linear progress indicator has an accessibility label of “loading news article” and role of “progressbar.”
+Progress indicator labels should explain which items are loading
+
+link
+Copy link
+Indeterminate linear progress indicator has an accessibility label of “loading my episodes” and role of “progressbar.”
+A label on an intedeterminate progress indicator on a screen which is loading a set of podcast episodes
+
+arrow_left_alt
+Previous
+Progress indicators: Guidelines
+. my current implementations which need to be thorough to the last detail and follow 10 principles of good design (lufuno@fedora ~/smartui-beta2 (main)> cat qml/smartui/qmldir
+module SmartUIBeta
+plugin SmartUIBeta
+
+─── Theme ───────────────────────────────────────────────────
+singleton ChiTheme 1.0 theme/ChiTheme.qml
+singleton SmartTheme 1.0 theme/SmartTheme.qml
+singleton IconFont 1.0 theme/IconFont.qml
+
+─── Buttons ─────────────────────────────────────────────────
+Button 1.0 ui/Buttons/Button.qml
+IconButton 1.0 ui/Buttons/IconButton.qml
+SplitButton 1.0 ui/Buttons/SplitButton.qml
+ToggleButton 1.0 ui/Buttons/ToggleButton.qml
+IconButtonToggle 1.0 ui/Buttons/IconButtonToggle.qml
+ButtonGroup 1.0 ui/Buttons/ButtonGroup.qml
+ConnectedButtonGroup 1.0 ui/Buttons/ConnectedButtonGroup.qml
+ConnectedIconButtonGroup 1.0 ui/Buttons/ConnectedIconButtonGroup.qml
+
+─── FAB ─────────────────────────────────────────────────────
+FAB 1.0 ui/FAB/FAB.qml
+FABMenu 1.0 ui/FAB/FABMenu.qml
+FABMenuItem 1.0 ui/FAB/FABMenuItem.qml
+
+─── Switches ────────────────────────────────────────────────
+Switch 1.0 ui/switches/Switch.qml
+
+─── Progress ────────────────────────────────────────────────
+LinearProgressIndicator 1.0 ui/progress/LinearProgressIndicator.qml
+CircularProgressIndicator 1.0 ui/progress/CircularProgressIndicator.qml
+
+─── Navigation ──────────────────────────────────────────────
+NavigationRail 1.0 ui/navigation/NavigationRail.qml
+NavigationBar 1.0 ui/navigation/NavigationBar.qml
+NavigationBarItem 1.0 ui/navigation/NavigationBarItem.qml
+Tabs 1.0 ui/navigation/Tabs.qml
+Tab 1.0 ui/navigation/Tab.qml
+TopAppBar 1.0 ui/navigation/TopAppBar.qml
+TopAppBarAction 1.0 ui/navigation/TopAppBarAction.qml
+NavigationDrawer 1.0 ui/navigation/NavigationDrawer.qml
+NavigationDrawerItem 1.0 ui/navigation/NavigationDrawerItem.qml
+NavigationDrawerDivider 1.0 ui/navigation/NavigationDrawerDivider.qml
+BottomSheet 1.0 ui/navigation/BottomSheet.qml
+Breadcrumb 1.0 ui/navigation/Breadcrumb.qml
+
+─── Inputs ──────────────────────────────────────────────────
+TextField 1.0 ui/inputs/TextField.qml
+Stepper 1.0 ui/inputs/Stepper.qml
+NumberField 1.0 ui/inputs/NumberField.qml
+
+─── Selection ───────────────────────────────────────────────
+Checkbox 1.0 ui/selection/Checkbox.qml
+RadioButton 1.0 ui/selection/RadioButton.qml
+RadioGroup 1.0 ui/selection/RadioGroup.qml
+Slider 1.0 ui/selection/Slider.qml
+SegmentedButton 1.0 ui/selection/SegmentedButton.qml
+
+─── Containers ──────────────────────────────────────────────
+Card 1.0 ui/containers/Card.qml
+Divider 1.0 ui/containers/Divider.qml
+SideSheet 1.0 ui/containers/SideSheet.qml
+Toolbar 1.0 ui/containers/Toolbar.qml
+ToolbarItem 1.0 ui/containers/ToolbarItem.qml
+ToolbarToggleItem 1.0 ui/containers/ToolbarToggleItem.qml
+ToolbarSeparator 1.0 ui/containers/ToolbarSeparator.qml
+
+─── Feedback ────────────────────────────────────────────────
+Snackbar 1.0 ui/feedback/Snackbar.qml
+Badge 1.0 ui/feedback/Badge.qml
+Skeleton 1.0 ui/feedback/Skeleton.qml
+EmptyState 1.0 ui/feedback/EmptyState.qml
+
+─── Chips ───────────────────────────────────────────────────
+Chip 1.0 ui/chips/Chip.qml
+ChipGroup 1.0 ui/chips/ChipGroup.qml
+
+─── Menus ───────────────────────────────────────────────────
+Menu 1.0 ui/menus/Menu.qml
+MenuItem 1.0 ui/menus/MenuItem.qml
+MenuDivider 1.0 ui/menus/MenuDivider.qml
+ContextMenu 1.0 ui/menus/ContextMenu.qml
+Tooltip 1.0 ui/menus/Tooltip.qml
+OverflowMenu 1.0 ui/menus/OverflowMenu.qml
+DropdownMenu 1.0 ui/menus/DropdownMenu.qml
+singleton MenuManager 1.0 ui/menus/MenuManager.qml
+
+─── Dialogs ─────────────────────────────────────────────────
+Dialog 1.0 ui/dialogs/Dialog.qml
+AlertDialog 1.0 ui/dialogs/AlertDialog.qml
+ConfirmDialog 1.0 ui/dialogs/ConfirmDialog.qml
+FullscreenDialog 1.0 ui/dialogs/FullscreenDialog.qml
+SmartFileDialog 1.0 ui/dialogs/SmartFileDialog.qml
+singleton DialogManager 1.0 ui/dialogs/DialogManager.qml
+
+─── Pickers ─────────────────────────────────────────────────
+DatePicker 1.0 ui/pickers/DatePicker.qml
+TimePicker 1.0 ui/pickers/TimePicker.qml
+ColorPicker 1.0 ui/pickers/ColorPicker.qml
+
+─── Search ──────────────────────────────────────────────────
+SearchBar 1.0 ui/search/SearchBar.qml
+
+─── Lists ───────────────────────────────────────────────────
+ListItem 1.0 ui/lists/ListItem.qml
+SwipeListItem 1.0 ui/lists/SwipeListItem.qml
+
+─── Data Display ────────────────────────────────────────────
+Avatar 1.0 ui/data/Avatar.qml
+AvatarGroup 1.0 ui/data/AvatarGroup.qml
+DataTable 1.0 ui/data/DataTable.qml
+Kbd 1.0 ui/data/Kbd.qml
+TreeView 1.0 ui/data/TreeView.qml
+CodeBlock 1.0 ui/data/CodeBlock.qml
+ColorSwatch 1.0 ui/data/ColorSwatch.qml
+IconLabel 1.0 ui/data/IconLabel.qml
+Tag 1.0 ui/data/Tag.qml
+FileTable 1.0 ui/data/FileTable.qml
+
+─── Layout ──────────────────────────────────────────────────
+Splitter 1.0 ui/system/Splitter.qml
+
+─── Carousel ────────────────────────────────────────────────
+Carousel 1.0 ui/carousel/Carousel.qml
+CarouselItem 1.0 ui/carousel/CarouselItem.qml
+
+─── Common ──────────────────────────────────────────────────
+Icon 1.0 ui/common/Icon.qml
+
+─── Application Window ─────────────────────────────────────
+SmartApplicationWindow 1.0 ui/applicationwindow/SmartApplicationWindow.qml
+SmartWindowControls 1.0 ui/applicationwindow/WindowControls.qml
+
+─── Navigation (new) ───────────────────────────────────────
+PathSearchBar 1.0 ui/navigation/PathSearchBar.qml
+lufuno@fedora ~/smartui-beta2 (main)> cat qml/smartui/theme/ChiTheme.qml
+pragma Singleton
+import QtQuick
+
+Item {
+id: themeRoot
+
+text
+
+readonly property color seed: "#673AB7"
+
+// ─── Font Configuration ─────────────────────────────────
+readonly property string fontFamily: "Roboto"
+readonly property string iconFamily: "Material Icons"
+
+// ─── Typography Scale (Material Design 3) ───────────────
+// Weights: Normal=400, Medium=500, DemiBold=600, Bold=700
+readonly property var typography: ({
+    displayLarge:   { family: "Roboto", size: 57, weight: 400, spacing: -0.25, lineHeight: 64 },
+    displayMedium:  { family: "Roboto", size: 45, weight: 400, spacing: 0,     lineHeight: 52 },
+    displaySmall:   { family: "Roboto", size: 36, weight: 400, spacing: 0,     lineHeight: 44 },
+
+    headlineLarge:  { family: "Roboto", size: 32, weight: 400, spacing: 0,     lineHeight: 40 },
+    headlineMedium: { family: "Roboto", size: 28, weight: 400, spacing: 0,     lineHeight: 36 },
+    headlineSmall:  { family: "Roboto", size: 24, weight: 400, spacing: 0,     lineHeight: 32 },
+
+    titleLarge:     { family: "Roboto", size: 22, weight: 400, spacing: 0,     lineHeight: 28 },
+    titleMedium:    { family: "Roboto", size: 16, weight: 500, spacing: 0.15,  lineHeight: 24 },
+    titleSmall:     { family: "Roboto", size: 14, weight: 500, spacing: 0.1,   lineHeight: 20 },
+
+    bodyLarge:      { family: "Roboto", size: 16, weight: 400, spacing: 0.5,   lineHeight: 24 },
+    bodyMedium:     { family: "Roboto", size: 14, weight: 400, spacing: 0.25,  lineHeight: 20 },
+    bodySmall:      { family: "Roboto", size: 12, weight: 400, spacing: 0.4,   lineHeight: 16 },
+
+    labelLarge:     { family: "Roboto", size: 14, weight: 500, spacing: 0.1,   lineHeight: 20 },
+    labelMedium:    { family: "Roboto", size: 12, weight: 500, spacing: 0.5,   lineHeight: 16 },
+    labelSmall:     { family: "Roboto", size: 11, weight: 500, spacing: 0.5,   lineHeight: 16 }
+})
+
+// ─── Color Scheme (Dark) ────────────────────────────────
+readonly property var dark: ({
+    primary: "#D3BCFD",
+    onPrimary: "#38265C",
+    primaryContainer: "#4F3D74",
+    onPrimaryContainer: "#EBDDFF",
+
+    secondary: "#CDC2DB",
+    onSecondary: "#342D40",
+    secondaryContainer: "#4B4358",
+    onSecondaryContainer: "#E9DEF8",
+
+    tertiary: "#F0B7C5",
+    onTertiary: "#4A2530",
+    tertiaryContainer: "#643B46",
+    onTertiaryContainer: "#FFD9E1",
+
+    error: "#FFB4AB",
+    onError: "#690005",
+    errorContainer: "#93000A",
+    onErrorContainer: "#FFDAD6",
+
+    background: "#151218",
+    onBackground: "#E7E0E8",
+    surface: "#151218",
+    onSurface: "#E7E0E8",
+    surfaceDim: "#151218",
+    surfaceBright: "#3B383E",
+    surfaceVariant: "#49454E",
+    onSurfaceVariant: "#CBC4CF",
+
+    surfaceContainerLowest: "#0D0B0F",
+    surfaceContainerLow: "#1D1B20",
+    surfaceContainer: "#211F24",
+    surfaceContainerHigh: "#2C292F",
+    surfaceContainerHighest: "#36343B",
+
+    outline: "#948F99",
+    outlineVariant: "#49454E",
+    shadow: "#000000",
+    scrim: "#000000",
+    surfaceTint: "#D3BCFD",
+
+    inverseSurface: "#E7E0E8",
+    inverseOnSurface: "#322F35",
+    inversePrimary: "#68548E"
+})
+
+// ─── Color Scheme (Light) ───────────────────────────────
+readonly property var light: ({
+    primary: "#68548E",
+    onPrimary: "#FFFFFF",
+    primaryContainer: "#EBDDFF",
+    onPrimaryContainer: "#230F46",
+
+    secondary: "#635B70",
+    onSecondary: "#FFFFFF",
+    secondaryContainer: "#E9DEF8",
+    onSecondaryContainer: "#1F182B",
+
+    tertiary: "#7E525D",
+    onTertiary: "#FFFFFF",
+    tertiaryContainer: "#FFD9E1",
+    onTertiaryContainer: "#31101B",
+
+    error: "#BA1A1A",
+    onError: "#FFFFFF",
+    errorContainer: "#FFDAD6",
+    onErrorContainer: "#410002",
+
+    background: "#FEF7FF",
+    onBackground: "#1D1B20",
+    surface: "#FEF7FF",
+    onSurface: "#1D1B20",
+    surfaceDim: "#DED8E0",
+    surfaceBright: "#FEF7FF",
+    surfaceVariant: "#E7E0EB",
+    onSurfaceVariant: "#49454E",
+
+    surfaceContainerLowest: "#FFFFFF",
+    surfaceContainerLow: "#F7F2FA",
+    surfaceContainer: "#F3EDF7",
+    surfaceContainerHigh: "#ECE6F0",
+    surfaceContainerHighest: "#E6E0E9",
+
+    outline: "#7A757F",
+    outlineVariant: "#CAC4D0",
+    shadow: "#000000",
+    scrim: "#000000",
+    surfaceTint: "#68548E",
+
+    inverseSurface: "#322F35",
+    inverseOnSurface: "#F5EFF7",
+    inversePrimary: "#D3BCFD"
+})
+
+// ─── Mode & Active Colors ───────────────────────────────
+property bool isDarkMode: false
+readonly property var colors: isDarkMode ? dark : light
+
+// ─── Motion ─────────────────────────────────────────────
+readonly property QtObject motion: QtObject {
+    readonly property int durationFast: 100
+    readonly property int durationMedium: 250
+    readonly property int durationSlow: 350
+    readonly property int durationExpressive: 600
+
+    readonly property int easeStandard: Easing.OutCubic
+    readonly property int easeEmphasized: Easing.OutQuart
+    readonly property int easeBounce: Easing.OutBounce
+    readonly property int easeElastic: Easing.OutElastic
+    readonly property int easeBack: Easing.OutBack
+}
+}
+lufuno@fedora ~/smartui-beta2 (main)> cat qml/smartui/ui/progress/LinearProgressIndicator.qml
+// smartui/ui/progress/LinearProgressIndicator.qml
+import QtQuick
+import "../../theme" as Theme
+
+Item {
+id: root
+
+text
+
+// Core properties
+property real progress: 0.0              // 0.0 to 1.0
+property string variant: "flat"          // "flat" or "wave"
+property string thickness: "small"       // "small" (4dp) or "medium" (8dp)
+property string size: "medium"           // "small", "medium", "large", "xlarge"
+property bool showStop: true
+property bool indeterminate: false
+property bool enabled: true
+
+// Animation properties
+property bool animated: true
+property int animationDuration: 300
+
+// Size specs
+readonly property var sizeSpecs: ({
+    small:  { width: 200, containerHeight: 12 },
+    medium: { width: 400, containerHeight: 12 },
+    large:  { width: 600, containerHeight: 14 },
+    xlarge: { width: 800, containerHeight: 16 }
+})
+
+readonly property var currentSpec: sizeSpecs[size] || sizeSpecs.medium
+readonly property int trackHeight: thickness === "small" ? 4 : 8
+readonly property int stopSize: thickness === "small" ? 4 : 4
+readonly property int stopContainerSize: thickness === "small" ? 6 : 8
+readonly property real trackRadius: thickness === "small" ? 2 : 4
+readonly property real actualProgress: Math.max(0, Math.min(1, progress))
+readonly property int gapWidth: thickness === "small" ? 6 : 8
+
+// Wave specs
+readonly property int waveSegmentWidth: 40
+readonly property real waveHeight: thickness === "small" ? 10 : 12
+
+implicitWidth: currentSpec.width
+implicitHeight: currentSpec.containerHeight
+
+opacity: enabled ? 1.0 : 0.38
+Behavior on opacity {
+    NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+}
+
+Item {
+    id: container
+    anchors.fill: parent
+    clip: true
+
+    property real progressEndX: parent.width * actualProgress
+    property real trackStartX: progressEndX > 0 ? progressEndX + gapWidth : 0
+    property real trackWidth: parent.width - trackStartX
+
+    // FLAT VARIANT - Progress (left)
+    Rectangle {
+        id: flatProgress
+        visible: variant === "flat" && !indeterminate && actualProgress > 0
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.left: parent.left
+        width: container.progressEndX
+        height: trackHeight
+        radius: trackRadius
+        color: Theme.ChiTheme.colors.primary
+
+        Behavior on width {
+            enabled: animated
+            NumberAnimation {
+                duration: animationDuration
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        Behavior on color {
+            ColorAnimation { duration: 200 }
+        }
+
+        // Rounded caps
+        Rectangle {
+            visible: actualProgress < 1
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            width: trackHeight
+            height: trackHeight
+            radius: trackHeight / 2
+            color: parent.color
+        }
+
+        Rectangle {
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            width: trackHeight
+            height: trackHeight
+            radius: trackHeight / 2
+            color: parent.color
+        }
+    }
+
+    // FLAT VARIANT - Track (right)
+    Rectangle {
+        id: flatTrack
+        visible: variant === "flat" && !indeterminate && actualProgress < 1
+        anchors.verticalCenter: parent.verticalCenter
+        x: container.trackStartX
+        width: container.trackWidth
+        height: trackHeight
+        radius: trackRadius
+        color: Theme.ChiTheme.colors.secondaryContainer
+
+        Behavior on x {
+            enabled: animated
+            NumberAnimation {
+                duration: animationDuration
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        Behavior on width {
+            enabled: animated
+            NumberAnimation {
+                duration: animationDuration
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        Behavior on color {
+            ColorAnimation { duration: 200 }
+        }
+    }
+
+    // FLAT VARIANT - 0% background
+    Rectangle {
+        visible: variant === "flat" && !indeterminate && actualProgress === 0
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: trackHeight
+        radius: trackRadius
+        color: Theme.ChiTheme.colors.secondaryContainer
+        Behavior on color { ColorAnimation { duration: 200 } }
+    }
+
+    // WAVE VARIANT - Progress (left)
+    Canvas {
+        id: waveCanvas
+        visible: variant === "wave" && !indeterminate && actualProgress > 0
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.left: parent.left
+        width: container.progressEndX
+        height: parent.height
+
+        property real animatedProgress: actualProgress
+
+        Behavior on width {
+            enabled: animated
+            NumberAnimation {
+                duration: animationDuration
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        Behavior on animatedProgress {
+            enabled: animated
+            NumberAnimation {
+                duration: animationDuration
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        onAnimatedProgressChanged: requestPaint()
+        onWidthChanged: requestPaint()
+        Component.onCompleted: requestPaint()
+
+        onPaint: {
+            var ctx = getContext("2d")
+            ctx.clearRect(0, 0, width, height)
+            if (width <= 0)
+                return
+
+            ctx.save()
+
+            ctx.strokeStyle = Theme.ChiTheme.colors.primary
+            ctx.lineWidth = trackHeight
+            ctx.lineCap = "round"
+            ctx.lineJoin = "round"
+
+            var centerY = height / 2
+            var segmentWidth = waveSegmentWidth
+            var amplitude = (waveHeight - trackHeight) / 2
+
+            ctx.beginPath()
+            ctx.moveTo(0, centerY)
+
+            var x = 0
+            var segmentIndex = 0
+
+            while (x < width) {
+                var nextX = Math.min(x + segmentWidth / 2, width)
+                var isUp = segmentIndex % 2 === 0
+
+                if (nextX - x > 1) {
+                    var cp1x = x + (nextX - x) * 0.25
+                    var cp1y = centerY + (isUp ? -amplitude : amplitude)
+                    var cp2x = x + (nextX - x) * 0.75
+                    var cp2y = centerY + (isUp ? -amplitude : amplitude)
+
+                    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, nextX, centerY)
+                }
+
+                x = nextX
+                segmentIndex++
+                if (x >= width)
+                    break
+            }
+
+            ctx.stroke()
+            ctx.restore()
+        }
+    }
+
+    // WAVE VARIANT - Track (right)
+    Rectangle {
+        id: waveTrack
+        visible: variant === "wave" && !indeterminate && actualProgress < 1
+        anchors.verticalCenter: parent.verticalCenter
+        x: container.trackStartX
+        width: container.trackWidth
+        height: trackHeight
+        radius: trackRadius
+        color: Theme.ChiTheme.colors.secondaryContainer
+
+        Behavior on x {
+            enabled: animated
+            NumberAnimation {
+                duration: animationDuration
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        Behavior on width {
+            enabled: animated
+            NumberAnimation {
+                duration: animationDuration
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        Behavior on color {
+            ColorAnimation { duration: 200 }
+        }
+    }
+
+    // WAVE VARIANT - 0% background
+    Rectangle {
+        visible: variant === "wave" && !indeterminate && actualProgress === 0
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: trackHeight
+        radius: trackRadius
+        color: Theme.ChiTheme.colors.secondaryContainer
+        Behavior on color { ColorAnimation { duration: 200 } }
+    }
+
+    // INDETERMINATE
+    Item {
+        id: indeterminateContainer
+        visible: indeterminate
+        anchors.fill: parent
+        clip: true
+
+        Rectangle {
+            id: indeterminateBar
+            anchors.verticalCenter: parent.verticalCenter
+            width: parent.width * 0.3
+            height: trackHeight
+            radius: trackHeight / 2
+            color: Theme.ChiTheme.colors.primary
+            x: -width
+
+            Behavior on color {
+                ColorAnimation { duration: 200 }
+            }
+
+            SequentialAnimation on x {
+                running: indeterminate
+                loops: Animation.Infinite
+
+                NumberAnimation {
+                    from: -indeterminateBar.width
+                    to: indeterminateContainer.width
+                    duration: 1500
+                    easing.type: Easing.InOutCubic
+                }
+                PauseAnimation { duration: 500 }
+            }
+        }
+
+        Rectangle {
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: trackHeight
+            radius: trackRadius
+            color: Theme.ChiTheme.colors.secondaryContainer
+            z: -1
+            Behavior on color { ColorAnimation { duration: 200 } }
+        }
+    }
+
+    // Stop indicator
+    Rectangle {
+        id: stopIndicator
+        visible: showStop && !indeterminate && actualProgress < 1
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
+        width: stopContainerSize
+        height: stopContainerSize
+        color: "transparent"
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: stopSize
+            height: stopSize
+            radius: thickness === "small" ? 26 : 3
+            color: Theme.ChiTheme.colors.primary
+            Behavior on color { ColorAnimation { duration: 200 } }
+        }
+    }
+}
+
+Accessible.role: Accessible.ProgressBar
+Accessible.name: "Progress indicator"
+Accessible.description: indeterminate
+    ? "Loading"
+    : (Math.round(actualProgress * 100) + "% complete")
+
+function setProgress(value, animate = true) {
+    animated = animate
+    progress = value
+    if (!animate)
+        animated = true
+}
+
+function reset()  { progress = 0 }
+function complete() { progress = 1.0 }
+}
+lufuno@fedora ~/smartui-beta2 (main)> cat qml/smartui/ui/progress/CircularProgressIndicator.qml
+// qml/smartui/ui/progress/CircularProgressIndicator.qml
+import QtQuick
+import "../../theme" as Theme
+
+Item {
+id: root
+
+text
+
+property real progress: 0.0              // 0.0 to 1.0
+property bool indeterminate: false
+property string size: "medium"           // "small", "medium", "large"
+property bool enabled: true
+property bool animated: true
+property int animationDuration: 300
+
+readonly property var sizeSpecs: ({
+    small: { diameter: 24, strokeWidth: 3 },
+    medium: { diameter: 40, strokeWidth: 4 },
+    large: { diameter: 56, strokeWidth: 5 }
+})
+
+readonly property var currentSize: sizeSpecs[size] || sizeSpecs.medium
+readonly property real actualProgress: Math.max(0, Math.min(1, progress))
+
+implicitWidth: currentSize.diameter
+implicitHeight: currentSize.diameter
+
+opacity: enabled ? 1.0 : 0.38
+
+Behavior on opacity {
+    NumberAnimation { duration: 150 }
+}
+
+property var colors: Theme.ChiTheme.colors
+
+// Track (background circle)
+Canvas {
+    id: trackCanvas
+    anchors.fill: parent
+
+    onPaint: {
+        var ctx = getContext("2d")
+        ctx.clearRect(0, 0, width, height)
+
+        var centerX = width / 2
+        var centerY = height / 2
+        var radius = (Math.min(width, height) - currentSize.strokeWidth) / 2
+
+        ctx.beginPath()
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI)
+        ctx.strokeStyle = colors.secondaryContainer
+        ctx.lineWidth = currentSize.strokeWidth
+        ctx.lineCap = "round"
+        ctx.stroke()
+    }
+
+    Component.onCompleted: requestPaint()
+
+    Connections {
+        target: Theme.ChiTheme
+        function onColorsChanged() { trackCanvas.requestPaint() }
+    }
+}
+
+// Determinate progress
+Canvas {
+    id: progressCanvas
+    anchors.fill: parent
+    visible: !indeterminate
+
+    property real animatedProgress: actualProgress
+
+    Behavior on animatedProgress {
+        enabled: animated
+        NumberAnimation {
+            duration: animationDuration
+            easing.type: Easing.OutCubic
+        }
+    }
+
+    onAnimatedProgressChanged: requestPaint()
+
+    onPaint: {
+        var ctx = getContext("2d")
+        ctx.clearRect(0, 0, width, height)
+
+        if (animatedProgress <= 0) return
+
+        var centerX = width / 2
+        var centerY = height / 2
+        var radius = (Math.min(width, height) - currentSize.strokeWidth) / 2
+
+        var startAngle = -Math.PI / 2
+        var endAngle = startAngle + (2 * Math.PI * animatedProgress)
+
+        ctx.beginPath()
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle)
+        ctx.strokeStyle = colors.primary
+        ctx.lineWidth = currentSize.strokeWidth
+        ctx.lineCap = "round"
+        ctx.stroke()
+    }
+
+    Component.onCompleted: requestPaint()
+
+    Connections {
+        target: Theme.ChiTheme
+        function onColorsChanged() { progressCanvas.requestPaint() }
+    }
+}
+
+// Indeterminate spinner
+Canvas {
+    id: indeterminateCanvas
+    anchors.fill: parent
+    visible: indeterminate
+
+    property real rotation: 0
+    property real dashOffset: 0
+
+    onPaint: {
+        var ctx = getContext("2d")
+        ctx.clearRect(0, 0, width, height)
+
+        ctx.save()
+        ctx.translate(width / 2, height / 2)
+        ctx.rotate(rotation * Math.PI / 180)
+        ctx.translate(-width / 2, -height / 2)
+
+        var centerX = width / 2
+        var centerY = height / 2
+        var radius = (Math.min(width, height) - currentSize.strokeWidth) / 2
+
+        // Draw arc that varies in length
+        var arcLength = 0.25 + 0.5 * Math.abs(Math.sin(dashOffset * Math.PI / 180))
+        var startAngle = -Math.PI / 2 + (dashOffset * Math.PI / 180)
+        var endAngle = startAngle + (2 * Math.PI * arcLength)
+
+        ctx.beginPath()
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle)
+        ctx.strokeStyle = colors.primary
+        ctx.lineWidth = currentSize.strokeWidth
+        ctx.lineCap = "round"
+        ctx.stroke()
+
+        ctx.restore()
+    }
+
+    SequentialAnimation on rotation {
+        running: indeterminate && root.visible
+        loops: Animation.Infinite
+
+        NumberAnimation {
+            from: 0
+            to: 360
+            duration: 1500
+            easing.type: Easing.Linear
+        }
+    }
+
+    SequentialAnimation on dashOffset {
+        running: indeterminate && root.visible
+        loops: Animation.Infinite
+
+        NumberAnimation {
+            from: 0
+            to: 360
+            duration: 2000
+            easing.type: Easing.InOutQuad
+        }
+    }
+
+    onRotationChanged: requestPaint()
+    onDashOffsetChanged: requestPaint()
+
+    Component.onCompleted: requestPaint()
+
+    Connections {
+        target: Theme.ChiTheme
+        function onColorsChanged() { indeterminateCanvas.requestPaint() }
+    }
+}
+
+// Center content (for percentage, icon, etc.)
+property alias content: contentContainer.children
+
+Item {
+    id: contentContainer
+    anchors.centerIn: parent
+    width: parent.width - currentSize.strokeWidth * 4
+    height: parent.height - currentSize.strokeWidth * 4
+}
+
+function setProgress(value, animate = true) {
+    animated = animate
+    progress = value
+    if (!animate) animated = true
+}
+
+function reset() { progress = 0 }
+function complete() { progress = 1.0 }
+
+Accessible.role: Accessible.ProgressBar
+Accessible.name: "Circular progress indicator"
+Accessible.description: indeterminate
+    ? "Loading"
+    : (Math.round(actualProgress * 100) + "% complete")
+}
+lufuno@fedora ~/smartui-beta2 (main)> cat qml/smartui/ui/progress/partials/WaveSegment.qml
+import QtQuick
+
+Item {
+id: seg
+property int stroke: 4
+property color color: "magenta"
+property bool up: true
+property bool mirrored: false
+property int segmentWidth: 40
+property int containerHeight: 12
+
+text
+
+width: segmentWidth
+height: containerHeight
+
+Canvas {
+    anchors.fill: parent
+
+    onPaint: {
+        var ctx = getContext("2d")
+        ctx.clearRect(0, 0, width, height)
+        ctx.save()
+
+        if (seg.mirrored) {
+            ctx.translate(width, 0)
+            ctx.scale(-1, 1)
+        }
+
+        ctx.strokeStyle = seg.color
+        ctx.lineWidth = seg.stroke
+        ctx.lineCap = "round"
+        ctx.lineJoin = "round"
+
+        var cy = height / 2
+        var waveH = (seg.stroke === 4 ? 10 : 12)
+        var amplitude = (waveH - seg.stroke) / 2
+
+        ctx.beginPath()
+        ctx.moveTo(0, cy)
+
+        var cp1x = width * 0.25
+        var cp2x = width * 0.75
+        var cpY = cy + (seg.up ? -amplitude : amplitude)
+        ctx.bezierCurveTo(cp1x, cpY, cp2x, cpY, width, cy)
+        ctx.stroke()
+
+        ctx.restore()
+    }
+}
+}
+lufuno@fedora ~/smartui-beta2 (main)>) as you can see the circular indicator is broken it does show but animation doesnt make sense, and can be more perfomant and thorough and have as little as possible without sacrifice of visual results, avoid many js calls and many more stuff, this is native ui should be as performant as possible. use cat or echo to automatically adjust, create and edit the files
+
+Ask followup…
+
+Search
+
+Inputs are processed by third-party AI and responses may be inaccurate.
+
+Directly Chat with Frontier AI Search Models

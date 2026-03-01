@@ -1,350 +1,364 @@
 // smartui/ui/progress/LinearProgressIndicator.qml
+// Linear progress indicator — M3 + M3 Expressive tokens
+// Anatomy: active indicator, track, stop indicator, gap
 import QtQuick
+import QtQuick.Shapes
 import "../../theme" as Theme
 
 Item {
     id: root
 
-    // Core properties
-    property real progress: 0.0              // 0.0 to 1.0
-    property string variant: "flat"          // "flat" or "wave"
-    property string thickness: "small"       // "small" (4dp) or "medium" (8dp)
-    property string size: "medium"           // "small", "medium", "large", "xlarge"
-    property bool showStop: true
+    // ─── Public API ─────────────────────────────────────────
+    property real progress: 0.0
     property bool indeterminate: false
+    property bool wavy: false
+    property real trackThickness: 4
+    property bool showStopIndicator: true
     property bool enabled: true
 
-    // Animation properties
-    property bool animated: true
-    property int animationDuration: 300
+    // ─── M3 Tokens ──────────────────────────────────────────
+    readonly property real _amplitude: 3.0
+    readonly property real _wavelength: 40.0
+    readonly property real _indeterminateWavelength: 20.0
+    readonly property real _stopSize: 4.0
+    readonly property real _gap: 4.0
 
-    // Size specs
-    readonly property var sizeSpecs: ({
-        small:  { width: 200, containerHeight: 12 },
-        medium: { width: 400, containerHeight: 12 },
-        large:  { width: 600, containerHeight: 14 },
-        xlarge: { width: 800, containerHeight: 16 }
-    })
+    // ─── Internal State ─────────────────────────────────────
+    readonly property real _progress: Math.max(0, Math.min(1, progress))
+    readonly property real _containerHeight: wavy
+        ? Math.max(trackThickness + _amplitude * 2, 10)
+        : trackThickness
+    readonly property real _radius: trackThickness / 2
 
-    readonly property var currentSpec: sizeSpecs[size] || sizeSpecs.medium
-    readonly property int trackHeight: thickness === "small" ? 4 : 8
-    readonly property int stopSize: thickness === "small" ? 4 : 4
-    readonly property int stopContainerSize: thickness === "small" ? 6 : 8
-    readonly property real trackRadius: thickness === "small" ? 2 : 4
-    readonly property real actualProgress: Math.max(0, Math.min(1, progress))
-    readonly property int gapWidth: thickness === "small" ? 6 : 8
+    readonly property real _activeWidth: width * _progress
+    readonly property bool _hasProgress: _progress > 0.001
+    readonly property bool _isComplete: _progress > 0.999
+    readonly property real _gapPx: (_hasProgress && !_isComplete) ? _gap : 0
+    readonly property real _trackX: _activeWidth + _gapPx
+    readonly property real _trackW: Math.max(0, width - _trackX)
 
-    // Wave specs
-    readonly property int waveSegmentWidth: 40
-    readonly property real waveHeight: thickness === "small" ? 10 : 12
-
-    implicitWidth: currentSpec.width
-    implicitHeight: currentSpec.containerHeight
-
+    implicitWidth: 240
+    implicitHeight: _containerHeight
     opacity: enabled ? 1.0 : 0.38
-    Behavior on opacity {
-        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+
+    // ═══════════════════════════════════════════════════════
+    // DETERMINATE — FLAT
+    // ═══════════════════════════════════════════════════════
+
+    Rectangle {
+        id: flatTrack
+        visible: !indeterminate && !wavy
+        anchors.verticalCenter: parent.verticalCenter
+        x: _hasProgress ? _trackX : 0
+        width: _hasProgress ? _trackW : root.width
+        height: trackThickness
+        radius: _radius
+        color: Theme.ChiTheme.colors.secondaryContainer
+
+        Behavior on x     { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+        Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+    }
+
+    Rectangle {
+        id: flatActive
+        visible: !indeterminate && !wavy && _hasProgress
+        anchors.verticalCenter: parent.verticalCenter
+        x: 0
+        width: _activeWidth
+        height: trackThickness
+        radius: _radius
+        color: Theme.ChiTheme.colors.primary
+
+        Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // DETERMINATE — WAVY
+    // ═══════════════════════════════════════════════════════
+
+    Rectangle {
+        id: wavyTrack
+        visible: !indeterminate && wavy
+        anchors.verticalCenter: parent.verticalCenter
+        x: _hasProgress ? _trackX : 0
+        width: _hasProgress ? _trackW : root.width
+        height: trackThickness
+        radius: _radius
+        color: Theme.ChiTheme.colors.secondaryContainer
+
+        Behavior on x     { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+        Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
     }
 
     Item {
-        id: container
+        id: wavyActiveClip
+        visible: !indeterminate && wavy && _hasProgress
+        anchors.verticalCenter: parent.verticalCenter
+        width: _activeWidth
+        height: _containerHeight
+        clip: true
+
+        Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+
+        property real _phase: 0.0
+        NumberAnimation on _phase {
+            from: 0; to: _wavelength
+            duration: 1200
+            loops: Animation.Infinite
+            running: wavy && !indeterminate && root.visible && root.enabled
+        }
+
+        Shape {
+            x: -wavyActiveClip._phase
+            width: wavyActiveClip.width + _wavelength * 2
+            height: parent.height
+            layer.enabled: false
+
+            ShapePath {
+                strokeColor: Theme.ChiTheme.colors.primary
+                strokeWidth: root.trackThickness
+                fillColor: "transparent"
+                capStyle: ShapePath.RoundCap
+                joinStyle: ShapePath.RoundJoin
+
+                PathPolyline {
+                    path: {
+                        var pts = [];
+                        var w = wavyActiveClip.width + root._wavelength * 2;
+                        var cy = root._containerHeight / 2;
+                        var amp = root._amplitude;
+                        var wl = root._wavelength;
+                        if (w <= 0 || wl <= 0) return [Qt.point(0, cy)];
+                        var step = 2;
+                        for (var x = 0; x <= w; x += step) {
+                            pts.push(Qt.point(x, cy + amp * Math.sin(2 * Math.PI * x / wl)));
+                        }
+                        if (pts.length > 0 && pts[pts.length - 1].x < w)
+                            pts.push(Qt.point(w, cy + amp * Math.sin(2 * Math.PI * w / wl)));
+                        return pts;
+                    }
+                }
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // INDETERMINATE — FLAT
+    // ═══════════════════════════════════════════════════════
+
+    Item {
+        id: indeterminateFlat
+        visible: indeterminate && !wavy
         anchors.fill: parent
         clip: true
 
-        property real progressEndX: parent.width * actualProgress
-        property real trackStartX: progressEndX > 0 ? progressEndX + gapWidth : 0
-        property real trackWidth: parent.width - trackStartX
-
-        // FLAT VARIANT - Progress (left)
         Rectangle {
-            id: flatProgress
-            visible: variant === "flat" && !indeterminate && actualProgress > 0
             anchors.verticalCenter: parent.verticalCenter
-            anchors.left: parent.left
-            width: container.progressEndX
-            height: trackHeight
-            radius: trackRadius
+            width: parent.width
+            height: trackThickness
+            radius: _radius
+            color: Theme.ChiTheme.colors.secondaryContainer
+        }
+
+        Rectangle {
+            id: bar1
+            anchors.verticalCenter: parent.verticalCenter
+            height: trackThickness
+            radius: _radius
             color: Theme.ChiTheme.colors.primary
 
-            Behavior on width {
-                enabled: animated
-                NumberAnimation {
-                    duration: animationDuration
-                    easing.type: Easing.OutCubic
-                }
-            }
+            SequentialAnimation {
+                running: indeterminate && !wavy && root.visible
+                loops: Animation.Infinite
 
-            Behavior on color {
-                ColorAnimation { duration: 200 }
-            }
-
-            // Rounded caps
-            Rectangle {
-                visible: actualProgress < 1
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                width: trackHeight
-                height: trackHeight
-                radius: trackHeight / 2
-                color: parent.color
-            }
-
-            Rectangle {
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-                width: trackHeight
-                height: trackHeight
-                radius: trackHeight / 2
-                color: parent.color
-            }
-        }
-
-        // FLAT VARIANT - Track (right)
-        Rectangle {
-            id: flatTrack
-            visible: variant === "flat" && !indeterminate && actualProgress < 1
-            anchors.verticalCenter: parent.verticalCenter
-            x: container.trackStartX
-            width: container.trackWidth
-            height: trackHeight
-            radius: trackRadius
-            color: Theme.ChiTheme.colors.secondaryContainer
-
-            Behavior on x {
-                enabled: animated
-                NumberAnimation {
-                    duration: animationDuration
-                    easing.type: Easing.OutCubic
-                }
-            }
-
-            Behavior on width {
-                enabled: animated
-                NumberAnimation {
-                    duration: animationDuration
-                    easing.type: Easing.OutCubic
-                }
-            }
-
-            Behavior on color {
-                ColorAnimation { duration: 200 }
-            }
-        }
-
-        // FLAT VARIANT - 0% background
-        Rectangle {
-            visible: variant === "flat" && !indeterminate && actualProgress === 0
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.left: parent.left
-            anchors.right: parent.right
-            height: trackHeight
-            radius: trackRadius
-            color: Theme.ChiTheme.colors.secondaryContainer
-            Behavior on color { ColorAnimation { duration: 200 } }
-        }
-
-        // WAVE VARIANT - Progress (left)
-        Canvas {
-            id: waveCanvas
-            visible: variant === "wave" && !indeterminate && actualProgress > 0
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.left: parent.left
-            width: container.progressEndX
-            height: parent.height
-
-            property real animatedProgress: actualProgress
-
-            Behavior on width {
-                enabled: animated
-                NumberAnimation {
-                    duration: animationDuration
-                    easing.type: Easing.OutCubic
-                }
-            }
-
-            Behavior on animatedProgress {
-                enabled: animated
-                NumberAnimation {
-                    duration: animationDuration
-                    easing.type: Easing.OutCubic
-                }
-            }
-
-            onAnimatedProgressChanged: requestPaint()
-            onWidthChanged: requestPaint()
-            Component.onCompleted: requestPaint()
-
-            onPaint: {
-                var ctx = getContext("2d")
-                ctx.clearRect(0, 0, width, height)
-                if (width <= 0)
-                    return
-
-                ctx.save()
-
-                ctx.strokeStyle = Theme.ChiTheme.colors.primary
-                ctx.lineWidth = trackHeight
-                ctx.lineCap = "round"
-                ctx.lineJoin = "round"
-
-                var centerY = height / 2
-                var segmentWidth = waveSegmentWidth
-                var amplitude = (waveHeight - trackHeight) / 2
-
-                ctx.beginPath()
-                ctx.moveTo(0, centerY)
-
-                var x = 0
-                var segmentIndex = 0
-
-                while (x < width) {
-                    var nextX = Math.min(x + segmentWidth / 2, width)
-                    var isUp = segmentIndex % 2 === 0
-
-                    if (nextX - x > 1) {
-                        var cp1x = x + (nextX - x) * 0.25
-                        var cp1y = centerY + (isUp ? -amplitude : amplitude)
-                        var cp2x = x + (nextX - x) * 0.75
-                        var cp2y = centerY + (isUp ? -amplitude : amplitude)
-
-                        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, nextX, centerY)
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: bar1; property: "x"
+                        from: -root.width * 0.5; to: root.width * 0.7
+                        duration: 1000; easing.type: Easing.InOutCubic
                     }
-
-                    x = nextX
-                    segmentIndex++
-                    if (x >= width)
-                        break
+                    NumberAnimation {
+                        target: bar1; property: "width"
+                        from: root.width * 0.08; to: root.width * 0.55
+                        duration: 1000; easing.type: Easing.InOutCubic
+                    }
                 }
-
-                ctx.stroke()
-                ctx.restore()
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: bar1; property: "x"
+                        from: root.width * 0.7; to: root.width * 1.1
+                        duration: 800; easing.type: Easing.InCubic
+                    }
+                    NumberAnimation {
+                        target: bar1; property: "width"
+                        from: root.width * 0.55; to: root.width * 0.04
+                        duration: 800; easing.type: Easing.InCubic
+                    }
+                }
             }
         }
 
-        // WAVE VARIANT - Track (right)
         Rectangle {
-            id: waveTrack
-            visible: variant === "wave" && !indeterminate && actualProgress < 1
+            id: bar2
             anchors.verticalCenter: parent.verticalCenter
-            x: container.trackStartX
-            width: container.trackWidth
-            height: trackHeight
-            radius: trackRadius
-            color: Theme.ChiTheme.colors.secondaryContainer
+            height: trackThickness
+            radius: _radius
+            color: Theme.ChiTheme.colors.primary
 
-            Behavior on x {
-                enabled: animated
-                NumberAnimation {
-                    duration: animationDuration
-                    easing.type: Easing.OutCubic
+            SequentialAnimation {
+                running: indeterminate && !wavy && root.visible
+                loops: Animation.Infinite
+
+                PauseAnimation { duration: 600 }
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: bar2; property: "x"
+                        from: -root.width * 0.3; to: root.width * 0.8
+                        duration: 900; easing.type: Easing.InOutCubic
+                    }
+                    NumberAnimation {
+                        target: bar2; property: "width"
+                        from: root.width * 0.04; to: root.width * 0.45
+                        duration: 900; easing.type: Easing.InOutCubic
+                    }
                 }
-            }
-
-            Behavior on width {
-                enabled: animated
-                NumberAnimation {
-                    duration: animationDuration
-                    easing.type: Easing.OutCubic
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: bar2; property: "x"
+                        from: root.width * 0.8; to: root.width * 1.05
+                        duration: 700; easing.type: Easing.InCubic
+                    }
+                    NumberAnimation {
+                        target: bar2; property: "width"
+                        from: root.width * 0.45; to: root.width * 0.02
+                        duration: 700; easing.type: Easing.InCubic
+                    }
                 }
-            }
-
-            Behavior on color {
-                ColorAnimation { duration: 200 }
+                PauseAnimation { duration: 100 }
             }
         }
+    }
 
-        // WAVE VARIANT - 0% background
+    // ═══════════════════════════════════════════════════════
+    // INDETERMINATE — WAVY
+    // ═══════════════════════════════════════════════════════
+
+    Item {
+        id: indeterminateWavy
+        visible: indeterminate && wavy
+        anchors.fill: parent
+        clip: true
+
         Rectangle {
-            visible: variant === "wave" && !indeterminate && actualProgress === 0
             anchors.verticalCenter: parent.verticalCenter
-            anchors.left: parent.left
-            anchors.right: parent.right
-            height: trackHeight
-            radius: trackRadius
+            width: parent.width
+            height: trackThickness
+            radius: _radius
             color: Theme.ChiTheme.colors.secondaryContainer
-            Behavior on color { ColorAnimation { duration: 200 } }
         }
 
-        // INDETERMINATE
         Item {
-            id: indeterminateContainer
-            visible: indeterminate
-            anchors.fill: parent
+            id: wavyBar
+            anchors.verticalCenter: parent.verticalCenter
+            height: _containerHeight
             clip: true
 
-            Rectangle {
-                id: indeterminateBar
-                anchors.verticalCenter: parent.verticalCenter
-                width: parent.width * 0.3
-                height: trackHeight
-                radius: trackHeight / 2
-                color: Theme.ChiTheme.colors.primary
-                x: -width
+            property real _phase: 0.0
+            NumberAnimation on _phase {
+                from: 0; to: _indeterminateWavelength
+                duration: 600
+                loops: Animation.Infinite
+                running: indeterminate && wavy && root.visible
+            }
 
-                Behavior on color {
-                    ColorAnimation { duration: 200 }
-                }
+            SequentialAnimation {
+                running: indeterminate && wavy && root.visible
+                loops: Animation.Infinite
 
-                SequentialAnimation on x {
-                    running: indeterminate
-                    loops: Animation.Infinite
-
+                ParallelAnimation {
                     NumberAnimation {
-                        from: -indeterminateBar.width
-                        to: indeterminateContainer.width
-                        duration: 1500
-                        easing.type: Easing.InOutCubic
+                        target: wavyBar; property: "x"
+                        from: -root.width * 0.4; to: root.width * 0.75
+                        duration: 1000; easing.type: Easing.InOutCubic
                     }
-                    PauseAnimation { duration: 500 }
+                    NumberAnimation {
+                        target: wavyBar; property: "width"
+                        from: root.width * 0.08; to: root.width * 0.55
+                        duration: 1000; easing.type: Easing.InOutCubic
+                    }
+                }
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: wavyBar; property: "x"
+                        from: root.width * 0.75; to: root.width * 1.1
+                        duration: 800; easing.type: Easing.InCubic
+                    }
+                    NumberAnimation {
+                        target: wavyBar; property: "width"
+                        from: root.width * 0.55; to: root.width * 0.04
+                        duration: 800; easing.type: Easing.InCubic
+                    }
                 }
             }
 
-            Rectangle {
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.left: parent.left
-                anchors.right: parent.right
-                height: trackHeight
-                radius: trackRadius
-                color: Theme.ChiTheme.colors.secondaryContainer
-                z: -1
-                Behavior on color { ColorAnimation { duration: 200 } }
-            }
-        }
+            Shape {
+                x: -wavyBar._phase
+                width: wavyBar.width + _indeterminateWavelength * 2
+                height: parent.height
+                layer.enabled: false
 
-        // Stop indicator
-        Rectangle {
-            id: stopIndicator
-            visible: showStop && !indeterminate && actualProgress < 1
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            width: stopContainerSize
-            height: stopContainerSize
-            color: "transparent"
+                ShapePath {
+                    strokeColor: Theme.ChiTheme.colors.primary
+                    strokeWidth: root.trackThickness
+                    fillColor: "transparent"
+                    capStyle: ShapePath.RoundCap
+                    joinStyle: ShapePath.RoundJoin
 
-            Rectangle {
-                anchors.centerIn: parent
-                width: stopSize
-                height: stopSize
-                radius: thickness === "small" ? 26 : 3
-                color: Theme.ChiTheme.colors.primary
-                Behavior on color { ColorAnimation { duration: 200 } }
+                    PathPolyline {
+                        path: {
+                            var pts = [];
+                            var w = wavyBar.width + root._indeterminateWavelength * 2;
+                            var cy = root._containerHeight / 2;
+                            var amp = root._amplitude;
+                            var wl = root._indeterminateWavelength;
+                            if (w <= 0 || wl <= 0) return [Qt.point(0, cy)];
+                            var step = 2;
+                            for (var x = 0; x <= w; x += step) {
+                                pts.push(Qt.point(x, cy + amp * Math.sin(2 * Math.PI * x / wl)));
+                            }
+                            return pts;
+                        }
+                    }
+                }
             }
         }
     }
+
+    // ═══════════════════════════════════════════════════════
+    // STOP INDICATOR
+    // ═══════════════════════════════════════════════════════
+
+    Rectangle {
+        visible: showStopIndicator && !indeterminate && !_isComplete && _hasProgress
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.right: parent.right
+        width: _stopSize
+        height: _stopSize
+        radius: _stopSize / 2
+        color: Theme.ChiTheme.colors.primary
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // ACCESSIBILITY
+    // ═══════════════════════════════════════════════════════
 
     Accessible.role: Accessible.ProgressBar
-    Accessible.name: "Progress indicator"
+    Accessible.name: indeterminate ? "Loading" : "Progress"
     Accessible.description: indeterminate
-        ? "Loading"
-        : (Math.round(actualProgress * 100) + "% complete")
+        ? "Loading in progress"
+        : "%1% complete".arg(Math.round(_progress * 100))
 
-    function setProgress(value, animate = true) {
-        animated = animate
-        progress = value
-        if (!animate)
-            animated = true
-    }
-
-    function reset()  { progress = 0 }
-    function complete() { progress = 1.0 }
+    function setProgress(value) { progress = value }
+    function reset()            { progress = 0 }
+    function complete()         { progress = 1.0 }
 }

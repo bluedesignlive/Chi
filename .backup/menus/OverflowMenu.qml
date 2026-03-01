@@ -1,6 +1,8 @@
+// qml/smartui/ui/menus/OverflowMenu.qml
+
 import QtQuick
 import QtQuick.Controls.Basic
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import "../../theme" as Theme
 import "../common"
 
@@ -8,7 +10,7 @@ Popup {
     id: root
 
     property var menus: []
-    property var colors: Theme.ChiTheme.colors
+    property var colors: Theme.SmartTheme
     property int maxHeight: 500
 
     signal itemTriggered(string menuId, string itemId)
@@ -21,17 +23,16 @@ Popup {
 
     background: Rectangle {
         color: colors.surfaceContainerHigh
-        radius: 16
+        radius: Theme.SmartTheme.shape.large
         border.width: 1
         border.color: colors.outlineVariant
 
         layer.enabled: true
-        layer.effect: DropShadow {
-            horizontalOffset: 0
-            verticalOffset: 4
-            radius: 16
-            samples: 33
-            color: Qt.rgba(0, 0, 0, 0.15)
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowColor: Qt.rgba(0, 0, 0, 0.15)
+            shadowVerticalOffset: 4
+            shadowBlur: 0.45
         }
     }
 
@@ -45,7 +46,8 @@ Popup {
         boundsBehavior: Flickable.StopAtBounds
 
         ScrollBar.vertical: ScrollBar {
-            policy: flickable.contentHeight > flickable.height ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff
+            policy: flickable.contentHeight > flickable.height
+                ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff
             width: 6
         }
 
@@ -63,9 +65,12 @@ Popup {
                     x: 8
                     spacing: 0
 
-                    property string menuId: modelData.id || ""
-                    property string menuTitle: modelData.title || ""
-                    property var menuItems: modelData.items || []
+                    required property var modelData
+                    required property int index
+
+                    readonly property string menuId:    modelData.id || ""
+                    readonly property string menuTitle:  modelData.title || ""
+                    readonly property var    menuItems:  modelData.items || []
 
                     // Menu header
                     Item {
@@ -77,8 +82,7 @@ Popup {
                             anchors.leftMargin: 8
                             anchors.verticalCenter: parent.verticalCenter
                             text: menuTitle
-                            font.family: "Roboto"
-                            font.pixelSize: 11
+                            font: Theme.SmartTheme.typography.labelSmall
                             font.weight: Font.Bold
                             color: colors.primary
                         }
@@ -90,16 +94,18 @@ Popup {
 
                         delegate: Item {
                             width: parent.width
-                            height: modelData.type === "divider" ? 9 : 44
+                            height: isDivider ? 9 : 44
 
-                            property string itemId: modelData.id || ""
-                            property string itemText: modelData.text || ""
-                            property string itemIcon: modelData.icon || ""
-                            property string itemShortcut: modelData.shortcut || ""
-                            property bool isDivider: modelData.type === "divider"
-                            property var subItems: modelData.items || []
-                            property bool hasSubmenu: subItems.length > 0
-                            property string parentMenuId: parent.menuId
+                            required property var modelData
+                            required property int index
+
+                            readonly property string itemId:       modelData.id || ""
+                            readonly property string itemText:     modelData.text || ""
+                            readonly property string itemIcon:     modelData.icon || ""
+                            readonly property string itemShortcut: modelData.shortcut || ""
+                            readonly property bool   isDivider:    modelData.type === "divider"
+                            readonly property var    subItems:     modelData.items || []
+                            readonly property bool   hasSubmenu:   subItems.length > 0
 
                             // Divider
                             Rectangle {
@@ -116,8 +122,11 @@ Popup {
                                 visible: !isDivider
                                 anchors.fill: parent
                                 anchors.margins: 2
-                                radius: 12
-                                color: menuItemMouse.containsMouse ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.08) : "transparent"
+                                radius: Theme.SmartTheme.shape.medium
+                                color: menuItemMouse.containsMouse
+                                    ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b,
+                                               Theme.SmartTheme.stateLayer.hover)
+                                    : "transparent"
 
                                 Row {
                                     anchors.left: parent.left
@@ -136,13 +145,11 @@ Popup {
                                     Text {
                                         anchors.verticalCenter: parent.verticalCenter
                                         text: itemText
-                                        font.family: "Roboto"
-                                        font.pixelSize: 14
+                                        font: Theme.SmartTheme.typography.bodyMedium
                                         color: colors.onSurface
                                     }
                                 }
 
-                                // Right side - shortcut or submenu arrow
                                 Row {
                                     anchors.right: parent.right
                                     anchors.rightMargin: 12
@@ -152,8 +159,7 @@ Popup {
                                     Text {
                                         anchors.verticalCenter: parent.verticalCenter
                                         text: itemShortcut
-                                        font.family: "Roboto"
-                                        font.pixelSize: 11
+                                        font: Theme.SmartTheme.typography.labelSmall
                                         color: colors.onSurfaceVariant
                                         opacity: 0.7
                                         visible: itemShortcut !== "" && !hasSubmenu
@@ -177,7 +183,7 @@ Popup {
                                         if (hasSubmenu) {
                                             submenuPopup.open()
                                         } else {
-                                            root.itemTriggered(parentMenuId, itemId)
+                                            root.itemTriggered(menuId, itemId)
                                             root.close()
                                         }
                                     }
@@ -194,17 +200,16 @@ Popup {
 
                                     background: Rectangle {
                                         color: colors.surfaceContainerHigh
-                                        radius: 12
+                                        radius: Theme.SmartTheme.shape.medium
                                         border.width: 1
                                         border.color: colors.outlineVariant
 
                                         layer.enabled: true
-                                        layer.effect: DropShadow {
-                                            horizontalOffset: 0
-                                            verticalOffset: 2
-                                            radius: 8
-                                            samples: 17
-                                            color: Qt.rgba(0, 0, 0, 0.12)
+                                        layer.effect: MultiEffect {
+                                            shadowEnabled: true
+                                            shadowColor: Qt.rgba(0, 0, 0, 0.12)
+                                            shadowVerticalOffset: 2
+                                            shadowBlur: 0.25
                                         }
                                     }
 
@@ -218,19 +223,25 @@ Popup {
                                                 width: 184
                                                 height: 40
 
+                                                required property var modelData
+                                                required property int index
+
                                                 Rectangle {
                                                     anchors.fill: parent
                                                     anchors.margins: 2
-                                                    radius: 10
-                                                    color: subItemMouse.containsMouse ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.08) : "transparent"
+                                                    radius: Theme.SmartTheme.shape.medium
+                                                    color: subItemMouse.containsMouse
+                                                        ? Qt.rgba(colors.onSurface.r, colors.onSurface.g,
+                                                                   colors.onSurface.b,
+                                                                   Theme.SmartTheme.stateLayer.hover)
+                                                        : "transparent"
 
                                                     Text {
                                                         anchors.left: parent.left
                                                         anchors.leftMargin: 12
                                                         anchors.verticalCenter: parent.verticalCenter
                                                         text: modelData.text || ""
-                                                        font.family: "Roboto"
-                                                        font.pixelSize: 13
+                                                        font: Theme.SmartTheme.typography.bodyMedium
                                                         color: colors.onSurface
                                                     }
 
@@ -240,7 +251,7 @@ Popup {
                                                         hoverEnabled: true
                                                         cursorShape: Qt.PointingHandCursor
                                                         onClicked: {
-                                                            root.itemTriggered(parentMenuId, modelData.id)
+                                                            root.itemTriggered(menuId, modelData.id)
                                                             submenuPopup.close()
                                                             root.close()
                                                         }
