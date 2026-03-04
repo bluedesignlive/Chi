@@ -1,5 +1,8 @@
+// qml/smartui/ui/menus/OverflowMenu.qml
+// M3 overflow menu — grouped model-driven, in-place submenu navigation
 import QtQuick
 import QtQuick.Controls.Basic
+import QtQuick.Layouts
 import QtQuick.Effects
 import "../../theme" as Theme
 import "../common"
@@ -15,13 +18,56 @@ Popup {
 
     x: 0
     y: parent ? parent.height + 4 : 0
-    width: 280
-    height: Math.min(contentColumn.implicitHeight + 16, maxHeight)
+    width: 260
     padding: 0
+
+    // ═══════════════════════════════════════════════════════════════════
+    // SUBMENU NAVIGATION STACK
+    // ═══════════════════════════════════════════════════════════════════
+
+    property var _navStack: []
+    readonly property bool _inSubmenu: _navStack.length > 0
+    readonly property string _subTitle: _inSubmenu
+        ? _navStack[_navStack.length - 1].title : ""
+    readonly property var _subItems: _inSubmenu
+        ? _navStack[_navStack.length - 1].items : []
+    readonly property string _subMenuId: _inSubmenu
+        ? _navStack[_navStack.length - 1].menuId : ""
+
+    property real _mainOp: _inSubmenu ? 0 : 1
+    property real _subOp:  _inSubmenu ? 1 : 0
+    Behavior on _mainOp { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+    Behavior on _subOp  { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+
+    function _pushSub(title, items, menuId) {
+        var s = _navStack.slice()
+        s.push({ title: title, items: items, menuId: menuId })
+        _navStack = s
+    }
+
+    function _popSub() {
+        if (_navStack.length > 0) {
+            var s = _navStack.slice()
+            s.pop(); _navStack = s
+        }
+    }
+
+    onClosed: { _navStack = []; _subFlick.contentY = 0 }
+
+    height: Math.min(_inSubmenu ? _subCol.implicitHeight + 56
+                                : _mainCol.implicitHeight + 16, maxHeight)
+
+    Behavior on height {
+        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // BACKGROUND
+    // ═══════════════════════════════════════════════════════════════════
 
     background: Rectangle {
         color: root.colors.surfaceContainerHigh
-        radius: 16
+        radius: 12
         border.width: 1
         border.color: root.colors.outlineVariant
 
@@ -30,238 +76,332 @@ Popup {
             shadowEnabled: true
             shadowColor: Qt.rgba(0, 0, 0, 0.15)
             shadowVerticalOffset: 4
-            shadowBlur: 0.45
+            shadowBlur: 0.4
         }
     }
 
-    contentItem: Flickable {
-        id: flickable
-        width: root.width
-        height: root.height - 16
-        contentWidth: width
-        contentHeight: contentColumn.implicitHeight
+    // ═══════════════════════════════════════════════════════════════════
+    // CONTENT
+    // ═══════════════════════════════════════════════════════════════════
+
+    contentItem: Item {
         clip: true
-        boundsBehavior: Flickable.StopAtBounds
 
-        ScrollBar.vertical: ScrollBar {
-            policy: flickable.contentHeight > flickable.height
-                ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff
-            width: 6
-        }
+        // ─── MAIN VIEW ──────────────────────────────────────────
 
-        Column {
-            id: contentColumn
-            width: parent.width
-            padding: 8
-            spacing: 0
+        Flickable {
+            id: _mainFlick
+            anchors.fill: parent
+            contentHeight: _mainCol.implicitHeight
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
+            visible: root._mainOp > 0.01
+            opacity: root._mainOp
+            x: (1 - root._mainOp) * -24
 
-            Repeater {
-                model: root.menus
+            Behavior on x { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
 
-                delegate: Column {
-                    width: parent.width - 16
-                    x: 8
-                    spacing: 0
+            Column {
+                id: _mainCol
+                width: parent.width
+                padding: 4
+                spacing: 0
 
-                    property string menuId:    modelData.id || ""
-                    property string menuTitle:  modelData.title || ""
-                    property var    menuItems:  modelData.items || []
+                Repeater {
+                    model: root.menus
 
-                    // Menu header
-                    Item {
-                        width: parent.width
-                        height: 32
+                    delegate: Column {
+                        required property var modelData
+                        required property int index
 
-                        Text {
-                            anchors.left: parent.left
-                            anchors.leftMargin: 8
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: menuTitle
-                            font.family: "Roboto"
-                            font.pixelSize: 11
-                            font.weight: Font.Bold
-                            color: root.colors.primary
-                        }
-                    }
+                        width: _mainCol.width - 8
+                        x: 4
+                        spacing: 0
 
-                    // Menu items
-                    Repeater {
-                        model: menuItems
+                        // Group header
+                        Item {
+                            width: parent.width; height: 28
+                            visible: (modelData.title || "") !== ""
 
-                        delegate: Item {
-                            width: parent.width
-                            height: modelData.type === "divider" ? 9 : 44
-
-                            property string itemId:       modelData.id || ""
-                            property string itemText:     modelData.text || ""
-                            property string itemIcon:     modelData.icon || ""
-                            property string itemShortcut: modelData.shortcut || ""
-                            property bool   isDivider:    modelData.type === "divider"
-                            property var    subItems:     modelData.items || []
-                            property bool   hasSubmenu:   subItems.length > 0
-                            property string parentMenuId: parent.menuId
-
-                            // Divider
-                            Rectangle {
-                                visible: isDivider
-                                anchors.centerIn: parent
-                                width: parent.width - 16
-                                height: 1
-                                color: root.colors.outlineVariant
+                            Text {
+                                anchors.left: parent.left
+                                anchors.leftMargin: 12
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: modelData.title || ""
+                                font.family: Theme.ChiTheme.typography.labelSmall.family
+                                font.pixelSize: Theme.ChiTheme.typography.labelSmall.size
+                                font.weight: Font.Bold
+                                color: root.colors.primary
                             }
+                        }
 
-                            // Menu item
-                            Rectangle {
-                                id: menuItemBg
-                                visible: !isDivider
-                                anchors.fill: parent
-                                anchors.margins: 2
-                                radius: 12
-                                color: menuItemMouse.containsMouse
-                                    ? Qt.rgba(root.colors.onSurface.r, root.colors.onSurface.g, root.colors.onSurface.b, 0.08)
-                                    : "transparent"
+                        // Group items
+                        Repeater {
+                            model: modelData.items || []
 
-                                Row {
-                                    anchors.left: parent.left
-                                    anchors.leftMargin: 12
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    spacing: 12
+                            delegate: Item {
+                                required property var modelData
+                                required property int index
 
-                                    Icon {
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        source: itemIcon
-                                        size: 20
-                                        color: root.colors.onSurfaceVariant
-                                        visible: itemIcon !== ""
-                                    }
+                                width: parent.width
+                                height: modelData.type === "divider" ? 9 : 36
 
-                                    Text {
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        text: itemText
-                                        font.family: "Roboto"
-                                        font.pixelSize: 14
-                                        color: root.colors.onSurface
-                                    }
+                                readonly property bool _isDivider: modelData.type === "divider"
+                                readonly property bool _hasSub: (modelData.items || []).length > 0
+
+                                // Divider
+                                Rectangle {
+                                    visible: _isDivider
+                                    anchors.centerIn: parent
+                                    width: parent.width - 16; height: 1
+                                    color: root.colors.outlineVariant
                                 }
 
-                                Row {
-                                    anchors.right: parent.right
-                                    anchors.rightMargin: 12
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    spacing: 8
-
-                                    Text {
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        text: itemShortcut
-                                        font.family: "Roboto"
-                                        font.pixelSize: 11
-                                        color: root.colors.onSurfaceVariant
-                                        opacity: 0.7
-                                        visible: itemShortcut !== "" && !hasSubmenu
-                                    }
-
-                                    Icon {
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        source: "chevron_right"
-                                        size: 16
-                                        color: root.colors.onSurfaceVariant
-                                        visible: hasSubmenu
-                                    }
-                                }
-
-                                MouseArea {
-                                    id: menuItemMouse
+                                // Item
+                                Rectangle {
+                                    visible: !_isDivider
                                     anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        if (hasSubmenu) {
-                                            submenuPopup.open()
-                                        } else {
-                                            root.itemTriggered(parentMenuId, itemId)
-                                            root.close()
+                                    anchors.margins: 1
+                                    radius: 8
+                                    color: _oMouse.containsMouse
+                                        ? Qt.alpha(root.colors.onSurface, 0.08)
+                                        : "transparent"
+
+                                    RowLayout {
+                                        anchors.fill: parent
+                                        anchors.leftMargin: 12
+                                        anchors.rightMargin: 12
+                                        spacing: 10
+
+                                        Icon {
+                                            visible: (modelData.icon || "") !== ""
+                                            source: modelData.icon || ""
+                                            size: 20
+                                            color: root.colors.onSurfaceVariant
+                                            Layout.alignment: Qt.AlignVCenter
+                                        }
+
+                                        Text {
+                                            text: modelData.text || ""
+                                            font.family: Theme.ChiTheme.typography.bodyMedium.family
+                                            font.pixelSize: Theme.ChiTheme.typography.bodyMedium.size
+                                            font.weight: Theme.ChiTheme.typography.bodyMedium.weight
+                                            color: root.colors.onSurface
+                                            elide: Text.ElideRight
+                                            Layout.fillWidth: true
+                                        }
+
+                                        Text {
+                                            visible: (modelData.shortcut || "") !== "" && !_hasSub
+                                            text: modelData.shortcut || ""
+                                            font.family: Theme.ChiTheme.typography.labelSmall.family
+                                            font.pixelSize: Theme.ChiTheme.typography.labelSmall.size
+                                            color: root.colors.onSurfaceVariant
+                                            opacity: 0.7
+                                            Layout.alignment: Qt.AlignVCenter
+                                        }
+
+                                        Icon {
+                                            visible: _hasSub
+                                            source: "chevron_right"
+                                            size: 16
+                                            color: root.colors.onSurfaceVariant
+                                            Layout.alignment: Qt.AlignVCenter
                                         }
                                     }
-                                }
 
-                                // Submenu popup
-                                Popup {
-                                    id: submenuPopup
-                                    x: parent.width - 8
-                                    y: -8
-                                    width: 200
-                                    padding: 8
-                                    visible: false
-
-                                    background: Rectangle {
-                                        color: root.colors.surfaceContainerHigh
-                                        radius: 12
-                                        border.width: 1
-                                        border.color: root.colors.outlineVariant
-
-                                        layer.enabled: true
-                                        layer.effect: MultiEffect {
-                                            shadowEnabled: true
-                                            shadowColor: Qt.rgba(0, 0, 0, 0.12)
-                                            shadowVerticalOffset: 2
-                                            shadowBlur: 0.25
-                                        }
-                                    }
-
-                                    contentItem: Column {
-                                        spacing: 0
-
-                                        Repeater {
-                                            model: subItems
-
-                                            delegate: Item {
-                                                width: 184
-                                                height: 40
-
-                                                Rectangle {
-                                                    anchors.fill: parent
-                                                    anchors.margins: 2
-                                                    radius: 10
-                                                    color: subItemMouse.containsMouse
-                                                        ? Qt.rgba(root.colors.onSurface.r, root.colors.onSurface.g,
-                                                                   root.colors.onSurface.b, 0.08)
-                                                        : "transparent"
-
-                                                    Text {
-                                                        anchors.left: parent.left
-                                                        anchors.leftMargin: 12
-                                                        anchors.verticalCenter: parent.verticalCenter
-                                                        text: modelData.text || ""
-                                                        font.family: "Roboto"
-                                                        font.pixelSize: 13
-                                                        color: root.colors.onSurface
-                                                    }
-
-                                                    MouseArea {
-                                                        id: subItemMouse
-                                                        anchors.fill: parent
-                                                        hoverEnabled: true
-                                                        cursorShape: Qt.PointingHandCursor
-                                                        onClicked: {
-                                                            root.itemTriggered(parentMenuId, modelData.id)
-                                                            submenuPopup.close()
-                                                            root.close()
-                                                        }
-                                                    }
-                                                }
+                                    MouseArea {
+                                        id: _oMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            if (_hasSub) {
+                                                // Navigate in-place
+                                                var parentId = parent.parent.parent.modelData.id || ""
+                                                root._pushSub(modelData.text, modelData.items, parentId)
+                                            } else {
+                                                var mId = parent.parent.parent.modelData.id || ""
+                                                root.itemTriggered(mId, modelData.id || "")
+                                                root.close()
                                             }
                                         }
                                     }
                                 }
                             }
                         }
-                    }
 
-                    // Separator between menu groups
-                    Item {
-                        width: parent.width
-                        height: 8
-                        visible: index < root.menus.length - 1
+                        // Separator between groups
+                        Item {
+                            width: parent.width; height: 5
+                            visible: index < root.menus.length - 1
+                            Rectangle {
+                                anchors.centerIn: parent
+                                width: parent.width - 16; height: 1
+                                color: root.colors.outlineVariant
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // ─── SUBMENU VIEW ────────────────────────────────────────
+
+        Flickable {
+            id: _subFlick
+            anchors.fill: parent
+            contentHeight: _subCol.implicitHeight
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
+            visible: root._subOp > 0.01
+            opacity: root._subOp
+            x: (1 - root._subOp) * 24
+
+            Behavior on x { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+
+            Column {
+                id: _subCol
+                width: parent.width
+                padding: 4
+                spacing: 0
+
+                // Back header
+                Item {
+                    width: parent.width - 8; x: 4
+                    height: 36
+
+                    Rectangle {
+                        anchors.fill: parent
+                        anchors.margins: 1
+                        radius: 8
+                        color: _backM.containsMouse
+                            ? Qt.alpha(root.colors.onSurface, 0.08) : "transparent"
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 8
+                            anchors.rightMargin: 12
+                            spacing: 8
+
+                            Icon {
+                                source: "arrow_back"
+                                size: 18
+                                color: root.colors.onSurfaceVariant
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+
+                            Text {
+                                text: root._subTitle
+                                font.family: Theme.ChiTheme.typography.labelLarge.family
+                                font.pixelSize: Theme.ChiTheme.typography.labelLarge.size
+                                font.weight: Theme.ChiTheme.typography.labelLarge.weight
+                                color: root.colors.onSurface
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                            }
+                        }
+
+                        MouseArea {
+                            id: _backM
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root._popSub()
+                        }
+                    }
+                }
+
+                // Divider
+                Item {
+                    width: parent.width - 8; x: 4
+                    height: 5
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: parent.width - 16; height: 1
+                        color: root.colors.outlineVariant
+                    }
+                }
+
+                // Sub items
+                Repeater {
+                    model: root._subItems
+
+                    delegate: Item {
+                        required property var modelData
+                        required property int index
+
+                        width: _subCol.width - 8
+                        x: 4
+                        height: modelData.type === "divider" ? 9 : 36
+
+                        readonly property bool _isDivider: modelData.type === "divider"
+                        readonly property bool _hasSub: (modelData.items || []).length > 0
+
+                        Rectangle {
+                            visible: _isDivider
+                            anchors.centerIn: parent
+                            width: parent.width - 16; height: 1
+                            color: root.colors.outlineVariant
+                        }
+
+                        Rectangle {
+                            visible: !_isDivider
+                            anchors.fill: parent
+                            anchors.margins: 1
+                            radius: 8
+                            color: _subM.containsMouse
+                                ? Qt.alpha(root.colors.onSurface, 0.08)
+                                : "transparent"
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 12
+                                anchors.rightMargin: 12
+                                spacing: 10
+
+                                Icon {
+                                    visible: (modelData.icon || "") !== ""
+                                    source: modelData.icon || ""
+                                    size: 20
+                                    color: root.colors.onSurfaceVariant
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+
+                                Text {
+                                    text: modelData.text || ""
+                                    font.family: Theme.ChiTheme.typography.bodyMedium.family
+                                    font.pixelSize: Theme.ChiTheme.typography.bodyMedium.size
+                                    font.weight: Theme.ChiTheme.typography.bodyMedium.weight
+                                    color: root.colors.onSurface
+                                    elide: Text.ElideRight
+                                    Layout.fillWidth: true
+                                }
+
+                                Icon {
+                                    visible: _hasSub
+                                    source: "chevron_right"
+                                    size: 16
+                                    color: root.colors.onSurfaceVariant
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+                            }
+
+                            MouseArea {
+                                id: _subM
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    if (_hasSub)
+                                        root._pushSub(modelData.text, modelData.items, root._subMenuId)
+                                    else {
+                                        root.itemTriggered(root._subMenuId, modelData.id || "")
+                                        root.close()
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

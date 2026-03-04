@@ -1,6 +1,5 @@
 // smartui/ui/progress/CircularProgressIndicator.qml
-// Circular progress indicator — M3 + M3 Expressive tokens
-// Anatomy: active indicator (arc), track (background circle)
+// M3 circular progress indicator — determinate + indeterminate
 import QtQuick
 import QtQuick.Shapes
 import "../../theme" as Theme
@@ -8,18 +7,14 @@ import "../../theme" as Theme
 Item {
     id: root
 
-    // ─── Public API ─────────────────────────────────────────
     property real progress: 0.0
     property bool indeterminate: false
-    property bool wavy: false
-    property string size: "medium"             // "small", "medium", "large", "xlarge"
+    property bool wavy: false          // kept for API compat, ignored
+    property string size: "medium"
     property bool enabled: true
-
-    // Direct overrides — default from size presets
     property real diameter: _spec.diameter
     property real strokeWidth: _spec.strokeWidth
 
-    // ─── Size Presets (M3 tokens) ───────────────────────────
     readonly property var _specs: ({
         small:  { diameter: 24, strokeWidth: 2.5 },
         medium: { diameter: 40, strokeWidth: 4   },
@@ -28,30 +23,42 @@ Item {
     })
     readonly property var _spec: _specs[size] || _specs.medium
 
-    // ─── M3 Wave Tokens ─────────────────────────────────────
-    readonly property real _waveAmplitude: 1.6
-    readonly property real _waveWavelength: 15.0
-
-    // ─── Internal Geometry ──────────────────────────────────
-    readonly property real _progress: Math.max(0, Math.min(1, progress))
-    readonly property real _d: wavy ? diameter + _waveAmplitude * 4 : diameter
-    readonly property real _cx: _d / 2
-    readonly property real _cy: _d / 2
+    readonly property real _cx: diameter / 2
+    readonly property real _cy: diameter / 2
     readonly property real _radius: (diameter - strokeWidth) / 2
-    readonly property bool _hasProgress: _progress > 0.001
+    // Gap angle: convert 4 px arc-length to degrees  (rad = px/r, deg = rad·180/π)
+    readonly property real _ga: (4.0 / _radius) * 57.2957795
 
-    implicitWidth: _d
-    implicitHeight: _d
+    readonly property real _progress: Math.max(0, Math.min(1, progress))
+
+    // Animated progress — Behavior handles the smooth transition
+    property real _ap: _progress
+    Behavior on _ap { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+
+    readonly property bool _z: _ap < 0.005
+    readonly property bool _f: _ap > 0.995
+
+    readonly property real _activeStart: -90 + _ga
+    readonly property real _activeSweep: Math.max(0, _ap * 360 - 2 * _ga)
+    readonly property real _trackStart: -90 + _ap * 360 + _ga
+    readonly property real _trackSweep: Math.max(0, (1 - _ap) * 360 - 2 * _ga)
+
+    implicitWidth: diameter
+    implicitHeight: diameter
     opacity: enabled ? 1.0 : 0.38
+    layer.enabled: visible
+    layer.samples: 4
+    layer.smooth: true
 
     // ═══════════════════════════════════════════════════════
-    // TRACK
+    // DETERMINATE
     // ═══════════════════════════════════════════════════════
 
     Shape {
+        visible: !root.indeterminate
         anchors.fill: parent
-        layer.enabled: false
 
+        // Track arc (remaining unfilled portion)
         ShapePath {
             strokeColor: Theme.ChiTheme.colors.secondaryContainer
             strokeWidth: root.strokeWidth
@@ -61,22 +68,14 @@ Item {
             PathAngleArc {
                 centerX: _cx; centerY: _cy
                 radiusX: _radius; radiusY: _radius
-                startAngle: 0; sweepAngle: 360
+                startAngle: _z ? -90 : (_f ? 0 : _trackStart)
+                sweepAngle: _z ? 360 : (_f ? 0 : _trackSweep)
             }
         }
-    }
 
-    // ═══════════════════════════════════════════════════════
-    // DETERMINATE — FLAT
-    // ═══════════════════════════════════════════════════════
-
-    Shape {
-        visible: !indeterminate && !wavy && _hasProgress
-        anchors.fill: parent
-        layer.enabled: false
-
+        // Active arc (filled portion)
         ShapePath {
-            strokeColor: Theme.ChiTheme.colors.primary
+            strokeColor: _z ? "transparent" : Theme.ChiTheme.colors.primary
             strokeWidth: root.strokeWidth
             fillColor: "transparent"
             capStyle: ShapePath.RoundCap
@@ -84,230 +83,78 @@ Item {
             PathAngleArc {
                 centerX: _cx; centerY: _cy
                 radiusX: _radius; radiusY: _radius
-                startAngle: -90
-                sweepAngle: _progress * 360
-
-                Behavior on sweepAngle {
-                    NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
-                }
+                startAngle: _activeStart
+                sweepAngle: _f ? 360 - 2 * _ga : _activeSweep
             }
         }
     }
 
     // ═══════════════════════════════════════════════════════
-    // DETERMINATE — WAVY
-    // ═══════════════════════════════════════════════════════
-
-    Shape {
-        id: determinateWavy
-        visible: !indeterminate && wavy && _hasProgress
-        anchors.fill: parent
-        layer.enabled: false
-
-        property real _phase: 0.0
-        NumberAnimation on _phase {
-            from: 0; to: 2 * Math.PI
-            duration: 1500
-            loops: Animation.Infinite
-            running: wavy && !indeterminate && root.visible && root.enabled
-        }
-
-        ShapePath {
-            strokeColor: Theme.ChiTheme.colors.primary
-            strokeWidth: root.strokeWidth
-            fillColor: "transparent"
-            capStyle: ShapePath.RoundCap
-            joinStyle: ShapePath.RoundJoin
-
-            PathPolyline {
-                path: {
-                    var pts = [];
-                    var sweep = root._progress * 2 * Math.PI;
-                    if (sweep < 0.01) return [Qt.point(root._cx, root._cy - root._radius)];
-
-                    var circumference = 2 * Math.PI * root._radius;
-                    var numWaves = circumference / root._waveWavelength;
-                    var amp = root._waveAmplitude;
-                    var phase = determinateWavy._phase;
-
-                    var steps = Math.max(90, Math.round(numWaves * 24 * root._progress));
-                    for (var i = 0; i <= steps; i++) {
-                        var t = i / steps;
-                        var angle = -Math.PI / 2 + t * sweep;
-                        var r = root._radius + amp * Math.sin(numWaves * angle + phase);
-                        pts.push(Qt.point(root._cx + r * Math.cos(angle),
-                                          root._cy + r * Math.sin(angle)));
-                    }
-                    return pts;
-                }
-            }
-        }
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // INDETERMINATE — FLAT
-    // ═══════════════════════════════════════════════════════
-
-    Shape {
-        id: indeterminateFlat
-        visible: indeterminate && !wavy
-        anchors.fill: parent
-        layer.enabled: false
-
-        rotation: _containerAngle
-
-        property real _containerAngle: 0
-        NumberAnimation on _containerAngle {
-            from: 0; to: 360
-            duration: 1568
-            loops: Animation.Infinite
-            running: indeterminate && !wavy && root.visible
-        }
-
-        property real _arcStart: 0
-        property real _arcSweep: 16
-
-        SequentialAnimation {
-            running: indeterminate && !wavy && root.visible
-            loops: Animation.Infinite
-
-            ParallelAnimation {
-                NumberAnimation {
-                    target: indeterminateFlat; property: "_arcSweep"
-                    from: 16; to: 270
-                    duration: 667; easing.type: Easing.InOutCubic
-                }
-                NumberAnimation {
-                    target: indeterminateFlat; property: "_arcStart"
-                    from: 0; to: 30
-                    duration: 667; easing.type: Easing.InOutCubic
-                }
-            }
-            ParallelAnimation {
-                NumberAnimation {
-                    target: indeterminateFlat; property: "_arcSweep"
-                    from: 270; to: 16
-                    duration: 667; easing.type: Easing.InOutCubic
-                }
-                NumberAnimation {
-                    target: indeterminateFlat; property: "_arcStart"
-                    from: 30; to: 330
-                    duration: 667; easing.type: Easing.InOutCubic
-                }
-            }
-        }
-
-        ShapePath {
-            strokeColor: Theme.ChiTheme.colors.primary
-            strokeWidth: root.strokeWidth
-            fillColor: "transparent"
-            capStyle: ShapePath.RoundCap
-
-            PathAngleArc {
-                centerX: _cx; centerY: _cy
-                radiusX: _radius; radiusY: _radius
-                startAngle: -90 + indeterminateFlat._arcStart
-                sweepAngle: indeterminateFlat._arcSweep
-            }
-        }
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // INDETERMINATE — WAVY
+    // INDETERMINATE — no gaps, smooth easing
     // ═══════════════════════════════════════════════════════
 
     Item {
-        id: indeterminateWavy
-        visible: indeterminate && wavy
+        id: iFlat
+        visible: root.indeterminate
         anchors.fill: parent
 
-        property real _containerAngle: 0
-        NumberAnimation on _containerAngle {
-            from: 0; to: 360
-            duration: 1568
+        // Continuous base rotation
+        property real _rot: 0
+        NumberAnimation on _rot {
+            from: 0; to: 360; duration: 2400
             loops: Animation.Infinite
-            running: indeterminate && wavy && root.visible
+            running: root.indeterminate && root.visible
         }
 
-        property real _arcStart: 0
-        property real _arcSweep: 16
-        property real _wavePhase: 0
+        property real _tail: 0
+        property real _head: 8
+        readonly property real _sw: Math.max(6, _head - _tail)
 
         SequentialAnimation {
-            running: indeterminate && wavy && root.visible
+            running: root.indeterminate && root.visible
             loops: Animation.Infinite
 
             ParallelAnimation {
-                NumberAnimation {
-                    target: indeterminateWavy; property: "_arcSweep"
-                    from: 16; to: 270
-                    duration: 667; easing.type: Easing.InOutCubic
-                }
-                NumberAnimation {
-                    target: indeterminateWavy; property: "_arcStart"
-                    from: 0; to: 30
-                    duration: 667; easing.type: Easing.InOutCubic
-                }
+                NumberAnimation { target: iFlat; property: "_head"; from: 8; to: 280; duration: 800; easing.type: Easing.InOutCubic }
+                NumberAnimation { target: iFlat; property: "_tail"; from: 0; to: 20; duration: 800; easing.type: Easing.InOutQuad }
             }
             ParallelAnimation {
-                NumberAnimation {
-                    target: indeterminateWavy; property: "_arcSweep"
-                    from: 270; to: 16
-                    duration: 667; easing.type: Easing.InOutCubic
-                }
-                NumberAnimation {
-                    target: indeterminateWavy; property: "_arcStart"
-                    from: 30; to: 330
-                    duration: 667; easing.type: Easing.InOutCubic
-                }
+                NumberAnimation { target: iFlat; property: "_head"; from: 280; to: 360; duration: 800; easing.type: Easing.InOutQuad }
+                NumberAnimation { target: iFlat; property: "_tail"; from: 20; to: 344; duration: 800; easing.type: Easing.InOutCubic }
             }
         }
-
-        NumberAnimation on _wavePhase {
-            from: 0; to: 2 * Math.PI
-            duration: 1200
-            loops: Animation.Infinite
-            running: indeterminate && wavy && root.visible
-        }
-
-        rotation: _containerAngle
 
         Shape {
             anchors.fill: parent
-            layer.enabled: false
+            rotation: iFlat._rot
 
+            // Track — full remaining arc
+            ShapePath {
+                strokeColor: Theme.ChiTheme.colors.secondaryContainer
+                strokeWidth: root.strokeWidth
+                fillColor: "transparent"
+                capStyle: ShapePath.RoundCap
+
+                PathAngleArc {
+                    centerX: _cx; centerY: _cy
+                    radiusX: _radius; radiusY: _radius
+                    startAngle: -90 + iFlat._head
+                    sweepAngle: 360 - iFlat._sw
+                }
+            }
+
+            // Active arc
             ShapePath {
                 strokeColor: Theme.ChiTheme.colors.primary
                 strokeWidth: root.strokeWidth
                 fillColor: "transparent"
                 capStyle: ShapePath.RoundCap
-                joinStyle: ShapePath.RoundJoin
 
-                PathPolyline {
-                    path: {
-                        var pts = [];
-                        var startDeg = indeterminateWavy._arcStart;
-                        var sweepDeg = indeterminateWavy._arcSweep;
-                        var startRad = (-90 + startDeg) * Math.PI / 180;
-                        var sweepRad = sweepDeg * Math.PI / 180;
-
-                        if (sweepRad < 0.05) return [Qt.point(root._cx, root._cy - root._radius)];
-
-                        var circumference = 2 * Math.PI * root._radius;
-                        var numWaves = circumference / root._waveWavelength;
-                        var amp = root._waveAmplitude;
-                        var phase = indeterminateWavy._wavePhase;
-
-                        var steps = Math.max(36, Math.round(numWaves * 24 * (sweepDeg / 360)));
-                        for (var i = 0; i <= steps; i++) {
-                            var t = i / steps;
-                            var angle = startRad + t * sweepRad;
-                            var r = root._radius + amp * Math.sin(numWaves * angle + phase);
-                            pts.push(Qt.point(root._cx + r * Math.cos(angle),
-                                              root._cy + r * Math.sin(angle)));
-                        }
-                        return pts;
-                    }
+                PathAngleArc {
+                    centerX: _cx; centerY: _cy
+                    radiusX: _radius; radiusY: _radius
+                    startAngle: -90 + iFlat._tail
+                    sweepAngle: iFlat._sw
                 }
             }
         }
@@ -317,10 +164,9 @@ Item {
     // CENTER CONTENT SLOT
     // ═══════════════════════════════════════════════════════
 
-    property alias content: contentSlot.children
-
+    property alias content: _slot.children
     Item {
-        id: contentSlot
+        id: _slot
         anchors.centerIn: parent
         width: diameter - strokeWidth * 4
         height: diameter - strokeWidth * 4
@@ -331,8 +177,8 @@ Item {
     // ═══════════════════════════════════════════════════════
 
     Accessible.role: Accessible.ProgressBar
-    Accessible.name: indeterminate ? "Loading" : "Progress"
-    Accessible.description: indeterminate
+    Accessible.name: root.indeterminate ? "Loading" : "Progress"
+    Accessible.description: root.indeterminate
         ? "Loading in progress"
         : "%1% complete".arg(Math.round(_progress * 100))
 

@@ -1,6 +1,9 @@
+// qml/smartui/ui/menus/DropdownMenu.qml
+// M3 dropdown menu — model-driven, desktop-density
 import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Effects
+import QtQuick.Layouts
 import "../../theme" as Theme
 import "../common"
 
@@ -12,8 +15,8 @@ Popup {
 
     signal itemClicked(string itemId)
 
-    width: 220
-    padding: 8
+    width: 200
+    padding: 4
 
     background: Rectangle {
         color: root.colors.surfaceContainerHigh
@@ -37,76 +40,78 @@ Popup {
             model: root.items
 
             delegate: Item {
-                width: parent.width
-                height: modelData.type === "divider" ? 9 : 40
+                required property var modelData
+                required property int index
 
-                property string itemId:       modelData.id || ""
-                property string itemText:     modelData.text || ""
-                property string itemIcon:     modelData.icon || ""
-                property string itemShortcut: modelData.shortcut || ""
-                property bool   isDivider:    modelData.type === "divider"
+                width: parent ? parent.width : 200
+                height: modelData.type === "divider" ? 9 : 36
+
+                readonly property string _id:       modelData.id || ""
+                readonly property string _text:     modelData.text || ""
+                readonly property string _icon:     modelData.icon || ""
+                readonly property string _shortcut: modelData.shortcut || ""
+                readonly property bool   _divider:  modelData.type === "divider"
 
                 // Divider
                 Rectangle {
-                    visible: isDivider
+                    visible: _divider
                     anchors.centerIn: parent
-                    width: parent.width - 16
-                    height: 1
+                    width: parent.width - 16; height: 1
                     color: root.colors.outlineVariant
                 }
 
-                // Menu item
+                // Item
                 Rectangle {
-                    visible: !isDivider
+                    visible: !_divider
                     anchors.fill: parent
-                    anchors.margins: 2
-                    radius: 10
-                    color: dropdownItemMouse.containsMouse
-                        ? Qt.rgba(root.colors.onSurface.r, root.colors.onSurface.g, root.colors.onSurface.b, 0.08)
-                        : "transparent"
+                    anchors.margins: 1
+                    radius: 8
+                    color: _dropMouse.containsMouse
+                        ? Qt.alpha(root.colors.onSurface, 0.08) : "transparent"
 
-                    Row {
-                        anchors.left: parent.left
+                    RowLayout {
+                        anchors.fill: parent
                         anchors.leftMargin: 12
-                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.rightMargin: 12
                         spacing: 10
 
                         Icon {
-                            anchors.verticalCenter: parent.verticalCenter
-                            source: itemIcon
+                            visible: _icon !== ""
+                            source: _icon
                             size: 18
                             color: root.colors.onSurfaceVariant
-                            visible: itemIcon !== ""
+                            Layout.alignment: Qt.AlignVCenter
                         }
 
                         Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: itemText
-                            font.family: "Roboto"
-                            font.pixelSize: 13
+                            text: _text
+                            font.family: Theme.ChiTheme.typography.bodyMedium.family
+                            font.pixelSize: Theme.ChiTheme.typography.bodyMedium.size
+                            font.weight: Theme.ChiTheme.typography.bodyMedium.weight
                             color: root.colors.onSurface
+                            elide: Text.ElideRight
+                            Layout.fillWidth: true
+                        }
+
+                        Text {
+                            visible: _shortcut !== ""
+                            text: _shortcut
+                            font.family: Theme.ChiTheme.typography.labelSmall.family
+                            font.pixelSize: Theme.ChiTheme.typography.labelSmall.size
+                            font.weight: Theme.ChiTheme.typography.labelSmall.weight
+                            color: root.colors.onSurfaceVariant
+                            opacity: 0.6
+                            Layout.alignment: Qt.AlignVCenter
                         }
                     }
 
-                    Text {
-                        anchors.right: parent.right
-                        anchors.rightMargin: 12
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: itemShortcut
-                        font.family: "Roboto"
-                        font.pixelSize: 11
-                        color: root.colors.onSurfaceVariant
-                        opacity: 0.6
-                        visible: itemShortcut !== ""
-                    }
-
                     MouseArea {
-                        id: dropdownItemMouse
+                        id: _dropMouse
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            root.itemClicked(itemId)
+                            root.itemClicked(_id)
                             root.close()
                         }
                     }

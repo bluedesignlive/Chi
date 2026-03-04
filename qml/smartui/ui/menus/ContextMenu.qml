@@ -1,3 +1,5 @@
+// qml/smartui/ui/menus/ContextMenu.qml
+// M3 context menu — positions itself at click coordinates
 import QtQuick
 import "../../theme" as Theme
 import "." as Menus
@@ -11,43 +13,38 @@ Menu {
     Timer {
         id: contextReopenTimer
         interval: 16
-        onTriggered: {
-            updatePosition()
-            open = true
-        }
+        onTriggered: { _updatePos(); open = true }
     }
 
-    function updatePosition() {
+    function _updatePos() {
         if (!appWindow) return
 
-        var parentPos = parent ? parent.mapToItem(appWindow, 0, 0) : Qt.point(0, 0)
-        var windowWidth = appWindow.width
-        var windowHeight = appWindow.height
+        var p = parent ? parent.mapToItem(appWindow, 0, 0) : Qt.point(0, 0)
+        var ww = appWindow.width
+        var wh = appWindow.height
 
-        var absX = Math.round(parentPos.x + clickX)
-        var absY = Math.round(parentPos.y + clickY)
+        var ax = Math.round(p.x + clickX)
+        var ay = Math.round(p.y + clickY)
 
-        if (absX + implicitWidth > windowWidth - 8) {
-            absX = Math.max(8, absX - implicitWidth)
-        }
-        if (absY + implicitHeight > windowHeight - 8) {
-            absY = Math.max(8, absY - implicitHeight)
-        }
+        // Clamp to screen edges with 8 px margin
+        if (ax + implicitWidth > ww - 8)
+            ax = Math.max(8, ax - implicitWidth)
+        if (ay + implicitHeight > wh - 8)
+            ay = Math.max(8, ay - implicitHeight)
 
-        menuX = absX
-        menuY = absY
+        menuX = ax
+        menuY = ay
     }
 
     function popup(px, py) {
-        clickX = px
-        clickY = py
+        clickX = px; clickY = py
         Menus.MenuManager.closeAllExcept(root)
-        
+
         if (open) {
             open = false
             contextReopenTimer.start()
         } else {
-            updatePosition()
+            _updatePos()
             open = true
         }
     }
