@@ -5,6 +5,7 @@ import "../../theme" as Theme
 Item {
     id: root
 
+    // ─── Public API ─────────────────────────────────────────
     property string icon: ""
     property string activeIcon: ""
     property string label: ""
@@ -13,25 +14,28 @@ Item {
     property bool showBadge: false
     property string badgeText: ""
     property bool enabled: true
-
     property int navIndex: 0
 
     signal clicked()
 
-    readonly property string displayIcon: selected && activeIcon !== "" ? activeIcon : icon
+    // ─── Theme Tokens ───────────────────────────────────────
+    readonly property var _c: Theme.ChiTheme.colors
+    readonly property var _t: Theme.ChiTheme.typography
+    readonly property var _m: Theme.ChiTheme.motion
 
+    // ─── Derived (private) ──────────────────────────────────
+    readonly property string _displayIcon: selected && activeIcon !== "" ? activeIcon : icon
+
+    // ─── Layout ─────────────────────────────────────────────
     Layout.fillWidth: true
     Layout.fillHeight: true
-
     opacity: enabled ? 1.0 : 0.38
-
-    property var colors: Theme.ChiTheme.colors
 
     Column {
         anchors.centerIn: parent
         spacing: 4
 
-        // Icon container with indicator
+        // ─── Icon Container ─────────────────────────────────
         Item {
             width: 64
             height: 32
@@ -41,20 +45,23 @@ Item {
             Rectangle {
                 id: indicator
                 anchors.centerIn: parent
-                width: selected ? 64 : 0
+                width: root.selected ? 64 : 0
                 height: 32
                 radius: 16
-                color: colors.secondaryContainer
-                opacity: selected ? 1 : 0
+                color: _c.secondaryContainer
+                opacity: root.selected ? 1 : 0
 
                 Behavior on width {
-                    NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    NumberAnimation {
+                        duration: _m.durationFast
+                        easing.type: _m.easeStandard
+                    }
                 }
                 Behavior on opacity {
-                    NumberAnimation { duration: 100 }
+                    NumberAnimation { duration: _m.durationFast }
                 }
                 Behavior on color {
-                    ColorAnimation { duration: 200 }
+                    ColorAnimation { duration: _m.durationFast }
                 }
             }
 
@@ -64,97 +71,100 @@ Item {
                 width: 64
                 height: 32
                 radius: 16
-                color: selected ? colors.onSecondaryContainer : colors.onSurface
-                opacity: {
-                    if (!enabled) return 0
-                    if (mouseArea.pressed) return 0.12
-                    if (mouseArea.containsMouse) return 0.08
-                    return 0
-                }
+                color: root.selected ? _c.onSecondaryContainer : _c.onSurface
+                opacity: tapHandler.pressed ? 0.12
+                       : hoverHandler.hovered ? 0.08
+                       : 0
 
                 Behavior on opacity {
-                    NumberAnimation { duration: 100 }
+                    NumberAnimation { duration: _m.durationFast }
                 }
             }
 
             // Icon
             Text {
                 anchors.centerIn: parent
-                text: displayIcon
-                font.family: "Material Icons"
+                text: root._displayIcon
+                font.family: Theme.ChiTheme.iconFamily
                 font.pixelSize: 24
-                color: selected ? colors.onSecondaryContainer : colors.onSurfaceVariant
+                color: root.selected ? _c.onSecondaryContainer : _c.onSurfaceVariant
 
                 Behavior on color {
-                    ColorAnimation { duration: 150 }
+                    ColorAnimation { duration: _m.durationFast }
                 }
             }
 
             // Badge
             Rectangle {
-                visible: showBadge
+                visible: root.showBadge
                 anchors.top: parent.top
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.horizontalCenterOffset: 12
                 anchors.topMargin: 2
-
-                width: badgeText === "" ? 6 : Math.max(16, badgeLabel.implicitWidth + 8)
-                height: badgeText === "" ? 6 : 16
+                width: root.badgeText === "" ? 6 : Math.max(16, badgeLabel.implicitWidth + 8)
+                height: root.badgeText === "" ? 6 : 16
                 radius: height / 2
-                color: colors.error
-
-                scale: showBadge ? 1 : 0
+                color: _c.error
+                scale: root.showBadge ? 1 : 0
 
                 Behavior on scale {
-                    NumberAnimation { duration: 150; easing.type: Easing.OutBack }
+                    NumberAnimation {
+                        duration: _m.durationFast
+                        easing.type: _m.easeBack
+                    }
                 }
                 Behavior on color {
-                    ColorAnimation { duration: 200 }
+                    ColorAnimation { duration: _m.durationFast }
                 }
 
                 Text {
                     id: badgeLabel
-                    visible: badgeText !== ""
+                    visible: root.badgeText !== ""
                     anchors.centerIn: parent
-                    text: badgeText
-                    font.family: "Roboto"
-                    font.pixelSize: 11
-                    font.weight: Font.Medium
-                    color: colors.onError
+                    text: root.badgeText
+                    font.family: _t.labelSmall.family
+                    font.pixelSize: _t.labelSmall.size
+                    font.weight: _t.labelSmall.weight
+                    color: _c.onError
 
                     Behavior on color {
-                        ColorAnimation { duration: 200 }
+                        ColorAnimation { duration: _m.durationFast }
                     }
                 }
             }
         }
 
-        // Label
+        // ─── Label ──────────────────────────────────────────
         Text {
-            visible: showLabel
-            text: label
-            font.family: "Roboto"
-            font.pixelSize: 12
-            font.weight: selected ? Font.Medium : Font.Normal
-            color: selected ? colors.onSurface : colors.onSurfaceVariant
+            visible: root.showLabel
+            text: root.label
+            font.family: _t.labelMedium.family
+            font.pixelSize: _t.labelMedium.size
+            font.weight: root.selected ? Font.Medium : Font.Normal
+            font.letterSpacing: _t.labelMedium.spacing
+            color: root.selected ? _c.onSurface : _c.onSurfaceVariant
             anchors.horizontalCenter: parent.horizontalCenter
 
             Behavior on color {
-                ColorAnimation { duration: 150 }
+                ColorAnimation { duration: _m.durationFast }
             }
         }
     }
 
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
+    // ─── Input Handlers ─────────────────────────────────────
+    HoverHandler {
+        id: hoverHandler
         enabled: root.enabled
-        hoverEnabled: true
-        cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-
-        onClicked: root.clicked()
+        cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
     }
 
+    TapHandler {
+        id: tapHandler
+        enabled: root.enabled
+        onTapped: root.clicked()
+    }
+
+    // ─── Accessibility ──────────────────────────────────────
     Accessible.role: Accessible.PageTab
     Accessible.name: label
     Accessible.selected: selected

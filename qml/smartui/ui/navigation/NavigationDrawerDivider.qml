@@ -5,46 +5,23 @@ import "../../theme" as Theme
 Item {
     id: root
 
-    property string label: ""
+    property string density: "compact"
+
+    readonly property var _c: Theme.ChiTheme.colors
+    readonly property bool _isCompact: density === "compact"
 
     Layout.fillWidth: true
-    implicitHeight: label !== "" ? 44 : 17
+    implicitHeight: 1 + (_isCompact ? 6 : 16)
 
-    property var colors: Theme.ChiTheme.colors
-
-    Column {
-        anchors.fill: parent
-        anchors.leftMargin: 28
-        anchors.rightMargin: 28
-        spacing: 0
-
-        Item { width: 1; height: 8 }
-
-        Rectangle {
-            width: parent.width
-            height: 1
-            color: colors.outlineVariant
-
-            Behavior on color {
-                ColorAnimation { duration: 200 }
-            }
-        }
-
-        Item { width: 1; height: 8 }
-
-        Text {
-            visible: label !== ""
-            text: label
-            font.family: "Roboto"
-            font.pixelSize: 14
-            font.weight: Font.Medium
-            font.letterSpacing: 0.1
-            color: colors.onSurfaceVariant
-            topPadding: 8
-
-            Behavior on color {
-                ColorAnimation { duration: 200 }
-            }
-        }
+    Rectangle {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.leftMargin: root._isCompact ? 12 : 28
+        anchors.rightMargin: root._isCompact ? 12 : 28
+        anchors.verticalCenter: parent.verticalCenter
+        height: 1
+        color: _c.outlineVariant
     }
+
+    Accessible.role: Accessible.Separator
 }

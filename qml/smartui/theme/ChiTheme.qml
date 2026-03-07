@@ -11,7 +11,6 @@ Item {
     readonly property string iconFamily: "Material Icons"
 
     // ─── Typography Scale (Material Design 3) ───────────────
-    // Weights: Normal=400, Medium=500, DemiBold=600, Bold=700
     readonly property var typography: ({
         displayLarge:   { family: "Roboto", size: 57, weight: 400, spacing: -0.25, lineHeight: 64 },
         displayMedium:  { family: "Roboto", size: 45, weight: 400, spacing: 0,     lineHeight: 52 },
@@ -136,15 +135,28 @@ Item {
 
     // ─── Motion ─────────────────────────────────────────────
     readonly property QtObject motion: QtObject {
+        // ── Duration tokens ─────────────────────────────────
         readonly property int durationFast: 100
         readonly property int durationMedium: 250
         readonly property int durationSlow: 350
         readonly property int durationExpressive: 600
 
+        // ── Easing tokens ───────────────────────────────────
         readonly property int easeStandard: Easing.OutCubic
         readonly property int easeEmphasized: Easing.OutQuart
         readonly property int easeBounce: Easing.OutBounce
         readonly property int easeElastic: Easing.OutElastic
         readonly property int easeBack: Easing.OutBack
+
+        // ── Page Transition (shared-axis Y) ─────────────────
+        //  Used by NavigationDrawer and any component that
+        //  switches pages. Two-phase asymmetric: fast exit,
+        //  graceful entrance with directional Y shift + scale.
+        readonly property int pageExitDuration: 120
+        readonly property int pageEnterDuration: 180
+        readonly property int pageExitEasing: Easing.InQuart
+        readonly property int pageEnterEasing: Easing.OutQuart
+        readonly property real pageSlideDistance: 30
+        readonly property real pageScaleOut: 0.96
     }
 }
