@@ -23,3 +23,6 @@ contribution guidelines are coming soon.
 
 *Chi is a Smart design system.*
 *Made for people who believe open-source deserves to feel alive.*
+
+
+> **Note:** this project is currently transitioning from the name **SmartUI** to **Chi**.
