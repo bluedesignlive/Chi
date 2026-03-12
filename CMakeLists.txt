@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(smartui-beta
-    VERSION 0.1.0
-    DESCRIPTION "SmartUI — Material 3 Design System for Qt/QML"
+project(chi
+    VERSION 0.2.0
+    DESCRIPTION "Chi — Material 3 Design System for Qt/QML"
     LANGUAGES CXX
 )
 
@@ -11,11 +11,9 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-include(GNUInstallDirs)
-
 find_package(Qt6 6.5 REQUIRED COMPONENTS Quick Qml)
 
-# ── Qt QML install path detection ────────────────────────────
+# ── Qt QML install path ──────────────────────────────────────
 get_target_property(QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)
 execute_process(
     COMMAND ${QMAKE_EXECUTABLE} -query QT_INSTALL_QML
@@ -23,36 +21,34 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 message(STATUS "Qt QML path: ${QT_QML_INSTALL_DIR}")
-message(STATUS "Installing SmartUIBeta to: ${QT_QML_INSTALL_DIR}/SmartUIBeta")
+message(STATUS "Chi will install to: ${QT_QML_INSTALL_DIR}/Chi")
 
-# ── Plugin library (C++ sources ONLY) ────────────────────────
-add_library(SmartUIBeta SHARED
-    smartui.cpp
-    smartui.h
+# ── Plugin library ────────────────────────────────────────────
+add_library(ChiPlugin SHARED
+    chi.cpp
+    chi.h
     resources.qrc
 )
 
-target_link_libraries(SmartUIBeta PRIVATE Qt6::Quick Qt6::Qml)
-target_include_directories(SmartUIBeta PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(ChiPlugin PRIVATE Qt6::Quick Qt6::Qml)
+target_include_directories(ChiPlugin PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-# ── QML files: tracked for IDE visibility, NOT compiled ──────
-# These appear in Qt Creator / CLion project tree but are not
-# passed to the C++ compiler. Installation is handled below.
-file(GLOB_RECURSE SMARTUI_QML_FILES CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/qml/smartui/*.qml"
-    "${CMAKE_CURRENT_SOURCE_DIR}/qml/smartui/*.js"
+# ── QML files (IDE visibility only) ──────────────────────────
+file(GLOB_RECURSE CHI_QML_FILES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/qml/Chi/*.qml"
+    "${CMAKE_CURRENT_SOURCE_DIR}/qml/Chi/*.js"
 )
-add_custom_target(SmartUI_QmlFiles SOURCES ${SMARTUI_QML_FILES})
+add_custom_target(Chi_QmlFiles SOURCES ${CHI_QML_FILES})
 
 # ── Install plugin binary ────────────────────────────────────
-install(TARGETS SmartUIBeta
-    LIBRARY DESTINATION ${QT_QML_INSTALL_DIR}/SmartUIBeta
-    ARCHIVE DESTINATION ${QT_QML_INSTALL_DIR}/SmartUIBeta
+install(TARGETS ChiPlugin
+    LIBRARY DESTINATION ${QT_QML_INSTALL_DIR}/Chi
+    ARCHIVE DESTINATION ${QT_QML_INSTALL_DIR}/Chi
 )
 
-# ── Install QML files ────────────────────────────────────────
-install(DIRECTORY qml/smartui/
-    DESTINATION ${QT_QML_INSTALL_DIR}/SmartUIBeta
+# ── Install QML module ───────────────────────────────────────
+install(DIRECTORY qml/Chi/
+    DESTINATION ${QT_QML_INSTALL_DIR}/Chi
     FILES_MATCHING
         PATTERN "*.qml"
         PATTERN "qmldir"
@@ -61,8 +57,4 @@ install(DIRECTORY qml/smartui/
         PATTERN "*.svg"
         PATTERN "*.ttf"
         PATTERN "*.woff2"
-)
-
-install(FILES smartui.h resources.qrc
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/SmartUIBeta
 )

@@ -1,0 +1,226 @@
+// pragma Singleton
+// import QtQuick
+// import SmartUIBeta 1.0
+
+// Item {
+//     id: theme
+
+//     property bool isDarkMode: ThemeBackend.isDarkMode
+//     property color seed: ThemeBackend.primaryColor
+
+//     // --- COLOR MATH (HSL Tones) ---
+//     function p(tone) { return Qt.hsla(theme.seed.hslHue, theme.seed.hslSaturation, tone/100.0, 1.0) }
+//     function s(tone) { return Qt.hsla(theme.seed.hslHue, theme.seed.hslSaturation * 0.5, tone/100.0, 1.0) }
+//     function t(tone) {
+//         var h = theme.seed.hslHue + 0.16; if(h > 1.0) h -= 1.0
+//         return Qt.hsla(h, theme.seed.hslSaturation * 0.7, tone/100.0, 1.0)
+//     }
+//     function n(tone) { return Qt.hsla(theme.seed.hslHue, theme.seed.hslSaturation * 0.05, tone/100.0, 1.0) }
+//     function nv(tone) { return Qt.hsla(theme.seed.hslHue, theme.seed.hslSaturation * 0.2, tone/100.0, 1.0) }
+    
+//     // EXPRESSIVE BACKGROUNDS (Tinted, not grey)
+//     function bg(tone) {
+//         var sat = Math.max(0.1, theme.seed.hslSaturation * 0.3)
+//         return Qt.hsla(theme.seed.hslHue, sat, tone/100.0, 1.0)
+//     }
+//     function e(tone) { return Qt.hsla(0, 0.8, tone/100.0, 1.0) }
+
+//     readonly property var colors: isDarkMode ? dark : light
+
+//     readonly property var light: ({
+//         primary: p(40), onPrimary: "#ffffff", primaryContainer: p(90), onPrimaryContainer: p(10),
+//         secondary: s(40), onSecondary: "#ffffff", secondaryContainer: s(90), onSecondaryContainer: s(10),
+//         tertiary: t(40), onTertiary: "#ffffff", tertiaryContainer: t(90), onTertiaryContainer: t(10),
+        
+//         // TINTED SURFACES
+//         background: bg(98), onBackground: n(10),
+//         surface: bg(99), onSurface: n(10),
+        
+//         surfaceContainerLow: bg(96),
+//         surfaceContainer: bg(94),
+//         surfaceContainerHighest: bg(90),
+
+//         outline: nv(50), outlineVariant: nv(80),
+//         error: e(40), onError: "#ffffff", errorContainer: e(90), onErrorContainer: e(10)
+//     })
+
+//     readonly property var dark: ({
+//         primary: p(80), onPrimary: p(20), primaryContainer: p(30), onPrimaryContainer: p(90),
+//         secondary: s(80), onSecondary: s(20), secondaryContainer: s(30), onSecondaryContainer: s(90),
+//         tertiary: t(80), onTertiary: t(20), tertiaryContainer: t(30), onTertiaryContainer: t(90),
+        
+//         // TINTED SURFACES
+//         background: bg(6), onBackground: n(90),
+//         surface: bg(6), onSurface: n(90),
+
+//         surfaceContainerLow: bg(10),
+//         surfaceContainer: bg(12),
+//         surfaceContainerHighest: bg(22),
+
+//         outline: nv(60), outlineVariant: nv(30),
+//         error: e(80), onError: e(20), errorContainer: e(30), onErrorContainer: e(90)
+//     })
+    
+//     function toggleMode() { ThemeBackend.isDarkMode = !ThemeBackend.isDarkMode }
+// }
+
+
+
+pragma Singleton
+import QtQuick
+import SmartUIBeta 1.0
+
+Item {
+    id: theme
+
+    // 1. Bind strictly to the C++ Backend
+    property bool isDarkMode: ThemeBackend.isDarkMode
+    property color seed: ThemeBackend.primaryColor
+
+    // --- COLOR MATH (Material 3 HCT approximation via HSL) ---
+    // These functions generate the specific Tones (0-100) based on the seed color.
+
+    function wrapHue(h) { return h < 0 ? h + 1 : (h > 1 ? h - 1 : h) }
+
+    // PRIMARY: Uses the seed color directly
+    function p(tone) {
+        return Qt.hsla(theme.seed.hslHue, theme.seed.hslSaturation, tone/100.0, 1.0)
+    }
+
+    // SECONDARY: Same hue, but much lower saturation (approx 30% of seed)
+    function s(tone) {
+        return Qt.hsla(theme.seed.hslHue, Math.max(0.1, theme.seed.hslSaturation * 0.3), tone/100.0, 1.0)
+    }
+
+    // TERTIARY: Shifted Hue (+60 deg) for "Expressive" contrast
+    function t(tone) {
+        var h = wrapHue(theme.seed.hslHue + 0.166) // +60 degrees
+        return Qt.hsla(h, Math.max(0.2, theme.seed.hslSaturation * 0.8), tone/100.0, 1.0)
+    }
+
+    // NEUTRAL (Surfaces): Tiny bit of saturation matching the seed (Tinted Surfaces)
+    function n(tone) {
+        return Qt.hsla(theme.seed.hslHue, 0.04, tone/100.0, 1.0)
+    }
+
+    // NEUTRAL VARIANT (Outlines/Text): Slightly more saturation than Neutral
+    function nv(tone) {
+        return Qt.hsla(theme.seed.hslHue, 0.08, tone/100.0, 1.0)
+    }
+
+    // ERROR: Standard Red, keeps M3 tones
+    function e(tone) { return Qt.hsla(0.0, 0.8, tone/100.0, 1.0) }
+
+
+    // --- THEME ROLES ---
+    // This object maps the Tones (0-100) to the semantic names used by your components.
+
+    readonly property var colors: isDarkMode ? dark : light
+
+    readonly property var light: ({
+        // Primary
+        primary: p(40),
+        onPrimary: "#FFFFFF",
+        primaryContainer: p(90),
+        onPrimaryContainer: p(10),
+
+        // Secondary
+        secondary: s(40),
+        onSecondary: "#FFFFFF",
+        secondaryContainer: s(90),
+        onSecondaryContainer: s(10),
+
+        // Tertiary
+        tertiary: t(40),
+        onTertiary: "#FFFFFF",
+        tertiaryContainer: t(90),
+        onTertiaryContainer: t(10),
+
+        // Error
+        error: e(40),
+        onError: "#FFFFFF",
+        errorContainer: e(90),
+        onErrorContainer: e(10),
+
+        // Backgrounds & Surfaces (High Tones for Light Mode)
+        background: n(98),
+        onBackground: n(10),
+
+        surface: n(98),
+        onSurface: n(10),
+
+        // MISSING VARIABLE FIXED:
+        onSurfaceVariant: nv(30),
+
+        // Surface Containers (Layering)
+        surfaceContainerLowest: n(100),
+        surfaceContainerLow: n(96),
+        surfaceContainer: n(94),
+        surfaceContainerHigh: n(92),
+        surfaceContainerHighest: n(90),
+
+        // Outlines
+        outline: nv(50),
+        outlineVariant: nv(80),
+
+        // Inverse (Snackbars, Tooltips)
+        inverseSurface: n(20),
+        inverseOnSurface: n(95),
+        inversePrimary: p(80)
+    })
+
+    readonly property var dark: ({
+        // Primary
+        primary: p(80),
+        onPrimary: p(20),
+        primaryContainer: p(30),
+        onPrimaryContainer: p(90),
+
+        // Secondary
+        secondary: s(80),
+        onSecondary: s(20),
+        secondaryContainer: s(30),
+        onSecondaryContainer: s(90),
+
+        // Tertiary
+        tertiary: t(80),
+        onTertiary: t(20),
+        tertiaryContainer: t(30),
+        onTertiaryContainer: t(90),
+
+        // Error
+        error: e(80),
+        onError: e(20),
+        errorContainer: e(30),
+        onErrorContainer: e(90),
+
+        // Backgrounds (Low Tones for Dark Mode)
+        background: n(6),
+        onBackground: n(90),
+
+        surface: n(6),
+        onSurface: n(90),
+
+        // MISSING VARIABLE FIXED:
+        onSurfaceVariant: nv(80),
+
+        // Surface Containers (Layering)
+        surfaceContainerLowest: n(4),
+        surfaceContainerLow: n(10),
+        surfaceContainer: n(12),
+        surfaceContainerHigh: n(17),
+        surfaceContainerHighest: n(22),
+
+        // Outlines
+        outline: nv(60),
+        outlineVariant: nv(30),
+
+        // Inverse
+        inverseSurface: n(90),
+        inverseOnSurface: n(20),
+        inversePrimary: p(40)
+    })
+
+    // Helper for your main switch
+    function toggleMode() { ThemeBackend.isDarkMode = !ThemeBackend.isDarkMode }
+}
