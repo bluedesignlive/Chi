@@ -1,9 +1,0 @@
-/home/lufuno/Desktop/smartui-beta/testui/CMakeFiles/SmartUIBeta.dir
-/home/lufuno/Desktop/smartui-beta/testui/CMakeFiles/edit_cache.dir
-/home/lufuno/Desktop/smartui-beta/testui/CMakeFiles/rebuild_cache.dir
-/home/lufuno/Desktop/smartui-beta/testui/CMakeFiles/list_install_components.dir
-/home/lufuno/Desktop/smartui-beta/testui/CMakeFiles/install.dir
-/home/lufuno/Desktop/smartui-beta/testui/CMakeFiles/install/local.dir
-/home/lufuno/Desktop/smartui-beta/testui/CMakeFiles/install/strip.dir
-/home/lufuno/Desktop/smartui-beta/testui/CMakeFiles/SmartUIBeta_autogen_timestamp_deps.dir
-/home/lufuno/Desktop/smartui-beta/testui/CMakeFiles/SmartUIBeta_autogen.dir
