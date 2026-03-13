@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls.Basic as T
 import QtQuick.Layouts
-import "../theme" as Theme
+import "../../theme" as Theme
 
 T.SwipeDelegate {
     id: control

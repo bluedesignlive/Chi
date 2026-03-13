@@ -2,7 +2,7 @@
 // // import QtQuick.Layouts
 // // import Qt5Compat.GraphicalEffects
 // // import "../common" as Common
-// // import "../theme" as Theme
+// // import "../../theme" as Theme
 
 // // Item {
 // //     id: root
@@ -537,7 +537,7 @@
 // import QtQuick.Layouts
 // import Qt5Compat.GraphicalEffects
 // import "../common" as Common
-// import "../theme" as Theme
+// import "../../theme" as Theme
 
 // Item {
 //     id: root
@@ -1095,7 +1095,7 @@ import QtQuick
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
 import "../common" as Common
-import "../theme" as Theme
+import "../../theme" as Theme
 
 Item {
     id: root

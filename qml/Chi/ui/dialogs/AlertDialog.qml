@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../Buttons" as Buttons
-import "../theme" as Theme
+import "../../theme" as Theme
 
 Dialog {
     id: root

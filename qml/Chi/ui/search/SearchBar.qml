@@ -3,7 +3,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects
-import "../theme" as Theme
+import "../../theme" as Theme
 import "../menus" as Menus
 import "../common" as Common
 

@@ -2,7 +2,7 @@
 // M3 tooltip — plain (inverse surface) and rich (surface container)
 import QtQuick
 import QtQuick.Effects
-import "../theme" as Theme
+import "../../theme" as Theme
 
 Item {
     id: root

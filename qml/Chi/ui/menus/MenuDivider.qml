@@ -1,7 +1,7 @@
 // qml/smartui/ui/menus/MenuDivider.qml
 // M3 menu divider — thin rule with vertical padding
 import QtQuick
-import "../theme" as Theme
+import "../../theme" as Theme
 
 Item {
     id: root

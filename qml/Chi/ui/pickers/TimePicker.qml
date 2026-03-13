@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects
-import "../theme" as Theme
+import "../../theme" as Theme
 import "../common" as Common
 
 Item {

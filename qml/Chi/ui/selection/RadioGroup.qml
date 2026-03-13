@@ -1,6 +1,6 @@
 // qml/smartui/ui/selection/RadioGroup.qml
 import QtQuick
-import "../theme" as Theme
+import "../../theme" as Theme
 
 Column {
     id: root

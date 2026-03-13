@@ -1,7 +1,7 @@
 // qml/smartui/ui/menus/ContextMenu.qml
 // M3 context menu — positions itself at click coordinates
 import QtQuick
-import "../theme" as Theme
+import "../../theme" as Theme
 import "." as Menus
 
 Menu {

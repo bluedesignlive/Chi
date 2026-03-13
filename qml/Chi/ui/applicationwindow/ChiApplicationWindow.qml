@@ -4,7 +4,7 @@ import QtQuick.Window
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import QtQuick.Effects
-import "../theme" as Theme
+import "../../theme" as Theme
 import "../common"
 import "../menus" as Menus
 

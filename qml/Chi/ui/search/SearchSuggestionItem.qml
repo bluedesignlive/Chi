@@ -2,7 +2,7 @@
 // M3 search suggestion row — icon, text, optional trailing action
 import QtQuick
 import QtQuick.Layouts
-import "../theme" as Theme
+import "../../theme" as Theme
 import "../common" as Common
 
 Item {

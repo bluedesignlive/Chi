@@ -5,7 +5,7 @@ import QtQuick.Layouts
 import QtQuick.Effects
 import Qt.labs.folderlistmodel
 import QtCore
-import "../theme" as Theme
+import "../../theme" as Theme
 import "../common"
 import "../menus" as Menus
 import "../Buttons" as Buttons

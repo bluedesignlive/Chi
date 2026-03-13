@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects
 import QtQuick.Controls.Basic
-import "../theme" as Theme
+import "../../theme" as Theme
 import "../common" as Common
 
 Item {

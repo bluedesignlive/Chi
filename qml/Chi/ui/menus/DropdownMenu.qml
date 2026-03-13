@@ -4,7 +4,7 @@ import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Effects
 import QtQuick.Layouts
-import "../theme" as Theme
+import "../../theme" as Theme
 import "../common"
 
 Popup {

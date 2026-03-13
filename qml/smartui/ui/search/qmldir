@@ -1,4 +1,0 @@
-module SmartUIBeta.ui.search
-
-SearchBar 1.0 SearchBar.qml
-SearchSuggestionItem 1.0 SearchSuggestionItem.qml

@@ -1,6 +1,6 @@
 // qml/smartui/ui/selection/Slider.qml
 import QtQuick
-import "../theme" as Theme
+import "../../theme" as Theme
 
 Item {
     id: root

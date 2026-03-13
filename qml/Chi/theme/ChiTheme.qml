@@ -1,182 +1,164 @@
-// theme/ChiTheme.qml
 pragma Singleton
 import QtQuick
 
-QtObject {
-    id: root
+Item {
+    id: themeRoot
 
-    // ── C++ Backend (registered as Chi.ThemeBackend) ────────
-    // When used inside the module itself, we access it relatively.
-    // The plugin registers ThemeBackend; we grab it at component completion.
+    readonly property color seed: "#673AB7"
 
-    property bool  isDark:       ThemeBackend.isDarkMode
-    property string primarySeed: ThemeBackend.primaryColor
-    property int   _rev:         ThemeBackend.revision    // forces full rebind
+    readonly property string fontFamily: "Roboto"
+    readonly property string iconFamily: "Material Icons"
 
-    // ── Font Families ───────────────────────────────────────
-    readonly property string fontFamily: "Inter"
-    readonly property string iconFamily: "Material Symbols Outlined"
-
-    // ── Motion Tokens ───────────────────────────────────────
-    readonly property QtObject motion: QtObject {
-        readonly property int durationFast:       100
-        readonly property int durationMedium:     200
-        readonly property int durationSlow:       350
-        readonly property int durationEmphasis:   500
-        readonly property int easeStandard:       Easing.OutCubic
-        readonly property int easeDecelerate:     Easing.OutQuart
-        readonly property int easeAccelerate:     Easing.InCubic
-    }
-
-    // ── Typography Tokens ───────────────────────────────────
     readonly property var typography: ({
-        displayLarge:  { size: 57, weight: Font.Normal,  spacing: -0.25 },
-        displayMedium: { size: 45, weight: Font.Normal,  spacing: 0 },
-        displaySmall:  { size: 36, weight: Font.Normal,  spacing: 0 },
-        headlineLarge: { size: 32, weight: Font.Normal,  spacing: 0 },
-        headlineMedium:{ size: 28, weight: Font.Normal,  spacing: 0 },
-        headlineSmall: { size: 24, weight: Font.Normal,  spacing: 0 },
-        titleLarge:    { size: 22, weight: Font.Normal,  spacing: 0 },
-        titleMedium:   { size: 16, weight: Font.Medium,  spacing: 0.15 },
-        titleSmall:    { size: 14, weight: Font.Medium,  spacing: 0.1 },
-        labelLarge:    { size: 14, weight: Font.Medium,  spacing: 0.1 },
-        labelMedium:   { size: 12, weight: Font.Medium,  spacing: 0.5 },
-        labelSmall:    { size: 11, weight: Font.Medium,  spacing: 0.5 },
-        bodyLarge:     { size: 16, weight: Font.Normal,  spacing: 0.5 },
-        bodyMedium:    { size: 14, weight: Font.Normal,  spacing: 0.25 },
-        bodySmall:     { size: 12, weight: Font.Normal,  spacing: 0.4 }
+        displayLarge:   { family: "Roboto", size: 57, weight: 400, spacing: -0.25, lineHeight: 64 },
+        displayMedium:  { family: "Roboto", size: 45, weight: 400, spacing: 0,     lineHeight: 52 },
+        displaySmall:   { family: "Roboto", size: 36, weight: 400, spacing: 0,     lineHeight: 44 },
+        headlineLarge:  { family: "Roboto", size: 32, weight: 400, spacing: 0,     lineHeight: 40 },
+        headlineMedium: { family: "Roboto", size: 28, weight: 400, spacing: 0,     lineHeight: 36 },
+        headlineSmall:  { family: "Roboto", size: 24, weight: 400, spacing: 0,     lineHeight: 32 },
+        titleLarge:     { family: "Roboto", size: 22, weight: 400, spacing: 0,     lineHeight: 28 },
+        titleMedium:    { family: "Roboto", size: 16, weight: 500, spacing: 0.15,  lineHeight: 24 },
+        titleSmall:     { family: "Roboto", size: 14, weight: 500, spacing: 0.1,   lineHeight: 20 },
+        bodyLarge:      { family: "Roboto", size: 16, weight: 400, spacing: 0.5,   lineHeight: 24 },
+        bodyMedium:     { family: "Roboto", size: 14, weight: 400, spacing: 0.25,  lineHeight: 20 },
+        bodySmall:      { family: "Roboto", size: 12, weight: 400, spacing: 0.4,   lineHeight: 16 },
+        labelLarge:     { family: "Roboto", size: 14, weight: 500, spacing: 0.1,   lineHeight: 20 },
+        labelMedium:    { family: "Roboto", size: 12, weight: 500, spacing: 0.5,   lineHeight: 16 },
+        labelSmall:     { family: "Roboto", size: 11, weight: 500, spacing: 0.5,   lineHeight: 16 }
     })
 
-    // ── Color Palette ───────────────────────────────────────
-    // KEY FIX: `colors` is a BINDING that depends on `_rev`.
-    // Every time ThemeBackend emits themeChanged(), `_rev` changes,
-    // which forces `colors` to be fully re-evaluated, and every
-    // downstream QML binding that reads `ChiTheme.colors.xxx`
-    // will also re-evaluate.
+    // ─── Color Schemes (your originals, untouched) ──────────
+    readonly property var dark: ({
+        primary: "#D3BCFD",
+        onPrimary: "#38265C",
+        primaryContainer: "#4F3D74",
+        onPrimaryContainer: "#EBDDFF",
+        secondary: "#CDC2DB",
+        onSecondary: "#342D40",
+        secondaryContainer: "#4B4358",
+        onSecondaryContainer: "#E9DEF8",
+        tertiary: "#F0B7C5",
+        onTertiary: "#4A2530",
+        tertiaryContainer: "#643B46",
+        onTertiaryContainer: "#FFD9E1",
+        error: "#FFB4AB",
+        onError: "#690005",
+        errorContainer: "#93000A",
+        onErrorContainer: "#FFDAD6",
+        background: "#151218",
+        onBackground: "#E7E0E8",
+        surface: "#151218",
+        onSurface: "#E7E0E8",
+        surfaceDim: "#151218",
+        surfaceBright: "#3B383E",
+        surfaceVariant: "#49454E",
+        onSurfaceVariant: "#CBC4CF",
+        surfaceContainerLowest: "#0D0B0F",
+        surfaceContainerLow: "#1D1B20",
+        surfaceContainer: "#211F24",
+        surfaceContainerHigh: "#2C292F",
+        surfaceContainerHighest: "#36343B",
+        outline: "#948F99",
+        outlineVariant: "#49454E",
+        shadow: "#000000",
+        scrim: "#000000",
+        surfaceTint: "#D3BCFD",
+        inverseSurface: "#E7E0E8",
+        inverseOnSurface: "#322F35",
+        inversePrimary: "#68548E"
+    })
 
-    readonly property var colors: {
-        // Touch _rev to create a binding dependency
-        void(_rev);
-        return isDark ? darkPalette() : lightPalette();
+    readonly property var light: ({
+        primary: "#68548E",
+        onPrimary: "#FFFFFF",
+        primaryContainer: "#EBDDFF",
+        onPrimaryContainer: "#230F46",
+        secondary: "#635B70",
+        onSecondary: "#FFFFFF",
+        secondaryContainer: "#E9DEF8",
+        onSecondaryContainer: "#1F182B",
+        tertiary: "#7E525D",
+        onTertiary: "#FFFFFF",
+        tertiaryContainer: "#FFD9E1",
+        onTertiaryContainer: "#31101B",
+        error: "#BA1A1A",
+        onError: "#FFFFFF",
+        errorContainer: "#FFDAD6",
+        onErrorContainer: "#410002",
+        background: "#FEF7FF",
+        onBackground: "#1D1B20",
+        surface: "#FEF7FF",
+        onSurface: "#1D1B20",
+        surfaceDim: "#DED8E0",
+        surfaceBright: "#FEF7FF",
+        surfaceVariant: "#E7E0EB",
+        onSurfaceVariant: "#49454E",
+        surfaceContainerLowest: "#FFFFFF",
+        surfaceContainerLow: "#F7F2FA",
+        surfaceContainer: "#F3EDF7",
+        surfaceContainerHigh: "#ECE6F0",
+        surfaceContainerHighest: "#E6E0E9",
+        outline: "#7A757F",
+        outlineVariant: "#CAC4D0",
+        shadow: "#000000",
+        scrim: "#000000",
+        surfaceTint: "#68548E",
+        inverseSurface: "#322F35",
+        inverseOnSurface: "#F5EFF7",
+        inversePrimary: "#D3BCFD"
+    })
+
+    // ─── Mode & Active Colors ───────────────────────────────
+    property bool isDarkMode: true
+    readonly property var colors: isDarkMode ? dark : light
+
+    // ─── C++ Backend Connection (late-bind, safe) ───────────
+    // Connects to ThemeBackend for persistence + cross-app sync.
+    // If backend isn't available, everything still works locally.
+    property bool _hasBackend: false
+
+    Component.onCompleted: {
+        try {
+            if (typeof ThemeBackend !== 'undefined' && ThemeBackend !== null) {
+                // Sync initial state FROM backend
+                isDarkMode = ThemeBackend.isDarkMode
+
+                // Live-bind so backend changes update QML
+                isDarkMode = Qt.binding(function() { return ThemeBackend.isDarkMode })
+                _hasBackend = true
+                console.log("[ChiTheme] Backend connected, config:", 
+                    "~/.config/chi/theme.json")
+            }
+        } catch(e) {
+            console.log("[ChiTheme] No backend, using local toggle")
+        }
     }
 
-    // ── Palette Generators (pure functions) ─────────────────
-    function lightPalette() {
-        var p = primarySeed;
-        return {
-            // Primary
-            primary:                 p,
-            onPrimary:               "#ffffff",
-            primaryContainer:        Qt.lighter(p, 1.75),
-            onPrimaryContainer:      Qt.darker(p, 2.0),
-
-            // Secondary (desaturated primary)
-            secondary:               Qt.hsla(Qt.hsla(p).hslHue, 0.3, 0.40, 1.0).toString(),
-            onSecondary:             "#ffffff",
-            secondaryContainer:      Qt.hsla(Qt.hsla(p).hslHue, 0.25, 0.88, 1.0).toString(),
-            onSecondaryContainer:    Qt.hsla(Qt.hsla(p).hslHue, 0.3, 0.15, 1.0).toString(),
-
-            // Tertiary (complementary hue)
-            tertiary:                Qt.hsla((Qt.hsla(p).hslHue + 0.17) % 1.0, 0.45, 0.42, 1.0).toString(),
-            onTertiary:              "#ffffff",
-            tertiaryContainer:       Qt.hsla((Qt.hsla(p).hslHue + 0.17) % 1.0, 0.5, 0.88, 1.0).toString(),
-            onTertiaryContainer:     Qt.hsla((Qt.hsla(p).hslHue + 0.17) % 1.0, 0.4, 0.15, 1.0).toString(),
-
-            // Error
-            error:                   "#ba1a1a",
-            onError:                 "#ffffff",
-            errorContainer:          "#ffdad6",
-            onErrorContainer:        "#410002",
-
-            // Surfaces
-            surface:                 "#fdf8fd",
-            onSurface:               "#1c1b1f",
-            surfaceVariant:          "#e7e0ec",
-            onSurfaceVariant:        "#49454e",
-            surfaceContainerLowest:  "#ffffff",
-            surfaceContainerLow:     "#f7f2f7",
-            surfaceContainer:        "#f1ecf1",
-            surfaceContainerHigh:    "#ebe6eb",
-            surfaceContainerHighest: "#e6e1e5",
-            surfaceDim:              "#ddd8dd",
-            surfaceBright:           "#fdf8fd",
-
-            // Outline
-            outline:                 "#79747e",
-            outlineVariant:          "#c9c5d0",
-
-            // Inverse
-            inverseSurface:          "#313033",
-            inverseOnSurface:        "#f4eff4",
-            inversePrimary:          Qt.lighter(p, 1.55),
-
-            // Misc
-            shadow:                  "#000000",
-            scrim:                   "#000000",
-            background:              "#fdf8fd",
-            onBackground:            "#1c1b1f"
-        };
+    // Called when user toggles dark mode — persists if backend exists
+    function setDarkMode(dark) {
+        if (_hasBackend) {
+            ThemeBackend.isDarkMode = dark  // saves to file, emits signal, updates binding
+        } else {
+            isDarkMode = dark               // local only
+        }
     }
 
-    function darkPalette() {
-        var p = primarySeed;
-        return {
-            // Primary
-            primary:                 Qt.lighter(p, 1.55),
-            onPrimary:               Qt.darker(p, 1.8),
-            primaryContainer:        Qt.darker(p, 1.2),
-            onPrimaryContainer:      Qt.lighter(p, 1.75),
-
-            // Secondary
-            secondary:               Qt.hsla(Qt.hsla(p).hslHue, 0.25, 0.70, 1.0).toString(),
-            onSecondary:             Qt.hsla(Qt.hsla(p).hslHue, 0.3, 0.18, 1.0).toString(),
-            secondaryContainer:      Qt.hsla(Qt.hsla(p).hslHue, 0.25, 0.28, 1.0).toString(),
-            onSecondaryContainer:    Qt.hsla(Qt.hsla(p).hslHue, 0.25, 0.88, 1.0).toString(),
-
-            // Tertiary
-            tertiary:                Qt.hsla((Qt.hsla(p).hslHue + 0.17) % 1.0, 0.40, 0.70, 1.0).toString(),
-            onTertiary:              Qt.hsla((Qt.hsla(p).hslHue + 0.17) % 1.0, 0.4, 0.18, 1.0).toString(),
-            tertiaryContainer:       Qt.hsla((Qt.hsla(p).hslHue + 0.17) % 1.0, 0.35, 0.30, 1.0).toString(),
-            onTertiaryContainer:     Qt.hsla((Qt.hsla(p).hslHue + 0.17) % 1.0, 0.5, 0.88, 1.0).toString(),
-
-            // Error
-            error:                   "#ffb4ab",
-            onError:                 "#690005",
-            errorContainer:          "#93000a",
-            onErrorContainer:        "#ffdad6",
-
-            // Surfaces
-            surface:                 "#141218",
-            onSurface:               "#e6e1e5",
-            surfaceVariant:          "#49454e",
-            onSurfaceVariant:        "#c9c5d0",
-            surfaceContainerLowest:  "#0f0d13",
-            surfaceContainerLow:     "#1c1b1f",
-            surfaceContainer:        "#201f24",
-            surfaceContainerHigh:    "#2b292f",
-            surfaceContainerHighest: "#36343a",
-            surfaceDim:              "#141218",
-            surfaceBright:           "#3b383e",
-
-            // Outline
-            outline:                 "#938f99",
-            outlineVariant:          "#49454e",
-
-            // Inverse
-            inverseSurface:          "#e6e1e5",
-            inverseOnSurface:        "#313033",
-            inversePrimary:          p,
-
-            // Misc
-            shadow:                  "#000000",
-            scrim:                   "#000000",
-            background:              "#141218",
-            onBackground:            "#e6e1e5"
-        };
+    // ─── Motion ─────────────────────────────────────────────
+    readonly property QtObject motion: QtObject {
+        readonly property int durationFast: 100
+        readonly property int durationMedium: 250
+        readonly property int durationSlow: 350
+        readonly property int durationExpressive: 600
+        readonly property int easeStandard: Easing.OutCubic
+        readonly property int easeEmphasized: Easing.OutQuart
+        readonly property int easeBounce: Easing.OutBounce
+        readonly property int easeElastic: Easing.OutElastic
+        readonly property int easeBack: Easing.OutBack
+        readonly property int pageExitDuration: 120
+        readonly property int pageEnterDuration: 180
+        readonly property int pageExitEasing: Easing.InQuart
+        readonly property int pageEnterEasing: Easing.OutQuart
+        readonly property real pageSlideDistance: 30
+        readonly property real pageScaleOut: 0.96
     }
-
-    // ── Convenience: change theme from QML ──────────────────
-    function setDarkMode(dark)        { ThemeBackend.isDarkMode = dark; }
-    function setPrimaryColor(color)   { ThemeBackend.primaryColor = color; }
-    function toggleDarkMode()         { ThemeBackend.isDarkMode = !ThemeBackend.isDarkMode; }
 }

@@ -1,6 +1,6 @@
 import QtQuick
 import Qt5Compat.GraphicalEffects
-import "../theme" as Theme
+import "../../theme" as Theme
 
 Item {
     id: root

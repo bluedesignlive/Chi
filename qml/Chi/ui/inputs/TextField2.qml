@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls.Basic as T
-import "../theme" as Theme
+import "../../theme" as Theme
 
 Item {
     id: root

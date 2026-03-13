@@ -1,6 +1,6 @@
 // // // // import QtQuick
 // // // // import QtQuick.Layouts
-// // // // import "../theme" as Theme
+// // // // import "../../theme" as Theme
 
 // // // // pragma ComponentBehavior: Bound
 
@@ -155,7 +155,7 @@
 
 // // // import QtQuick
 // // // import QtQuick.Layouts
-// // // import "../theme" as Theme
+// // // import "../../theme" as Theme
 
 // // // pragma ComponentBehavior: Bound
 
@@ -325,7 +325,7 @@
 
 // // import QtQuick
 // // import QtQuick.Layouts
-// // import "../theme" as Theme
+// // import "../../theme" as Theme
 
 // // pragma ComponentBehavior: Bound
 
@@ -478,7 +478,7 @@
 
 // import QtQuick
 // import QtQuick.Layouts
-// import "../theme" as Theme
+// import "../../theme" as Theme
 
 // pragma ComponentBehavior: Bound
 
@@ -656,7 +656,7 @@
 
 import QtQuick
 import QtQuick.Layouts
-import "../theme" as Theme
+import "../../theme" as Theme
 
 pragma ComponentBehavior: Bound
 

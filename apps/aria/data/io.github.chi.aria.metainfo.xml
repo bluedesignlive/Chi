@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.chi.aria</id>
+  <name>Aria</name>
+  <summary>Lightweight audio player built with Chi</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <description><p>A clean, fast audio player for the Linux desktop.</p></description>
+  <launchable type="desktop-id">io.github.chi.aria.desktop</launchable>
+</component>

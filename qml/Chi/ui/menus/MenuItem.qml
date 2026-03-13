@@ -3,7 +3,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../common" as Common
-import "../theme" as Theme
+import "../../theme" as Theme
 
 Item {
     id: root

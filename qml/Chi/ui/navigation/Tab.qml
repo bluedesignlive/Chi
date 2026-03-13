@@ -2,7 +2,7 @@
 // // // // import QtQuick.Controls
 // // // // import QtQuick.Layouts
 // // // // import "../common" as Common
-// // // // import "../theme" as Theme
+// // // // import "../../theme" as Theme
 
 // // // // pragma ComponentBehavior: Bound
 
@@ -108,7 +108,7 @@
 // // // import QtQuick.Controls
 // // // import QtQuick.Layouts
 // // // import "../common" as Common
-// // // import "../theme" as Theme
+// // // import "../../theme" as Theme
 
 // // // pragma ComponentBehavior: Bound
 
@@ -276,7 +276,7 @@
 // // import QtQuick.Controls
 // // import QtQuick.Layouts
 // // import "../common" as Common
-// // import "../theme" as Theme
+// // import "../../theme" as Theme
 
 // // pragma ComponentBehavior: Bound
 
@@ -517,7 +517,7 @@
 // import QtQuick.Controls
 // import QtQuick.Layouts
 // import "../common" as Common
-// import "../theme" as Theme
+// import "../../theme" as Theme
 
 // pragma ComponentBehavior: Bound
 
@@ -743,7 +743,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../common" as Common
-import "../theme" as Theme
+import "../../theme" as Theme
 
 pragma ComponentBehavior: Bound
 

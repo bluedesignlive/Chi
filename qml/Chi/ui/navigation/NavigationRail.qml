@@ -2,7 +2,7 @@
 // // // import QtQuick.Layouts
 // // // import QtQuick.Controls.Basic
 // // // import Qt5Compat.GraphicalEffects
-// // // import "../theme" as Theme
+// // // import "../../theme" as Theme
 
 // // // Item {
 // // //     id: navigationRail
@@ -431,7 +431,7 @@
 // // import QtQuick.Layouts
 // // import QtQuick.Controls.Basic
 // // import Qt5Compat.GraphicalEffects
-// // import "../theme" as Theme
+// // import "../../theme" as Theme
 // // import "../common" // Imports your Icon.qml
 
 // // Item {
@@ -992,7 +992,7 @@
 // import QtQuick.Layouts
 // import QtQuick.Controls.Basic
 // import Qt5Compat.GraphicalEffects
-// import "../theme" as Theme
+// import "../../theme" as Theme
 // import "../common"
 
 // Item {
@@ -1455,7 +1455,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls.Basic
 import Qt5Compat.GraphicalEffects
-import "../theme" as Theme
+import "../../theme" as Theme
 import "../common"
 
 Item {

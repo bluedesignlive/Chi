@@ -1,7 +1,7 @@
 // WindowControls.qml
 import QtQuick
 import QtQuick.Window
-import "../theme" as Theme
+import "../../theme" as Theme
 import "../common"
 
 Item {

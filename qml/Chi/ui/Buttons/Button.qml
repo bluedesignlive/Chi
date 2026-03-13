@@ -14,7 +14,7 @@
 import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Effects
-import "../theme" as Theme
+import "../../theme" as Theme
 
 Item {
     id: root

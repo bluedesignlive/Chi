@@ -1,7 +1,7 @@
 // smartui/ui/progress/LinearProgressIndicator.qml
 // M3 linear progress indicator — determinate + indeterminate
 import QtQuick
-import "../theme" as Theme
+import "../../theme" as Theme
 
 Item {
     id: root

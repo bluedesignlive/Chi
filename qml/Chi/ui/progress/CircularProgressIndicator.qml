@@ -2,7 +2,7 @@
 // M3 circular progress indicator — determinate + indeterminate
 import QtQuick
 import QtQuick.Shapes
-import "../theme" as Theme
+import "../../theme" as Theme
 
 Item {
     id: root
