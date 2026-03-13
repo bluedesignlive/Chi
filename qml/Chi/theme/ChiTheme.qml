@@ -27,123 +27,153 @@ Item {
         labelSmall:     { family: "Roboto", size: 11, weight: 500, spacing: 0.5,   lineHeight: 16 }
     })
 
-    // ─── Color Schemes (your originals, untouched) ──────────
-    readonly property var dark: ({
-        primary: "#D3BCFD",
-        onPrimary: "#38265C",
-        primaryContainer: "#4F3D74",
-        onPrimaryContainer: "#EBDDFF",
-        secondary: "#CDC2DB",
-        onSecondary: "#342D40",
-        secondaryContainer: "#4B4358",
-        onSecondaryContainer: "#E9DEF8",
-        tertiary: "#F0B7C5",
-        onTertiary: "#4A2530",
-        tertiaryContainer: "#643B46",
-        onTertiaryContainer: "#FFD9E1",
-        error: "#FFB4AB",
-        onError: "#690005",
-        errorContainer: "#93000A",
-        onErrorContainer: "#FFDAD6",
-        background: "#151218",
-        onBackground: "#E7E0E8",
-        surface: "#151218",
-        onSurface: "#E7E0E8",
-        surfaceDim: "#151218",
-        surfaceBright: "#3B383E",
-        surfaceVariant: "#49454E",
-        onSurfaceVariant: "#CBC4CF",
-        surfaceContainerLowest: "#0D0B0F",
-        surfaceContainerLow: "#1D1B20",
-        surfaceContainer: "#211F24",
-        surfaceContainerHigh: "#2C292F",
+    readonly property var _seedDark: ({
+        primary: "#D3BCFD", onPrimary: "#38265C",
+        primaryContainer: "#4F3D74", onPrimaryContainer: "#EBDDFF",
+        secondary: "#CDC2DB", onSecondary: "#342D40",
+        secondaryContainer: "#4B4358", onSecondaryContainer: "#E9DEF8",
+        tertiary: "#F0B7C5", onTertiary: "#4A2530",
+        tertiaryContainer: "#643B46", onTertiaryContainer: "#FFD9E1",
+        error: "#FFB4AB", onError: "#690005",
+        errorContainer: "#93000A", onErrorContainer: "#FFDAD6",
+        background: "#151218", onBackground: "#E7E0E8",
+        surface: "#151218", onSurface: "#E7E0E8",
+        surfaceDim: "#151218", surfaceBright: "#3B383E",
+        surfaceVariant: "#49454E", onSurfaceVariant: "#CBC4CF",
+        surfaceContainerLowest: "#0D0B0F", surfaceContainerLow: "#1D1B20",
+        surfaceContainer: "#211F24", surfaceContainerHigh: "#2C292F",
         surfaceContainerHighest: "#36343B",
-        outline: "#948F99",
-        outlineVariant: "#49454E",
-        shadow: "#000000",
-        scrim: "#000000",
-        surfaceTint: "#D3BCFD",
-        inverseSurface: "#E7E0E8",
-        inverseOnSurface: "#322F35",
-        inversePrimary: "#68548E"
+        outline: "#948F99", outlineVariant: "#49454E",
+        shadow: "#000000", scrim: "#000000", surfaceTint: "#D3BCFD",
+        inverseSurface: "#E7E0E8", inverseOnSurface: "#322F35", inversePrimary: "#68548E"
     })
 
-    readonly property var light: ({
-        primary: "#68548E",
-        onPrimary: "#FFFFFF",
-        primaryContainer: "#EBDDFF",
-        onPrimaryContainer: "#230F46",
-        secondary: "#635B70",
-        onSecondary: "#FFFFFF",
-        secondaryContainer: "#E9DEF8",
-        onSecondaryContainer: "#1F182B",
-        tertiary: "#7E525D",
-        onTertiary: "#FFFFFF",
-        tertiaryContainer: "#FFD9E1",
-        onTertiaryContainer: "#31101B",
-        error: "#BA1A1A",
-        onError: "#FFFFFF",
-        errorContainer: "#FFDAD6",
-        onErrorContainer: "#410002",
-        background: "#FEF7FF",
-        onBackground: "#1D1B20",
-        surface: "#FEF7FF",
-        onSurface: "#1D1B20",
-        surfaceDim: "#DED8E0",
-        surfaceBright: "#FEF7FF",
-        surfaceVariant: "#E7E0EB",
-        onSurfaceVariant: "#49454E",
-        surfaceContainerLowest: "#FFFFFF",
-        surfaceContainerLow: "#F7F2FA",
-        surfaceContainer: "#F3EDF7",
-        surfaceContainerHigh: "#ECE6F0",
+    readonly property var _seedLight: ({
+        primary: "#68548E", onPrimary: "#FFFFFF",
+        primaryContainer: "#EBDDFF", onPrimaryContainer: "#230F46",
+        secondary: "#635B70", onSecondary: "#FFFFFF",
+        secondaryContainer: "#E9DEF8", onSecondaryContainer: "#1F182B",
+        tertiary: "#7E525D", onTertiary: "#FFFFFF",
+        tertiaryContainer: "#FFD9E1", onTertiaryContainer: "#31101B",
+        error: "#BA1A1A", onError: "#FFFFFF",
+        errorContainer: "#FFDAD6", onErrorContainer: "#410002",
+        background: "#FEF7FF", onBackground: "#1D1B20",
+        surface: "#FEF7FF", onSurface: "#1D1B20",
+        surfaceDim: "#DED8E0", surfaceBright: "#FEF7FF",
+        surfaceVariant: "#E7E0EB", onSurfaceVariant: "#49454E",
+        surfaceContainerLowest: "#FFFFFF", surfaceContainerLow: "#F7F2FA",
+        surfaceContainer: "#F3EDF7", surfaceContainerHigh: "#ECE6F0",
         surfaceContainerHighest: "#E6E0E9",
-        outline: "#7A757F",
-        outlineVariant: "#CAC4D0",
-        shadow: "#000000",
-        scrim: "#000000",
-        surfaceTint: "#68548E",
-        inverseSurface: "#322F35",
-        inverseOnSurface: "#F5EFF7",
-        inversePrimary: "#D3BCFD"
+        outline: "#7A757F", outlineVariant: "#CAC4D0",
+        shadow: "#000000", scrim: "#000000", surfaceTint: "#68548E",
+        inverseSurface: "#322F35", inverseOnSurface: "#F5EFF7", inversePrimary: "#D3BCFD"
     })
 
-    // ─── Mode & Active Colors ───────────────────────────────
     property bool isDarkMode: true
-    readonly property var colors: isDarkMode ? dark : light
+    property color primaryColor: seed
 
-    // ─── C++ Backend Connection (late-bind, safe) ───────────
-    // Connects to ThemeBackend for persistence + cross-app sync.
-    // If backend isn't available, everything still works locally.
-    property bool _hasBackend: false
+    readonly property var colors: {
+        var p = primaryColor
+        if (_isSeedColor(p))
+            return isDarkMode ? _seedDark : _seedLight
+        return isDarkMode ? _genDark(p) : _genLight(p)
+    }
+
+    function _isSeedColor(c) {
+        return Math.abs(c.r - seed.r) < 0.02
+            && Math.abs(c.g - seed.g) < 0.02
+            && Math.abs(c.b - seed.b) < 0.02
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // C++ BACKEND SYNC (automatic, no app-side code needed)
+    // _chiBackend is set by the plugin via initializeEngine
+    // ═══════════════════════════════════════════════════════
+
+    Connections {
+        target: _chiBackend
+        function onThemeChanged() {
+            themeRoot.isDarkMode   = _chiBackend.isDarkMode
+            themeRoot.primaryColor = _chiBackend.primaryColor
+        }
+    }
 
     Component.onCompleted: {
-        try {
-            if (typeof ThemeBackend !== 'undefined' && ThemeBackend !== null) {
-                // Sync initial state FROM backend
-                isDarkMode = ThemeBackend.isDarkMode
-
-                // Live-bind so backend changes update QML
-                isDarkMode = Qt.binding(function() { return ThemeBackend.isDarkMode })
-                _hasBackend = true
-                console.log("[ChiTheme] Backend connected, config:", 
-                    "~/.config/chi/theme.json")
-            }
-        } catch(e) {
-            console.log("[ChiTheme] No backend, using local toggle")
+        if (_chiBackend) {
+            isDarkMode   = _chiBackend.isDarkMode
+            primaryColor = _chiBackend.primaryColor
         }
     }
 
-    // Called when user toggles dark mode — persists if backend exists
-    function setDarkMode(dark) {
-        if (_hasBackend) {
-            ThemeBackend.isDarkMode = dark  // saves to file, emits signal, updates binding
-        } else {
-            isDarkMode = dark               // local only
+    function setDarkMode(dark)  { _chiBackend.isDarkMode = dark }
+    function setPrimaryColor(c) { _chiBackend.primaryColor = c.toString() }
+    function toggleDarkMode()   { _chiBackend.isDarkMode = !_chiBackend.isDarkMode }
+
+    // ═══════════════════════════════════════════════════════
+    // ALGORITHMIC PALETTES
+    // ═══════════════════════════════════════════════════════
+
+    function _genLight(p) {
+        var h = p.hslHue >= 0 ? p.hslHue : 0
+        var th = (h + 0.17) % 1.0
+        return {
+            primary: p.toString(), onPrimary: "#FFFFFF",
+            primaryContainer: Qt.lighter(p, 1.85).toString(),
+            onPrimaryContainer: Qt.darker(p, 2.5).toString(),
+            secondary: Qt.hsla(h, 0.20, 0.42, 1.0).toString(), onSecondary: "#FFFFFF",
+            secondaryContainer: Qt.hsla(h, 0.14, 0.90, 1.0).toString(),
+            onSecondaryContainer: Qt.hsla(h, 0.20, 0.15, 1.0).toString(),
+            tertiary: Qt.hsla(th, 0.32, 0.42, 1.0).toString(), onTertiary: "#FFFFFF",
+            tertiaryContainer: Qt.hsla(th, 0.38, 0.90, 1.0).toString(),
+            onTertiaryContainer: Qt.hsla(th, 0.30, 0.15, 1.0).toString(),
+            error: "#BA1A1A", onError: "#FFFFFF",
+            errorContainer: "#FFDAD6", onErrorContainer: "#410002",
+            background: "#FEF7FF", onBackground: "#1D1B20",
+            surface: "#FEF7FF", onSurface: "#1D1B20",
+            surfaceDim: "#DED8E0", surfaceBright: "#FEF7FF",
+            surfaceVariant: "#E7E0EB", onSurfaceVariant: "#49454E",
+            surfaceContainerLowest: "#FFFFFF", surfaceContainerLow: "#F7F2FA",
+            surfaceContainer: "#F3EDF7", surfaceContainerHigh: "#ECE6F0",
+            surfaceContainerHighest: "#E6E0E9",
+            outline: "#7A757F", outlineVariant: "#CAC4D0",
+            shadow: "#000000", scrim: "#000000", surfaceTint: p.toString(),
+            inverseSurface: "#322F35", inverseOnSurface: "#F5EFF7",
+            inversePrimary: Qt.lighter(p, 1.6).toString()
         }
     }
 
-    // ─── Motion ─────────────────────────────────────────────
+    function _genDark(p) {
+        var h = p.hslHue >= 0 ? p.hslHue : 0
+        var th = (h + 0.17) % 1.0
+        var lt = Qt.lighter(p, 1.55)
+        return {
+            primary: lt.toString(), onPrimary: Qt.darker(p, 1.8).toString(),
+            primaryContainer: Qt.darker(p, 1.15).toString(),
+            onPrimaryContainer: Qt.lighter(p, 1.85).toString(),
+            secondary: Qt.hsla(h, 0.18, 0.72, 1.0).toString(),
+            onSecondary: Qt.hsla(h, 0.20, 0.20, 1.0).toString(),
+            secondaryContainer: Qt.hsla(h, 0.18, 0.30, 1.0).toString(),
+            onSecondaryContainer: Qt.hsla(h, 0.15, 0.90, 1.0).toString(),
+            tertiary: Qt.hsla(th, 0.30, 0.72, 1.0).toString(),
+            onTertiary: Qt.hsla(th, 0.30, 0.20, 1.0).toString(),
+            tertiaryContainer: Qt.hsla(th, 0.28, 0.30, 1.0).toString(),
+            onTertiaryContainer: Qt.hsla(th, 0.35, 0.90, 1.0).toString(),
+            error: "#FFB4AB", onError: "#690005",
+            errorContainer: "#93000A", onErrorContainer: "#FFDAD6",
+            background: "#151218", onBackground: "#E7E0E8",
+            surface: "#151218", onSurface: "#E7E0E8",
+            surfaceDim: "#151218", surfaceBright: "#3B383E",
+            surfaceVariant: "#49454E", onSurfaceVariant: "#CBC4CF",
+            surfaceContainerLowest: "#0D0B0F", surfaceContainerLow: "#1D1B20",
+            surfaceContainer: "#211F24", surfaceContainerHigh: "#2C292F",
+            surfaceContainerHighest: "#36343B",
+            outline: "#948F99", outlineVariant: "#49454E",
+            shadow: "#000000", scrim: "#000000", surfaceTint: lt.toString(),
+            inverseSurface: "#E7E0E8", inverseOnSurface: "#322F35",
+            inversePrimary: p.toString()
+        }
+    }
+
     readonly property QtObject motion: QtObject {
         readonly property int durationFast: 100
         readonly property int durationMedium: 250

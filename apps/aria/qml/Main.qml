@@ -37,7 +37,7 @@ ChiApplicationWindow {
         QtObject {
             property string icon: ChiTheme.isDarkMode ? "\uE518" : "\uE51C"
             property bool enabled: true
-            function triggered() { ChiTheme.isDarkMode = !ChiTheme.isDarkMode }
+            function triggered() { ChiTheme.toggleDarkMode() }
         }
     ]
 
