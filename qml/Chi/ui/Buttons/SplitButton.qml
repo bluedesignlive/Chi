@@ -1,7 +1,6 @@
-// smartui/ui/Buttons/SplitButton.qml
+// SplitButton — Leading action + trailing toggle split button
 import QtQuick
-import QtQuick.Controls.Basic
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import "../../theme" as Theme
 
 Item {
@@ -21,275 +20,153 @@ Item {
     signal trailingClicked()
 
     opacity: enabled ? 1.0 : 0.38
-    Behavior on opacity {
-        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-    }
+    Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
 
     readonly property var sizeSpecs: ({
-        xsmall: {
-            height: 32,
-            padding: 6,
-            horizontalPadding: 12,
-            gap: 4,
-            iconSize: 20,
-            fontSize: 14,
-            fontWeight: Font.Medium,
-            letterSpacing: 0.1,
-            lineHeight: 20,
-            fullRadius: 16,
-            smallRadius: 4,
-            buttonGap: 2,
-            trailingIconSize: 16
-        },
-        small: {
-            height: 40,
-            padding: 10,
-            horizontalPadding: 16,
-            gap: 8,
-            iconSize: 20,
-            fontSize: 14,
-            fontWeight: Font.Medium,
-            letterSpacing: 0.1,
-            lineHeight: 20,
-            fullRadius: 20,
-            smallRadius: 4,
-            buttonGap: 2,
-            trailingIconSize: 18
-        },
-        medium: {
-            height: 56,
-            padding: 16,
-            horizontalPadding: 24,
-            gap: 8,
-            iconSize: 24,
-            fontSize: 16,
-            fontWeight: Font.Medium,
-            letterSpacing: 0.15,
-            lineHeight: 24,
-            fullRadius: 28,
-            smallRadius: 4,
-            buttonGap: 2,
-            trailingIconSize: 20
-        },
-        large: {
-            height: 96,
-            padding: 32,
-            horizontalPadding: 48,
-            gap: 12,
-            iconSize: 32,
-            fontSize: 24,
-            fontWeight: Font.Normal,
-            letterSpacing: 0,
-            lineHeight: 32,
-            fullRadius: 48,
-            smallRadius: 8,
-            buttonGap: 2,
-            trailingIconSize: 28
-        },
-        xlarge: {
-            height: 136,
-            padding: 48,
-            horizontalPadding: 64,
-            gap: 16,
-            iconSize: 40,
-            fontSize: 32,
-            fontWeight: Font.Normal,
-            letterSpacing: 0,
-            lineHeight: 40,
-            fullRadius: 68,
-            smallRadius: 12,
-            buttonGap: 2,
-            trailingIconSize: 36
-        }
+        xsmall: { height: 32, padding: 6,  horizontalPadding: 12, gap: 4,  iconSize: 20, fontSize: 14, fontWeight: Font.Medium, letterSpacing: 0.1,  fullRadius: 16, smallRadius: 4,  buttonGap: 2, trailingIconSize: 16 },
+        small:  { height: 40, padding: 10, horizontalPadding: 16, gap: 8,  iconSize: 20, fontSize: 14, fontWeight: Font.Medium, letterSpacing: 0.1,  fullRadius: 20, smallRadius: 4,  buttonGap: 2, trailingIconSize: 18 },
+        medium: { height: 56, padding: 16, horizontalPadding: 24, gap: 8,  iconSize: 24, fontSize: 16, fontWeight: Font.Medium, letterSpacing: 0.15, fullRadius: 28, smallRadius: 4,  buttonGap: 2, trailingIconSize: 20 },
+        large:  { height: 96, padding: 32, horizontalPadding: 48, gap: 12, iconSize: 32, fontSize: 24, fontWeight: Font.Normal, letterSpacing: 0,    fullRadius: 48, smallRadius: 8,  buttonGap: 2, trailingIconSize: 28 },
+        xlarge: { height: 136, padding: 48, horizontalPadding: 64, gap: 16, iconSize: 40, fontSize: 32, fontWeight: Font.Normal, letterSpacing: 0,   fullRadius: 68, smallRadius: 12, buttonGap: 2, trailingIconSize: 36 }
     })
 
-    readonly property var currentSize: sizeSpecs[size] || sizeSpecs.small
-    readonly property bool isIconImage:
-        leadingIcon.indexOf(".svg") !== -1 ||
-        leadingIcon.indexOf(".png") !== -1 ||
-        leadingIcon.indexOf(".jpg") !== -1 ||
-        leadingIcon.indexOf("qrc:/") === 0
+    readonly property var cs: sizeSpecs[size] || sizeSpecs.small
 
-    implicitWidth: leadingButtonContainer.implicitWidth + currentSize.buttonGap + trailingButtonContainer.width
-    implicitHeight: currentSize.height
+    // Cached variant flags
+    readonly property bool _filled: variant === "filled"
+    readonly property bool _elevated: variant === "elevated"
+    readonly property bool _tonal: variant === "tonal"
+    readonly property bool _outlined: variant === "outlined"
+
+    readonly property bool isIconImage: {
+        var s = leadingIcon
+        return s.indexOf(".svg") !== -1 || s.indexOf(".png") !== -1 ||
+               s.indexOf(".jpg") !== -1 || s.indexOf("qrc:/") === 0
+    }
+
+    // Cached colors — shared by both leading and trailing halves
+    readonly property color _interactColor: _filled ? colors.onPrimary :
+                                            _tonal ? colors.onSecondaryContainer : colors.primary
+    readonly property color _labelColor: enabled ? _interactColor : colors.onSurface
+    readonly property color _containerColor: {
+        if (!enabled && (_filled || _elevated)) return "transparent"
+        if (_filled) return colors.primary
+        if (_elevated) return colors.surfaceContainerLow
+        if (_tonal) return colors.secondaryContainer
+        return "transparent"
+    }
+
+    implicitWidth: leadingButtonContainer.implicitWidth + cs.buttonGap + trailingButtonContainer.width
+    implicitHeight: cs.height
 
     property var colors: Theme.ChiTheme.colors
 
-    states: [
-        State { name: "disabled";        when: !enabled },
-        State { name: "leadingPressed";  when: leadingMouseArea.pressed && enabled },
-        State { name: "leadingFocused";  when: splitButton.activeFocus && enabled && !leadingMouseArea.pressed },
-        State { name: "leadingHovered";  when: leadingMouseArea.containsMouse && enabled && !leadingMouseArea.pressed },
-        State { name: "enabled";         when: enabled }
-    ]
-
     Row {
-        spacing: currentSize.buttonGap
+        spacing: cs.buttonGap
 
-        // LEADING BUTTON
+        // ─── LEADING BUTTON ───
         Rectangle {
             id: leadingButtonContainer
             implicitWidth: leadingContent.implicitWidth
-            height: currentSize.height
+            height: cs.height
             clip: true
 
-            topLeftRadius: currentSize.fullRadius
-            bottomLeftRadius: currentSize.fullRadius
-            topRightRadius: currentSize.smallRadius
-            bottomRightRadius: currentSize.smallRadius
+            topLeftRadius: cs.fullRadius
+            bottomLeftRadius: cs.fullRadius
+            topRightRadius: cs.smallRadius
+            bottomRightRadius: cs.smallRadius
 
-            color: {
-                if (!enabled && variant === "filled")   return "transparent"
-                if (!enabled && variant === "elevated") return "transparent"
+            color: splitButton._containerColor
+            border.width: splitButton._outlined ? 1 : 0
+            border.color: splitButton._outlined ? colors.outline : "transparent"
 
-                switch (variant) {
-                case "filled":   return colors.primary
-                case "elevated": return colors.surfaceContainerLow
-                case "tonal":    return colors.secondaryContainer
-                case "outlined":
-                case "text":
-                default:         return "transparent"
-                }
-            }
-
+            // Disabled overlay
             Rectangle {
                 anchors.fill: parent
-                radius: 0
                 topLeftRadius: parent.topLeftRadius
                 topRightRadius: parent.topRightRadius
                 bottomLeftRadius: parent.bottomLeftRadius
                 bottomRightRadius: parent.bottomRightRadius
-                visible: !enabled && (variant === "filled" || variant === "elevated")
+                visible: !splitButton.enabled && (splitButton._filled || splitButton._elevated)
                 color: colors.onSurface
                 opacity: 0.12
             }
 
-            border.width: variant === "outlined" ? 1 : 0
-            border.color: variant === "outlined" ? colors.outline : "transparent"
-
-            // Simple ripple for leading side
+            // Ripple
             Rectangle {
-                id: leadingRipple
                 anchors.fill: parent
-                radius: 0
                 topLeftRadius: parent.topLeftRadius
                 topRightRadius: parent.topRightRadius
                 bottomLeftRadius: parent.bottomLeftRadius
                 bottomRightRadius: parent.bottomRightRadius
-                color: leadingStateLayer.color
+                color: splitButton._interactColor
                 opacity: 0
-                z: 0
 
                 SequentialAnimation on opacity {
                     id: leadingRippleAnimation
                     running: false
-                    NumberAnimation {
-                        from: 0
-                        to: 0.16
-                        duration: 90
-                        easing.type: Easing.OutCubic
-                    }
-                    NumberAnimation {
-                        to: 0
-                        duration: 210
-                        easing.type: Easing.OutCubic
-                    }
+                    NumberAnimation { from: 0; to: 0.16; duration: 90; easing.type: Easing.OutCubic }
+                    NumberAnimation { to: 0; duration: 210; easing.type: Easing.OutCubic }
                 }
             }
 
+            // State layer
             Rectangle {
-                id: leadingStateLayer
                 anchors.fill: parent
-                radius: 0
                 topLeftRadius: parent.topLeftRadius
                 topRightRadius: parent.topRightRadius
                 bottomLeftRadius: parent.bottomLeftRadius
                 bottomRightRadius: parent.bottomRightRadius
-                z: 1
+                color: splitButton._interactColor
 
-                color: {
-                    switch (variant) {
-                    case "filled":   return colors.onPrimary
-                    case "elevated": return colors.primary
-                    case "tonal":    return colors.onSecondaryContainer
-                    case "outlined":
-                    case "text":
-                    default:         return colors.primary
-                    }
-                }
-
-                opacity: {
-                    if (!enabled) return 0
-                    if (splitButton.state === "leadingPressed") return 0.12
-                    if (splitButton.state === "leadingFocused") return 0.12
-                    if (splitButton.state === "leadingHovered") return 0.08
-                    return 0
-                }
+                opacity: !splitButton.enabled ? 0 :
+                         (leadingMouseArea.pressed ? 0.12 :
+                         (splitButton.activeFocus ? 0.12 :
+                         (leadingMouseArea.containsMouse ? 0.08 : 0)))
 
                 Behavior on opacity {
-                    NumberAnimation {
-                        duration: splitButton.state === "leadingPressed" ? 50 : 150
-                        easing.type: Easing.OutCubic
-                    }
+                    NumberAnimation { duration: leadingMouseArea.pressed ? 50 : 150; easing.type: Easing.OutCubic }
                 }
             }
 
             Row {
                 id: leadingContent
                 anchors.centerIn: parent
-                spacing: currentSize.gap
-                padding: currentSize.padding
-                leftPadding: currentSize.horizontalPadding
-                rightPadding: currentSize.horizontalPadding
-                z: 2
+                spacing: cs.gap
+                padding: cs.padding
+                leftPadding: cs.horizontalPadding
+                rightPadding: cs.horizontalPadding
 
+                // Leading icon (text/ligature)
                 Text {
-                    visible: showLeadingIcon && leadingIcon !== "" && !isIconImage
-                    text: leadingIcon
-                    font.family: "Material Icons"
-                    font.pixelSize: currentSize.iconSize
-                    color: leadingLabel.color
+                    visible: splitButton.showLeadingIcon && splitButton.leadingIcon !== "" && !splitButton.isIconImage
+                    text: splitButton.leadingIcon
+                    font.family: Theme.ChiTheme.iconFamily
+                    font.pixelSize: cs.iconSize
+                    color: splitButton._labelColor
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
+                // Leading icon (image)
                 Image {
-                    visible: showLeadingIcon && leadingIcon !== "" && isIconImage
-                    width: currentSize.iconSize
-                    height: currentSize.iconSize
-                    source: leadingIcon
+                    visible: splitButton.showLeadingIcon && splitButton.leadingIcon !== "" && splitButton.isIconImage
+                    width: cs.iconSize; height: cs.iconSize
+                    source: splitButton.leadingIcon
                     fillMode: Image.PreserveAspectFit
                     smooth: true
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
+                // Label
                 Text {
-                    id: leadingLabel
                     text: splitButton.text
-
-                    font.family: "Roboto"
-                    font.weight: currentSize.fontWeight
-                    font.pixelSize: currentSize.fontSize
-                    font.letterSpacing: currentSize.letterSpacing
+                    font.family: Theme.ChiTheme.fontFamily
+                    font.weight: cs.fontWeight
+                    font.pixelSize: cs.fontSize
+                    font.letterSpacing: cs.letterSpacing
                     // Better vertical centering
-                    // lineHeight: currentSize.lineHeight
-                    // lineHeightMode: Text.FixedHeight
                     verticalAlignment: Text.AlignVCenter
-
-                    color: {
-                        switch (variant) {
-                        case "filled":
-                            return enabled ? colors.onPrimary : colors.onSurface
-                        case "elevated":
-                            return enabled ? colors.primary : colors.onSurface
-                        case "tonal":
-                            return enabled ? colors.onSecondaryContainer : colors.onSurface
-                        case "outlined":
-                        case "text":
-                        default:
-                            return enabled ? colors.primary : colors.onSurface
-                        }
-                    }
-
+                    color: splitButton._labelColor
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }
@@ -300,120 +177,91 @@ Item {
                 enabled: splitButton.enabled
                 hoverEnabled: true
                 cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-
                 onPressed: leadingRippleAnimation.restart()
                 onClicked: splitButton.leadingClicked()
             }
         }
 
-        // TRAILING BUTTON
+        // ─── TRAILING BUTTON ───
         Rectangle {
             id: trailingButtonContainer
-            width: currentSize.height
-            height: currentSize.height
+            width: cs.height
+            height: cs.height
             clip: true
 
-            topLeftRadius: trailingSelected ? currentSize.fullRadius :
-                          (trailingMouseArea.pressed ? currentSize.smallRadius * 3 : currentSize.smallRadius)
-            bottomLeftRadius: trailingSelected ? currentSize.fullRadius :
-                             (trailingMouseArea.pressed ? currentSize.smallRadius * 3 : currentSize.smallRadius)
-            topRightRadius: trailingSelected ? currentSize.fullRadius : currentSize.fullRadius
-            bottomRightRadius: trailingSelected ? currentSize.fullRadius : currentSize.fullRadius
+            // Left corners morph on selected/pressed; right corners always full
+            topLeftRadius: splitButton.trailingSelected ? cs.fullRadius :
+                          (trailingMouseArea.pressed ? cs.smallRadius * 3 : cs.smallRadius)
+            bottomLeftRadius: splitButton.trailingSelected ? cs.fullRadius :
+                             (trailingMouseArea.pressed ? cs.smallRadius * 3 : cs.smallRadius)
+            topRightRadius: cs.fullRadius
+            bottomRightRadius: cs.fullRadius
 
-            Behavior on topLeftRadius {
-                NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
-            }
-            Behavior on bottomLeftRadius {
-                NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
-            }
+            Behavior on topLeftRadius { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+            Behavior on bottomLeftRadius { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
 
-            color: leadingButtonContainer.color
-            border.width: leadingButtonContainer.border.width
-            border.color: leadingButtonContainer.border.color
+            color: splitButton._containerColor
+            border.width: splitButton._outlined ? 1 : 0
+            border.color: splitButton._outlined ? colors.outline : "transparent"
 
-            // Simple ripple for trailing side
+            // Ripple
             Rectangle {
-                id: trailingRipple
                 anchors.fill: parent
-                radius: 0
                 topLeftRadius: parent.topLeftRadius
                 topRightRadius: parent.topRightRadius
                 bottomLeftRadius: parent.bottomLeftRadius
                 bottomRightRadius: parent.bottomRightRadius
-                color: leadingStateLayer.color
+                color: splitButton._interactColor
                 opacity: 0
-                z: 0
 
                 SequentialAnimation on opacity {
                     id: trailingRippleAnimation
                     running: false
-                    NumberAnimation {
-                        from: 0
-                        to: 0.16
-                        duration: 90
-                        easing.type: Easing.OutCubic
-                    }
-                    NumberAnimation {
-                        to: 0
-                        duration: 210
-                        easing.type: Easing.OutCubic
-                    }
+                    NumberAnimation { from: 0; to: 0.16; duration: 90; easing.type: Easing.OutCubic }
+                    NumberAnimation { to: 0; duration: 210; easing.type: Easing.OutCubic }
                 }
             }
 
+            // State layer
             Rectangle {
-                id: trailingStateLayer
                 anchors.fill: parent
-                radius: 0
                 topLeftRadius: parent.topLeftRadius
                 topRightRadius: parent.topRightRadius
                 bottomLeftRadius: parent.bottomLeftRadius
                 bottomRightRadius: parent.bottomRightRadius
-                z: 1
+                color: splitButton._interactColor
 
-                color: leadingStateLayer.color
-
-                opacity: {
-                    if (!enabled) return 0
-                    if (trailingSelected)              return 0.12
-                    if (trailingMouseArea.pressed)     return 0.12
-                    if (trailingMouseArea.containsMouse) return 0.08
-                    return 0
-                }
+                opacity: !splitButton.enabled ? 0 :
+                         (splitButton.trailingSelected ? 0.12 :
+                         (trailingMouseArea.pressed ? 0.12 :
+                         (trailingMouseArea.containsMouse ? 0.08 : 0)))
 
                 Behavior on opacity {
-                    NumberAnimation {
-                        duration: trailingMouseArea.pressed ? 50 : 150
-                        easing.type: Easing.OutCubic
-                    }
+                    NumberAnimation { duration: trailingMouseArea.pressed ? 50 : 150; easing.type: Easing.OutCubic }
                 }
             }
 
+            // Trailing icon
             Text {
-                id: trailingIconText
                 anchors.centerIn: parent
-                text: trailingIcon
-                font.family: "Roboto"
-                font.pixelSize: currentSize.trailingIconSize
+                text: splitButton.trailingIcon
+                font.family: Theme.ChiTheme.fontFamily
+                font.pixelSize: cs.trailingIconSize
                 font.weight: Font.Bold
-                color: leadingLabel.color
-                z: 2
-                rotation: trailingSelected ? 180 : 0
-
-                Behavior on rotation {
-                    NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-                }
+                color: splitButton._labelColor
+                rotation: splitButton.trailingSelected ? 180 : 0
+                Behavior on rotation { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
             }
 
+            // Focus indicator
             Rectangle {
-                visible: trailingSelected && splitButton.activeFocus
+                visible: splitButton.trailingSelected && splitButton.activeFocus
                 anchors.fill: parent
                 anchors.margins: 2
                 radius: parent.radius
                 color: "transparent"
                 border.width: 3
                 border.color: colors.secondary
-                z: 3
             }
 
             MouseArea {
@@ -422,7 +270,6 @@ Item {
                 enabled: splitButton.enabled
                 hoverEnabled: true
                 cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-
                 onPressed: trailingRippleAnimation.restart()
                 onClicked: {
                     splitButton.trailingSelected = !splitButton.trailingSelected
@@ -432,13 +279,13 @@ Item {
         }
     }
 
-    layer.enabled: variant === "elevated" && enabled
-    layer.effect: DropShadow {
-        transparentBorder: true
-        horizontalOffset: 0
-        verticalOffset: 1
-        radius: 4
-        samples: 9
-        color: Qt.rgba(0, 0, 0, 0.3)
+    // Elevation for elevated variant
+    layer.enabled: _elevated && enabled
+    layer.effect: MultiEffect {
+        shadowEnabled: true
+        shadowColor: Qt.rgba(0, 0, 0, 0.3)
+        shadowHorizontalOffset: 0
+        shadowVerticalOffset: 1
+        shadowBlur: 0.2
     }
 }

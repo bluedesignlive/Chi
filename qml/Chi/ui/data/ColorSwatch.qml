@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Effects
 import "../../theme" as Theme
 
 Item {
@@ -13,16 +14,13 @@ Item {
 
     signal clicked()
 
-    readonly property var sizeSpecs: ({
-        small: { size: 24 },
-        medium: { size: 32 },
-        large: { size: 48 }
-    })
+    readonly property int _dim: size === "small" ? 24 : (size === "large" ? 48 : 32)
+    readonly property bool _isCircle: shape === "circle"
+    readonly property bool _isRounded: shape === "rounded"
+    readonly property real _radius: _isCircle ? _dim * 0.5 : (_isRounded ? 4 : 0)
 
-    readonly property var currentSize: sizeSpecs[size] || sizeSpecs.medium
-
-    implicitWidth: currentSize.size
-    implicitHeight: currentSize.size
+    implicitWidth: _dim
+    implicitHeight: _dim
 
     opacity: enabled ? 1.0 : 0.5
 
@@ -30,17 +28,14 @@ Item {
 
     // Selection ring
     Rectangle {
-        visible: selected
+        visible: root.selected
         anchors.fill: parent
         anchors.margins: -3
-        radius: shape === "circle" ? width / 2 : (shape === "rounded" ? 6 : 0)
+        radius: root._isCircle ? width * 0.5 : (root._isRounded ? 6 : 0)
         color: "transparent"
         border.width: 2
         border.color: colors.primary
-
-        Behavior on border.color {
-            ColorAnimation { duration: 150 }
-        }
+        Behavior on border.color { ColorAnimation { duration: 150 } }
     }
 
     // Checkerboard for transparency
@@ -60,11 +55,13 @@ Item {
         }
 
         layer.enabled: true
-        layer.effect: OpacityMask {
+        layer.effect: MultiEffect {
+            maskEnabled: true
             maskSource: Rectangle {
-                width: root.width
-                height: root.height
-                radius: shape === "circle" ? width / 2 : (shape === "rounded" ? 4 : 0)
+                width: root._dim
+                height: root._dim
+                radius: root._radius
+                visible: false
             }
         }
     }
@@ -72,35 +69,27 @@ Item {
     // Color fill
     Rectangle {
         anchors.fill: parent
-        radius: shape === "circle" ? width / 2 : (shape === "rounded" ? 4 : 0)
+        radius: root._radius
         color: root.color
-
-        border.width: showBorder ? 1 : 0
-        border.color: {
-            if (root.color.hslLightness > 0.9) return colors.outline
-            return "transparent"
-        }
+        border.width: root.showBorder ? 1 : 0
+        border.color: root.color.hslLightness > 0.9 ? colors.outline : "transparent"
     }
 
     // Hover state
     Rectangle {
         anchors.fill: parent
-        radius: shape === "circle" ? width / 2 : (shape === "rounded" ? 4 : 0)
+        radius: root._radius
         color: "#000000"
-        opacity: mouseArea.containsMouse && enabled ? 0.1 : 0
-
-        Behavior on opacity {
-            NumberAnimation { duration: 100 }
-        }
+        opacity: mouseArea.containsMouse && root.enabled ? 0.1 : 0
+        Behavior on opacity { NumberAnimation { duration: 100 } }
     }
 
     MouseArea {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
-        cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+        cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
         enabled: root.enabled
-
         onClicked: root.clicked()
     }
 

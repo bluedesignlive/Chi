@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import "../../theme" as Theme
 
 Item {
@@ -22,11 +22,22 @@ Item {
     readonly property bool hasDismiss: timeout > 0 || urgency !== "critical"
     readonly property bool hasAction: actionText !== ""
     readonly property bool hasIcon: icon !== ""
+    readonly property bool _isCritical: urgency === "critical"
+    readonly property bool _isLow: urgency === "low"
+
+    // Urgency-based colors cached once
+    readonly property color _urgencyBg: _isCritical ? colors.errorContainer :
+                                        (_isLow ? colors.surfaceContainerHighest : colors.primaryContainer)
+    readonly property color _urgencyFg: _isCritical ? colors.onErrorContainer :
+                                        (_isLow ? colors.onSurfaceVariant : colors.onPrimaryContainer)
+    readonly property color _urgencyStrip: _isCritical ? colors.error :
+                                           (_isLow ? colors.outline : colors.primary)
 
     implicitWidth: 360
     implicitHeight: contentColumn.implicitHeight + 24
 
     property var colors: Theme.ChiTheme.colors
+    readonly property var _typo: Theme.ChiTheme.typography
 
     Rectangle {
         id: container
@@ -35,38 +46,26 @@ Item {
         color: colors.surfaceContainerHigh
         clip: true
 
-        Behavior on color {
-            ColorAnimation { duration: 200 }
+        Behavior on color { ColorAnimation { duration: 200 } }
+
+        layer.enabled: root.visible
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowColor: Qt.rgba(0, 0, 0, 0.2)
+            shadowHorizontalOffset: 0
+            shadowVerticalOffset: 4
+            shadowBlur: 0.6
         }
 
-        layer.enabled: true
-        layer.effect: DropShadow {
-            transparentBorder: true
-            horizontalOffset: 0
-            verticalOffset: 4
-            radius: 16
-            samples: 17
-            color: Qt.rgba(0, 0, 0, 0.2)
-        }
-
-        // Urgency indicator
+        // Urgency indicator strip
         Rectangle {
             anchors.left: parent.left
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             width: 4
             radius: 2
-            color: {
-                switch (urgency) {
-                case "critical": return colors.error
-                case "low": return colors.outline
-                default: return colors.primary
-                }
-            }
-
-            Behavior on color {
-                ColorAnimation { duration: 200 }
-            }
+            color: root._urgencyStrip
+            Behavior on color { ColorAnimation { duration: 200 } }
         }
 
         ColumnLayout {
@@ -84,29 +83,17 @@ Item {
 
                 // Icon
                 Rectangle {
-                    visible: hasIcon
+                    visible: root.hasIcon
                     Layout.preferredWidth: 40
                     Layout.preferredHeight: 40
                     radius: 20
-                    color: {
-                        switch (urgency) {
-                        case "critical": return colors.errorContainer
-                        case "low": return colors.surfaceContainerHighest
-                        default: return colors.primaryContainer
-                        }
-                    }
+                    color: root._urgencyBg
 
                     Text {
                         anchors.centerIn: parent
-                        text: icon
+                        text: root.icon
                         font.pixelSize: 20
-                        color: {
-                            switch (urgency) {
-                            case "critical": return colors.onErrorContainer
-                            case "low": return colors.onSurfaceVariant
-                            default: return colors.onPrimaryContainer
-                            }
-                        }
+                        color: root._urgencyFg
                     }
                 }
 
@@ -116,39 +103,33 @@ Item {
                     spacing: 4
 
                     Text {
-                        text: title
-                        font.family: "Roboto"
-                        font.pixelSize: 14
+                        text: root.title
+                        font.family: Theme.ChiTheme.fontFamily
+                        font.pixelSize: _typo.bodyMedium.size
                         font.weight: Font.Medium
                         color: colors.onSurface
                         elide: Text.ElideRight
                         Layout.fillWidth: true
-
-                        Behavior on color {
-                            ColorAnimation { duration: 200 }
-                        }
+                        Behavior on color { ColorAnimation { duration: 200 } }
                     }
 
                     Text {
-                        visible: message !== ""
-                        text: message
-                        font.family: "Roboto"
-                        font.pixelSize: 14
+                        visible: root.message !== ""
+                        text: root.message
+                        font.family: Theme.ChiTheme.fontFamily
+                        font.pixelSize: _typo.bodyMedium.size
                         color: colors.onSurfaceVariant
                         wrapMode: Text.WordWrap
                         maximumLineCount: 3
                         elide: Text.ElideRight
                         Layout.fillWidth: true
-
-                        Behavior on color {
-                            ColorAnimation { duration: 200 }
-                        }
+                        Behavior on color { ColorAnimation { duration: 200 } }
                     }
                 }
 
                 // Close button
                 Item {
-                    visible: hasDismiss
+                    visible: root.hasDismiss
                     Layout.preferredWidth: 32
                     Layout.preferredHeight: 32
                     Layout.alignment: Qt.AlignTop
@@ -172,16 +153,14 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            dismissAnimation.start()
-                        }
+                        onClicked: dismissAnimation.start()
                     }
                 }
             }
 
             // Progress bar
             Rectangle {
-                visible: showProgress
+                visible: root.showProgress
                 Layout.fillWidth: true
                 Layout.preferredHeight: 4
                 radius: 2
@@ -191,19 +170,16 @@ Item {
                     anchors.left: parent.left
                     anchors.top: parent.top
                     anchors.bottom: parent.bottom
-                    width: parent.width * progress
+                    width: parent.width * root.progress
                     radius: 2
                     color: colors.primary
-
-                    Behavior on width {
-                        NumberAnimation { duration: 100 }
-                    }
+                    Behavior on width { NumberAnimation { duration: 100 } }
                 }
             }
 
             // Action button
             Item {
-                visible: hasAction
+                visible: root.hasAction
                 Layout.preferredWidth: actionLabel.implicitWidth + 24
                 Layout.preferredHeight: 36
                 Layout.alignment: Qt.AlignRight
@@ -218,9 +194,9 @@ Item {
                 Text {
                     id: actionLabel
                     anchors.centerIn: parent
-                    text: actionText
-                    font.family: "Roboto"
-                    font.pixelSize: 14
+                    text: root.actionText
+                    font.family: Theme.ChiTheme.fontFamily
+                    font.pixelSize: _typo.labelLarge.size
                     font.weight: Font.Medium
                     color: colors.primary
                 }
@@ -230,11 +206,12 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: actionClicked()
+                    onClicked: root.actionClicked()
                 }
             }
         }
 
+        // Background click area
         MouseArea {
             anchors.fill: parent
             z: -1
@@ -245,8 +222,8 @@ Item {
     // Auto-dismiss timer
     Timer {
         id: dismissTimer
-        interval: timeout
-        running: timeout > 0 && root.visible
+        interval: root.timeout
+        running: root.timeout > 0 && root.visible
         onTriggered: dismissAnimation.start()
     }
 
@@ -266,7 +243,7 @@ Item {
             script: {
                 root.visible = false
                 root.opacity = 1
-                closed()
+                root.closed()
             }
         }
     }

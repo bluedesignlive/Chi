@@ -1,14 +1,14 @@
 import QtQuick
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import "../../theme" as Theme
 
 Item {
     id: root
 
     property bool open: false
-    property string variant: "standard"      // "standard", "modal"
-    property string position: "right"        // "left", "right"
+    property string variant: "standard"
+    property string position: "right"
     property string title: ""
     property bool showClose: true
     property bool showDivider: true
@@ -25,17 +25,19 @@ Item {
 
     anchors.fill: parent
     visible: open || closeAnimation.running
-    z: variant === "modal" ? 1000 : 0
+    z: _modal ? 1000 : 0
 
     property var colors: Theme.ChiTheme.colors
 
-    // Scrim for modal variant
+    readonly property bool _modal: variant === "modal"
+    readonly property bool _left: position === "left"
+
     Rectangle {
         id: scrim
-        visible: variant === "modal"
+        visible: root._modal
         anchors.fill: parent
         color: colors.scrim
-        opacity: open ? 0.32 : 0
+        opacity: root.open ? 0.32 : 0
         radius: 28
 
         Behavior on opacity {
@@ -48,67 +50,49 @@ Item {
 
         MouseArea {
             anchors.fill: parent
-            enabled: variant === "modal" && open
+            enabled: root._modal && root.open
             onClicked: root.close()
         }
     }
 
-    // Sheet container
     Rectangle {
         id: sheet
-        width: Math.min(sheetWidth, maxWidth)
+        width: Math.min(root.sheetWidth, root.maxWidth)
         height: parent.height
-
         anchors.top: parent.top
         anchors.bottom: parent.bottom
-
-        x: {
-            if (position === "left") {
-                return open ? 0 : -width
-            } else {
-                return open ? parent.width - width : parent.width
-            }
-        }
-
+        x: root._left ? (root.open ? 0 : -width) :
+                         (root.open ? parent.width - width : parent.width)
         color: colors.surface
 
         Behavior on x {
             NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
         }
-        Behavior on color {
-            ColorAnimation { duration: 200 }
-        }
+        Behavior on color { ColorAnimation { duration: 200 } }
 
-        // Vertical divider on the edge
         Rectangle {
-            visible: showDivider
+            visible: root.showDivider
             width: 1
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-            x: position === "left" ? parent.width - 1 : 0
+            x: root._left ? parent.width - 1 : 0
             color: colors.outlineVariant
-
-            Behavior on color {
-                ColorAnimation { duration: 200 }
-            }
+            Behavior on color { ColorAnimation { duration: 200 } }
         }
 
-        // Shadow for modal
-        layer.enabled: variant === "modal" && open
-        layer.effect: DropShadow {
-            transparentBorder: true
-            horizontalOffset: position === "left" ? 4 : -4
-            verticalOffset: 0
-            radius: 16
-            samples: 17
-            color: Qt.rgba(0, 0, 0, 0.15)
+        layer.enabled: root._modal && root.open
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowColor: Qt.rgba(0, 0, 0, 0.15)
+            shadowHorizontalOffset: root._left ? 4 : -4
+            shadowVerticalOffset: 0
+            shadowBlur: 0.6
         }
 
         ColumnLayout {
             anchors.fill: parent
             spacing: 0
 
-            // Header
             Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 76
@@ -121,7 +105,6 @@ Item {
                     anchors.bottomMargin: 16
                     spacing: 0
 
-                    // Title
                     Item {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
@@ -130,21 +113,17 @@ Item {
                             anchors.left: parent.left
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.verticalCenterOffset: 6
-                            text: title
+                            text: root.title
                             font.family: "Roboto"
                             font.pixelSize: 22
                             font.weight: Font.Normal
                             color: colors.onSurfaceVariant
-
-                            Behavior on color {
-                                ColorAnimation { duration: 200 }
-                            }
+                            Behavior on color { ColorAnimation { duration: 200 } }
                         }
                     }
 
-                    // Close button
                     Item {
-                        visible: showClose
+                        visible: root.showClose
                         Layout.preferredWidth: 48
                         Layout.preferredHeight: 48
 
@@ -155,10 +134,7 @@ Item {
                             radius: 20
                             color: colors.onSurfaceVariant
                             opacity: closeMouse.containsMouse ? 0.08 : 0
-
-                            Behavior on opacity {
-                                NumberAnimation { duration: 100 }
-                            }
+                            Behavior on opacity { NumberAnimation { duration: 100 } }
                         }
 
                         Text {
@@ -166,10 +142,7 @@ Item {
                             text: "✕"
                             font.pixelSize: 24
                             color: colors.onSurfaceVariant
-
-                            Behavior on color {
-                                ColorAnimation { duration: 200 }
-                            }
+                            Behavior on color { ColorAnimation { duration: 200 } }
                         }
 
                         MouseArea {
@@ -183,7 +156,6 @@ Item {
                 }
             }
 
-            // Content area
             Item {
                 id: contentContainer
                 Layout.fillWidth: true
@@ -191,23 +163,18 @@ Item {
                 clip: true
             }
 
-            // Actions area
             Item {
-                visible: showActions && actionsContainer.children.length > 0
+                visible: root.showActions && actionsContainer.children.length > 0
                 Layout.fillWidth: true
                 Layout.preferredHeight: 61
 
-                // Horizontal divider
                 Rectangle {
                     anchors.top: parent.top
                     anchors.left: parent.left
                     anchors.right: parent.right
                     height: 1
                     color: colors.outlineVariant
-
-                    Behavior on color {
-                        ColorAnimation { duration: 200 }
-                    }
+                    Behavior on color { ColorAnimation { duration: 200 } }
                 }
 
                 RowLayout {
@@ -224,19 +191,9 @@ Item {
 
     Keys.onEscapePressed: if (open) close()
 
-    function show() {
-        open = true
-    }
-
-    function close() {
-        open = false
-        closed()
-    }
-
-    function toggle() {
-        if (open) close()
-        else show()
-    }
+    function show() { open = true }
+    function close() { open = false; closed() }
+    function toggle() { if (open) close(); else show() }
 
     Accessible.role: Accessible.Pane
     Accessible.name: title || "Side sheet"

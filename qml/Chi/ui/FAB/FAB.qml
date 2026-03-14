@@ -1,6 +1,5 @@
 import QtQuick
-import QtQuick.Controls.Basic
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import "../../theme" as Theme
 
 Item {
@@ -23,37 +22,45 @@ Item {
 
     property var colors: Theme.ChiTheme.colors
 
-    readonly property var variantColors: ({
-        primary:   { container: colors.primaryContainer,   onContainer: colors.onPrimaryContainer },
-        secondary: { container: colors.secondaryContainer, onContainer: colors.onSecondaryContainer },
-        tertiary:  { container: colors.tertiaryContainer,  onContainer: colors.onTertiaryContainer },
-        surface:   { container: colors.surfaceContainerHigh, onContainer: colors.primary }
-    })
+    readonly property color _cc: {
+        switch (variant) {
+            case "secondary": return colors.secondaryContainer
+            case "tertiary": return colors.tertiaryContainer
+            case "surface": return colors.surfaceContainerHigh
+            default: return colors.primaryContainer
+        }
+    }
 
-    readonly property var currentVariant: variantColors[variant] || variantColors.primary
+    readonly property color _occ: {
+        switch (variant) {
+            case "secondary": return colors.onSecondaryContainer
+            case "tertiary": return colors.onTertiaryContainer
+            case "surface": return colors.primary
+            default: return colors.onPrimaryContainer
+        }
+    }
 
     Rectangle {
         id: container
         anchors.fill: parent
         radius: 16
         clip: true
-        color: currentVariant.container
+        color: fab._cc
 
-        layer.enabled: enabled
-        layer.effect: DropShadow {
-            transparentBorder: true
-            horizontalOffset: 0
-            verticalOffset: mouseArea.containsMouse ? 4 : 2
-            radius: mouseArea.containsMouse ? 8 : 4
-            samples: 17
-            color: Qt.rgba(0, 0, 0, 0.25)
+        layer.enabled: fab.enabled
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowColor: Qt.rgba(0, 0, 0, 0.25)
+            shadowHorizontalOffset: 0
+            shadowVerticalOffset: mouseArea.containsMouse ? 4 : 2
+            shadowBlur: mouseArea.containsMouse ? 0.4 : 0.2
         }
 
         Rectangle {
             id: ripple
             anchors.fill: parent
             radius: parent.radius
-            color: currentVariant.onContainer
+            color: fab._occ
             opacity: 0
             SequentialAnimation on opacity {
                 id: rippleAnimation
@@ -66,18 +73,18 @@ Item {
         Rectangle {
             anchors.fill: parent
             radius: parent.radius
-            color: currentVariant.onContainer
+            color: fab._occ
             opacity: mouseArea.pressed ? 0.12 : (mouseArea.containsMouse ? 0.08 : 0)
             Behavior on opacity { NumberAnimation { duration: 150 } }
         }
 
         Text {
             anchors.centerIn: parent
-            text: icon
+            text: fab.icon
             font.family: "Material Icons"
             font.pixelSize: 24
-            color: currentVariant.onContainer
-            rotation: menuOpen ? 45 : 0
+            color: fab._occ
+            rotation: fab.menuOpen ? 45 : 0
             Behavior on rotation { NumberAnimation { duration: 200 } }
         }
     }

@@ -1,5 +1,5 @@
 import QtQuick
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import "../../theme" as Theme
 
 Item {
@@ -19,20 +19,7 @@ Item {
 
     property var colors: Theme.ChiTheme.colors
 
-    // Shadow for Elevated variant
-    Item {
-        anchors.fill: container
-        visible: variant === "elevated"
-        layer.enabled: true
-        layer.effect: DropShadow {
-            transparentBorder: true
-            horizontalOffset: 0
-            verticalOffset: mouseArea.pressed ? 2 : 1
-            radius: mouseArea.pressed ? 4 : 2
-            samples: 9
-            color: Qt.rgba(0,0,0,0.15)
-        }
-    }
+    readonly property bool _elevated: variant === "elevated"
 
     Rectangle {
         id: container
@@ -40,41 +27,39 @@ Item {
         radius: card.radius
         clip: true
 
-        color: {
-            switch(variant) {
-                case "filled": return colors.surfaceContainerHighest
-                case "elevated": return colors.surfaceContainerLow
-                case "outlined": return colors.surface
-                default: return colors.surface
-            }
-        }
+        color: card._elevated ? colors.surfaceContainerLow :
+               (card.variant === "outlined" ? colors.surface : colors.surfaceContainerHighest)
 
-        border.width: variant === "outlined" ? 1 : 0
+        border.width: card.variant === "outlined" ? 1 : 0
         border.color: colors.outlineVariant
 
         // State Layer (Hover/Press overlay)
         Rectangle {
             anchors.fill: parent
             color: colors.onSurface
-            opacity: {
-                if (!interactive) return 0
-                if (mouseArea.pressed) return 0.12
-                if (mouseArea.containsMouse) return 0.08
-                return 0
-            }
-            visible: interactive
+            visible: card.interactive
+            opacity: !card.interactive ? 0 :
+                     (mouseArea.pressed ? 0.12 :
+                     (mouseArea.containsMouse ? 0.08 : 0))
+            Behavior on opacity { NumberAnimation { duration: 150 } }
+        }
 
-            Behavior on opacity {
-                NumberAnimation { duration: 150 }
-            }
+        // Shadow for Elevated variant
+        layer.enabled: card._elevated
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowColor: Qt.rgba(0, 0, 0, 0.15)
+            shadowHorizontalOffset: 0
+            shadowVerticalOffset: mouseArea.pressed ? 2 : 1
+            shadowBlur: mouseArea.pressed ? 0.2 : 0.1
         }
 
         MouseArea {
             id: mouseArea
             anchors.fill: parent
-            enabled: interactive
+            enabled: card.interactive
             hoverEnabled: true
-            cursorShape: interactive ? Qt.PointingHandCursor : Qt.ArrowCursor
+            cursorShape: card.interactive ? Qt.PointingHandCursor : Qt.ArrowCursor
             onClicked: card.clicked()
         }
     }

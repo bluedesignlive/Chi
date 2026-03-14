@@ -1,14 +1,13 @@
 import QtQuick
-import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import "../../theme" as Theme
 
 Item {
     id: root
 
-    property string configuration: "floating" // "floating", "docked"
-    property string orientation: "horizontal" // "horizontal", "vertical"
-    property string type: "standard"          // "standard", "vibrant"
+    property string configuration: "floating"
+    property string orientation: "horizontal"
+    property string type: "standard"
     property bool enabled: true
 
     default property alias items: itemsContainer.data
@@ -16,8 +15,8 @@ Item {
     readonly property bool isFloating: configuration === "floating"
     readonly property bool isHorizontal: orientation === "horizontal"
     readonly property bool isVibrant: type === "vibrant"
+    readonly property int _spacing: isFloating ? 4 : 8
 
-    // Dynamic sizing based on orientation and configuration
     implicitWidth: isHorizontal ? itemsContainer.implicitWidth + 16 : 64
     implicitHeight: isHorizontal ? 64 : itemsContainer.implicitHeight + 16
 
@@ -26,71 +25,56 @@ Item {
     Rectangle {
         id: container
         anchors.fill: parent
-        
-        radius: isFloating ? 32 : 0
-        
-        color: isVibrant ? colors.primaryContainer : colors.surfaceContainer
+        radius: root.isFloating ? 32 : 0
+        color: root.isVibrant ? colors.primaryContainer : colors.surfaceContainer
 
-        Behavior on color {
-            ColorAnimation { duration: 200 }
+        Behavior on color { ColorAnimation { duration: 200 } }
+
+        layer.enabled: root.isFloating
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowColor: Qt.rgba(0, 0, 0, 0.15)
+            shadowHorizontalOffset: 0
+            shadowVerticalOffset: 4
+            shadowBlur: 0.4
         }
 
-        // Shadow for floating toolbar
-        layer.enabled: isFloating
-        layer.effect: DropShadow {
-            transparentBorder: true
-            horizontalOffset: 0
-            verticalOffset: 4
-            radius: 8
-            samples: 17
-            color: Qt.rgba(0, 0, 0, 0.15)
-        }
-
-        // Items container
         Item {
-            id: itemsLayout
             anchors.fill: parent
-            anchors.margins: isFloating ? 8 : (isHorizontal ? 12 : 8)
-            anchors.leftMargin: isHorizontal ? (isFloating ? 8 : 16) : (isFloating ? 12 : 8)
-            anchors.rightMargin: isHorizontal ? (isFloating ? 8 : 16) : (isFloating ? 12 : 8)
-            anchors.topMargin: isHorizontal ? 12 : (isFloating ? 8 : 12)
-            anchors.bottomMargin: isHorizontal ? 12 : (isFloating ? 8 : 12)
+            anchors.leftMargin: root.isHorizontal ? (root.isFloating ? 8 : 16) : (root.isFloating ? 12 : 8)
+            anchors.rightMargin: root.isHorizontal ? (root.isFloating ? 8 : 16) : (root.isFloating ? 12 : 8)
+            anchors.topMargin: root.isHorizontal ? 12 : (root.isFloating ? 8 : 12)
+            anchors.bottomMargin: root.isHorizontal ? 12 : (root.isFloating ? 8 : 12)
 
-            // Horizontal layout
             Row {
-                id: horizontalLayout
-                visible: isHorizontal
+                visible: root.isHorizontal
                 anchors.centerIn: parent
-                spacing: configuration === "docked" ? 8 : 4
+                spacing: root._spacing
 
                 Item {
                     id: itemsContainer
                     width: childrenRect.width
                     height: 48
-                    
-                    // Children will be ToolbarItem components
                 }
             }
 
-            // Vertical layout
             Column {
-                id: verticalLayout
-                visible: !isHorizontal
+                visible: !root.isHorizontal
                 anchors.centerIn: parent
                 spacing: 4
 
-                // Mirror items from horizontal container
                 Repeater {
                     model: itemsContainer.children.length
-                    
                     delegate: Item {
                         width: 48
                         height: 48
-                        visible: itemsContainer.children[index] ? itemsContainer.children[index].visible : false
-                        
+                        visible: {
+                            var c = itemsContainer.children[index]
+                            return c ? c.visible : false
+                        }
                         Loader {
                             anchors.fill: parent
-                            sourceComponent: itemsContainer.children[index] ? itemsContainer.children[index] : null
+                            sourceComponent: itemsContainer.children[index] || null
                         }
                     }
                 }
@@ -98,47 +82,44 @@ Item {
         }
     }
 
-    // Reconfigure child items when type changes
-    onTypeChanged: updateItemColors()
-    onEnabledChanged: updateItemColors()
+    onTypeChanged: _updateItems()
+    onEnabledChanged: _updateItems()
+    Component.onCompleted: { _updateItems(); _relayout() }
+    onItemsChanged: _relayout()
 
-    Component.onCompleted: {
-        updateItemColors()
-        relayoutItems()
-    }
-
-    function updateItemColors() {
-        for (var i = 0; i < itemsContainer.children.length; i++) {
-            var item = itemsContainer.children[i]
-            if (item.hasOwnProperty("toolbarType")) {
-                item.toolbarType = type
-            }
-            if (item.hasOwnProperty("enabled")) {
+    function _updateItems() {
+        var c = itemsContainer.children
+        var n = c.length
+        var t = type
+        var e = root.enabled
+        for (var i = 0; i < n; ++i) {
+            var item = c[i]
+            if (item.hasOwnProperty("toolbarType"))
+                item.toolbarType = t
+            if (item.hasOwnProperty("enabled"))
                 item.enabled = Qt.binding(function() { return root.enabled })
-            }
         }
     }
 
-    function relayoutItems() {
-        // Arrange items in a row/column
+    function _relayout() {
+        var c = itemsContainer.children
+        var n = c.length
+        var horiz = isHorizontal
+        var sp = horiz ? _spacing : 4
         var offset = 0
-        for (var i = 0; i < itemsContainer.children.length; i++) {
-            var item = itemsContainer.children[i]
+        for (var i = 0; i < n; ++i) {
+            var item = c[i]
             if (item.visible) {
-                if (isHorizontal) {
-                    item.x = offset
-                    item.y = 0
-                    offset += item.width + (configuration === "docked" ? 8 : 4)
+                if (horiz) {
+                    item.x = offset; item.y = 0
+                    offset += item.width + sp
                 } else {
-                    item.x = 0
-                    item.y = offset
-                    offset += item.height + 4
+                    item.x = 0; item.y = offset
+                    offset += item.height + sp
                 }
             }
         }
     }
-
-    onItemsChanged: relayoutItems()
 
     Accessible.role: Accessible.ToolBar
     Accessible.name: "Toolbar"

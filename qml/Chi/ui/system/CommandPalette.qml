@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import "../../theme" as Theme
 
 Item {
@@ -8,7 +8,7 @@ Item {
 
     property bool open: false
     property string placeholder: "Type a command..."
-    property var commands: []                // [{id: "", label: "", shortcut: "", icon: "", category: ""}]
+    property var commands: []                // [{id, label, shortcut, icon, category}]
     property string searchText: ""
     property int selectedIndex: 0
     property int maxVisible: 8
@@ -18,10 +18,10 @@ Item {
 
     readonly property var filteredCommands: {
         if (searchText === "") return commands
-        var search = searchText.toLowerCase()
+        var s = searchText.toLowerCase()
         return commands.filter(function(cmd) {
-            return cmd.label.toLowerCase().indexOf(search) !== -1 ||
-                   (cmd.category && cmd.category.toLowerCase().indexOf(search) !== -1)
+            return cmd.label.toLowerCase().indexOf(s) !== -1 ||
+                   (cmd.category && cmd.category.toLowerCase().indexOf(s) !== -1)
         })
     }
 
@@ -30,6 +30,7 @@ Item {
     z: 2000
 
     property var colors: Theme.ChiTheme.colors
+    readonly property var _typo: Theme.ChiTheme.typography
 
     // Backdrop
     Rectangle {
@@ -55,27 +56,20 @@ Item {
         color: colors.surfaceContainerHigh
         clip: true
 
-        scale: open ? 1 : 0.95
-        opacity: open ? 1 : 0
+        scale: root.open ? 1 : 0.95
+        opacity: root.open ? 1 : 0
 
-        Behavior on scale {
-            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
-        }
-        Behavior on opacity {
-            NumberAnimation { duration: 150 }
-        }
-        Behavior on color {
-            ColorAnimation { duration: 200 }
-        }
+        Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: 150 } }
+        Behavior on color { ColorAnimation { duration: 200 } }
 
-        layer.enabled: true
-        layer.effect: DropShadow {
-            transparentBorder: true
-            horizontalOffset: 0
-            verticalOffset: 16
-            radius: 32
-            samples: 33
-            color: Qt.rgba(0, 0, 0, 0.3)
+        layer.enabled: root.open
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowColor: Qt.rgba(0, 0, 0, 0.3)
+            shadowHorizontalOffset: 0
+            shadowVerticalOffset: 16
+            shadowBlur: 1.0
         }
 
         ColumnLayout {
@@ -106,45 +100,39 @@ Item {
                         id: searchInput
                         Layout.fillWidth: true
                         Layout.alignment: Qt.AlignVCenter
-
-                        font.family: "Roboto"
-                        font.pixelSize: 16
+                        font.family: Theme.ChiTheme.fontFamily
+                        font.pixelSize: _typo.bodyLarge.size
                         color: colors.onSurface
                         selectionColor: colors.primaryContainer
                         selectedTextColor: colors.onPrimaryContainer
 
                         onTextChanged: {
-                            searchText = text
-                            selectedIndex = 0
+                            root.searchText = text
+                            root.selectedIndex = 0
                         }
 
-                        Keys.onUpPressed: {
-                            if (selectedIndex > 0) selectedIndex--
-                        }
-
-                        Keys.onDownPressed: {
-                            if (selectedIndex < filteredCommands.length - 1) selectedIndex++
-                        }
-
+                        Keys.onUpPressed: { if (root.selectedIndex > 0) root.selectedIndex-- }
+                        Keys.onDownPressed: { if (root.selectedIndex < root.filteredCommands.length - 1) root.selectedIndex++ }
                         Keys.onReturnPressed: {
-                            if (filteredCommands.length > 0) {
-                                commandSelected(filteredCommands[selectedIndex])
+                            if (root.filteredCommands.length > 0) {
+                                root.commandSelected(root.filteredCommands[root.selectedIndex])
                                 root.close()
                             }
                         }
-
                         Keys.onEscapePressed: root.close()
 
+                        // Placeholder
                         Text {
                             visible: !searchInput.text
                             anchors.fill: parent
-                            text: placeholder
+                            text: root.placeholder
                             font: searchInput.font
                             color: colors.onSurfaceVariant
                             verticalAlignment: Text.AlignVCenter
                         }
                     }
 
+                    // Clear button
                     Text {
                         visible: searchInput.text !== ""
                         text: "✕"
@@ -156,14 +144,12 @@ Item {
                             anchors.fill: parent
                             anchors.margins: -8
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                searchInput.clear()
-                                searchInput.forceActiveFocus()
-                            }
+                            onClicked: { searchInput.clear(); searchInput.forceActiveFocus() }
                         }
                     }
                 }
 
+                // Divider
                 Rectangle {
                     anchors.left: parent.left
                     anchors.right: parent.right
@@ -178,7 +164,7 @@ Item {
                 id: commandsList
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                Layout.preferredHeight: Math.min(filteredCommands.length * 48, maxVisible * 48)
+                Layout.preferredHeight: Math.min(root.filteredCommands.length, root.maxVisible) * 48
                 contentHeight: commandsColumn.implicitHeight
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
@@ -188,24 +174,22 @@ Item {
                     width: parent.width
 
                     Repeater {
-                        model: filteredCommands
+                        model: root.filteredCommands
 
                         Rectangle {
                             width: parent.width
                             height: 48
 
-                            property bool isSelected: index === selectedIndex
+                            property bool _sel: index === root.selectedIndex
 
-                            color: isSelected ? colors.primaryContainer : "transparent"
+                            color: _sel ? colors.primaryContainer : "transparent"
+                            Behavior on color { ColorAnimation { duration: 100 } }
 
-                            Behavior on color {
-                                ColorAnimation { duration: 100 }
-                            }
-
+                            // Hover overlay
                             Rectangle {
                                 anchors.fill: parent
                                 color: colors.onSurface
-                                opacity: cmdMouse.containsMouse && !isSelected ? 0.08 : 0
+                                opacity: cmdMouse.containsMouse && !parent._sel ? 0.08 : 0
                             }
 
                             RowLayout {
@@ -217,46 +201,40 @@ Item {
                                 // Icon
                                 Text {
                                     visible: modelData.icon && modelData.icon !== ""
-                                    text: modelData.icon
+                                    text: modelData.icon || ""
                                     font.pixelSize: 20
-                                    color: isSelected ? colors.onPrimaryContainer : colors.onSurfaceVariant
+                                    color: _sel ? colors.onPrimaryContainer : colors.onSurfaceVariant
                                     Layout.alignment: Qt.AlignVCenter
-
-                                    Behavior on color {
-                                        ColorAnimation { duration: 100 }
-                                    }
+                                    Behavior on color { ColorAnimation { duration: 100 } }
                                 }
 
-                                // Label
+                                // Label + category
                                 ColumnLayout {
                                     Layout.fillWidth: true
                                     spacing: 2
 
                                     Text {
-                                        text: modelData.label
-                                        font.family: "Roboto"
-                                        font.pixelSize: 14
-                                        color: isSelected ? colors.onPrimaryContainer : colors.onSurface
+                                        text: modelData.label || ""
+                                        font.family: Theme.ChiTheme.fontFamily
+                                        font.pixelSize: _typo.bodyMedium.size
+                                        color: _sel ? colors.onPrimaryContainer : colors.onSurface
                                         elide: Text.ElideRight
                                         Layout.fillWidth: true
-
-                                        Behavior on color {
-                                            ColorAnimation { duration: 100 }
-                                        }
+                                        Behavior on color { ColorAnimation { duration: 100 } }
                                     }
 
                                     Text {
                                         visible: modelData.category && modelData.category !== ""
-                                        text: modelData.category
-                                        font.family: "Roboto"
-                                        font.pixelSize: 12
+                                        text: modelData.category || ""
+                                        font.family: Theme.ChiTheme.fontFamily
+                                        font.pixelSize: _typo.bodySmall.size
                                         color: colors.onSurfaceVariant
                                         elide: Text.ElideRight
                                         Layout.fillWidth: true
                                     }
                                 }
 
-                                // Shortcut
+                                // Shortcut badge
                                 Rectangle {
                                     visible: modelData.shortcut && modelData.shortcut !== ""
                                     Layout.preferredWidth: shortcutLabel.implicitWidth + 12
@@ -267,9 +245,9 @@ Item {
                                     Text {
                                         id: shortcutLabel
                                         anchors.centerIn: parent
-                                        text: modelData.shortcut
-                                        font.family: "Roboto"
-                                        font.pixelSize: 12
+                                        text: modelData.shortcut || ""
+                                        font.family: Theme.ChiTheme.fontFamily
+                                        font.pixelSize: _typo.bodySmall.size
                                         color: colors.onSurfaceVariant
                                     }
                                 }
@@ -280,13 +258,8 @@ Item {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-
-                                onClicked: {
-                                    commandSelected(modelData)
-                                    root.close()
-                                }
-
-                                onEntered: selectedIndex = index
+                                onClicked: { root.commandSelected(modelData); root.close() }
+                                onEntered: root.selectedIndex = index
                             }
                         }
                     }
@@ -295,15 +268,15 @@ Item {
 
             // Empty state
             Item {
-                visible: filteredCommands.length === 0
+                visible: root.filteredCommands.length === 0
                 Layout.fillWidth: true
                 Layout.preferredHeight: 100
 
                 Text {
                     anchors.centerIn: parent
                     text: "No commands found"
-                    font.family: "Roboto"
-                    font.pixelSize: 14
+                    font.family: Theme.ChiTheme.fontFamily
+                    font.pixelSize: _typo.bodyMedium.size
                     color: colors.onSurfaceVariant
                 }
             }
@@ -322,25 +295,22 @@ Item {
 
                     Text {
                         text: "↑↓ Navigate"
-                        font.family: "Roboto"
-                        font.pixelSize: 12
+                        font.family: Theme.ChiTheme.fontFamily
+                        font.pixelSize: _typo.bodySmall.size
                         color: colors.onSurfaceVariant
                     }
-
                     Text {
                         text: "↵ Select"
-                        font.family: "Roboto"
-                        font.pixelSize: 12
+                        font.family: Theme.ChiTheme.fontFamily
+                        font.pixelSize: _typo.bodySmall.size
                         color: colors.onSurfaceVariant
                     }
-
                     Text {
                         text: "Esc Close"
-                        font.family: "Roboto"
-                        font.pixelSize: 12
+                        font.family: Theme.ChiTheme.fontFamily
+                        font.pixelSize: _typo.bodySmall.size
                         color: colors.onSurfaceVariant
                     }
-
                     Item { Layout.fillWidth: true }
                 }
             }
@@ -355,19 +325,9 @@ Item {
         }
     }
 
-    function show() {
-        open = true
-    }
-
-    function close() {
-        open = false
-        closed()
-    }
-
-    function toggle() {
-        if (open) close()
-        else show()
-    }
+    function show() { open = true }
+    function close() { open = false; closed() }
+    function toggle() { if (open) close(); else show() }
 
     Accessible.role: Accessible.Dialog
     Accessible.name: "Command palette"

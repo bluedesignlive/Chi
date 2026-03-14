@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import "../../theme" as Theme
 
 Item {
@@ -37,34 +37,33 @@ Item {
     readonly property bool hasTrailing: trailingIcon !== "" || trailingText !== "" || showSwitch
 
     readonly property var sizeSpecs: ({
-        small: { height: 48, avatarSize: 32, iconSize: 20, fontSize: 14, secondarySize: 12 },
+        small:  { height: 48, avatarSize: 32, iconSize: 20, fontSize: 14, secondarySize: 12 },
         medium: { height: hasSecondaryText ? 72 : 56, avatarSize: 40, iconSize: 24, fontSize: 16, secondarySize: 14 },
-        large: { height: hasTertiaryText ? 88 : 72, avatarSize: 48, iconSize: 24, fontSize: 16, secondarySize: 14 }
+        large:  { height: hasTertiaryText ? 88 : 72, avatarSize: 48, iconSize: 24, fontSize: 16, secondarySize: 14 }
     })
 
-    readonly property var currentSize: sizeSpecs[size] || sizeSpecs.medium
+    readonly property var cs: sizeSpecs[size] || sizeSpecs.medium
+    readonly property bool _hasAvSrc: avatarSource !== ""
 
     implicitWidth: parent ? parent.width : 360
-    implicitHeight: currentSize.height
+    implicitHeight: cs.height
 
     opacity: enabled ? 1.0 : 0.38
 
     property var colors: Theme.ChiTheme.colors
+    readonly property var _typo: Theme.ChiTheme.typography
 
     Rectangle {
         anchors.fill: parent
-        color: selected ? colors.secondaryContainer : "transparent"
+        color: root.selected ? colors.secondaryContainer : "transparent"
         Behavior on color { ColorAnimation { duration: 150 } }
 
+        // State layer
         Rectangle {
             anchors.fill: parent
             color: colors.onSurface
-            opacity: {
-                if (!enabled) return 0
-                if (mouseArea.pressed) return 0.12
-                if (mouseArea.containsMouse) return 0.08
-                return 0
-            }
+            opacity: !root.enabled ? 0 :
+                     (mouseArea.pressed ? 0.12 : (mouseArea.containsMouse ? 0.08 : 0))
             Behavior on opacity { NumberAnimation { duration: 100 } }
         }
 
@@ -74,26 +73,24 @@ Item {
             anchors.rightMargin: 16
             spacing: 16
 
-            // Leading content
+            // ─── Leading content ───
             Item {
-                visible: hasLeading
-                Layout.preferredWidth: showAvatar ? currentSize.avatarSize : currentSize.iconSize
+                visible: root.hasLeading
+                Layout.preferredWidth: root.showAvatar ? cs.avatarSize : cs.iconSize
                 Layout.preferredHeight: Layout.preferredWidth
                 Layout.alignment: Qt.AlignVCenter
 
                 // Checkbox
                 Rectangle {
-                    visible: showCheckbox
+                    visible: root.showCheckbox
                     anchors.centerIn: parent
-                    width: 20
-                    height: 20
-                    radius: 2
-                    color: checked ? colors.primary : "transparent"
-                    border.width: checked ? 0 : 2
+                    width: 20; height: 20; radius: 2
+                    color: root.checked ? colors.primary : "transparent"
+                    border.width: root.checked ? 0 : 2
                     border.color: colors.onSurfaceVariant
 
                     Text {
-                        visible: checked
+                        visible: root.checked
                         anchors.centerIn: parent
                         text: "✓"
                         font.pixelSize: 16
@@ -105,29 +102,24 @@ Item {
                         anchors.fill: parent
                         anchors.margins: -8
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            checked = !checked
-                            checkboxToggled(checked)
-                        }
+                        onClicked: { root.checked = !root.checked; root.checkboxToggled(root.checked) }
                     }
                 }
 
                 // Radio
                 Rectangle {
-                    visible: showRadio
+                    visible: root.showRadio
                     anchors.centerIn: parent
-                    width: 20
-                    height: 20
-                    radius: 10
+                    width: 20; height: 20; radius: 10
                     color: "transparent"
                     border.width: 2
-                    border.color: radioChecked ? colors.primary : colors.onSurfaceVariant
+                    border.color: root.radioChecked ? colors.primary : colors.onSurfaceVariant
 
                     Rectangle {
                         anchors.centerIn: parent
-                        width: radioChecked ? 10 : 0
+                        width: root.radioChecked ? 10 : 0
                         height: width
-                        radius: width / 2
+                        radius: width * 0.5
                         color: colors.primary
                         Behavior on width { NumberAnimation { duration: 150 } }
                     }
@@ -136,41 +128,42 @@ Item {
                         anchors.fill: parent
                         anchors.margins: -8
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            radioChecked = true
-                            radioToggled()
-                        }
+                        onClicked: { root.radioChecked = true; root.radioToggled() }
                     }
                 }
 
                 // Avatar
                 Rectangle {
-                    visible: showAvatar
+                    visible: root.showAvatar
                     anchors.fill: parent
-                    radius: width / 2
+                    radius: width * 0.5
                     color: colors.primaryContainer
 
                     Text {
-                        visible: avatarSource === ""
+                        visible: !root._hasAvSrc
                         anchors.centerIn: parent
-                        text: avatarText || (text.length > 0 ? text[0].toUpperCase() : "")
-                        font.family: "Roboto"
-                        font.pixelSize: currentSize.avatarSize * 0.4
+                        text: root.avatarText || (root.text.length > 0 ? root.text[0].toUpperCase() : "")
+                        font.family: Theme.ChiTheme.fontFamily
+                        font.pixelSize: cs.avatarSize * 0.4
                         font.weight: Font.Medium
                         color: colors.onPrimaryContainer
                     }
 
                     Image {
-                        visible: avatarSource !== ""
+                        visible: root._hasAvSrc
                         anchors.fill: parent
-                        source: avatarSource
+                        source: root._hasAvSrc ? root.avatarSource : ""
                         fillMode: Image.PreserveAspectCrop
-                        layer.enabled: true
-                        layer.effect: OpacityMask {
+                        asynchronous: true
+
+                        layer.enabled: visible && status === Image.Ready
+                        layer.effect: MultiEffect {
+                            maskEnabled: true
                             maskSource: Rectangle {
-                                width: currentSize.avatarSize
-                                height: currentSize.avatarSize
-                                radius: currentSize.avatarSize / 2
+                                width: cs.avatarSize
+                                height: cs.avatarSize
+                                radius: cs.avatarSize * 0.5
+                                visible: false
                             }
                         }
                     }
@@ -178,17 +171,17 @@ Item {
 
                 // Icon
                 Text {
-                    visible: !showCheckbox && !showRadio && !showAvatar && leadingIcon !== ""
+                    visible: !root.showCheckbox && !root.showRadio && !root.showAvatar && root.leadingIcon !== ""
                     anchors.centerIn: parent
-                    text: leadingIcon
-                    font.family: "Material Icons"
-                    font.pixelSize: currentSize.iconSize
+                    text: root.leadingIcon
+                    font.family: Theme.ChiTheme.iconFamily
+                    font.pixelSize: cs.iconSize
                     color: colors.onSurfaceVariant
                     Behavior on color { ColorAnimation { duration: 150 } }
                 }
             }
 
-            // Text content
+            // ─── Text content ───
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignVCenter
@@ -196,8 +189,8 @@ Item {
 
                 Text {
                     text: root.text
-                    font.family: "Roboto"
-                    font.pixelSize: currentSize.fontSize
+                    font.family: Theme.ChiTheme.fontFamily
+                    font.pixelSize: cs.fontSize
                     color: colors.onSurface
                     elide: Text.ElideRight
                     Layout.fillWidth: true
@@ -205,10 +198,10 @@ Item {
                 }
 
                 Text {
-                    visible: hasSecondaryText
-                    text: secondaryText
-                    font.family: "Roboto"
-                    font.pixelSize: currentSize.secondarySize
+                    visible: root.hasSecondaryText
+                    text: root.secondaryText
+                    font.family: Theme.ChiTheme.fontFamily
+                    font.pixelSize: cs.secondarySize
                     color: colors.onSurfaceVariant
                     elide: Text.ElideRight
                     Layout.fillWidth: true
@@ -216,10 +209,10 @@ Item {
                 }
 
                 Text {
-                    visible: hasTertiaryText
-                    text: tertiaryText
-                    font.family: "Roboto"
-                    font.pixelSize: currentSize.secondarySize
+                    visible: root.hasTertiaryText
+                    text: root.tertiaryText
+                    font.family: Theme.ChiTheme.fontFamily
+                    font.pixelSize: cs.secondarySize
                     color: colors.onSurfaceVariant
                     elide: Text.ElideRight
                     Layout.fillWidth: true
@@ -227,36 +220,33 @@ Item {
                 }
             }
 
-            // Trailing content
+            // ─── Trailing content ───
             Item {
-                visible: hasTrailing
-                Layout.preferredWidth: showSwitch ? 52 : (trailingText !== "" ? trailingLabel.implicitWidth : currentSize.iconSize)
-                Layout.preferredHeight: showSwitch ? 32 : currentSize.iconSize
+                visible: root.hasTrailing
+                Layout.preferredWidth: root.showSwitch ? 52 :
+                    (root.trailingText !== "" ? trailingLabel.implicitWidth : cs.iconSize)
+                Layout.preferredHeight: root.showSwitch ? 32 : cs.iconSize
                 Layout.alignment: Qt.AlignVCenter
 
                 // Switch
                 Item {
-                    visible: showSwitch
+                    visible: root.showSwitch
                     anchors.fill: parent
 
                     Rectangle {
-                        id: switchTrack
                         anchors.centerIn: parent
-                        width: 52
-                        height: 32
-                        radius: 16
-                        color: switchChecked ? colors.primary : colors.surfaceContainerHighest
-                        border.width: switchChecked ? 0 : 2
+                        width: 52; height: 32; radius: 16
+                        color: root.switchChecked ? colors.primary : colors.surfaceContainerHighest
+                        border.width: root.switchChecked ? 0 : 2
                         border.color: colors.outline
 
                         Rectangle {
-                            id: switchThumb
                             anchors.verticalCenter: parent.verticalCenter
-                            x: switchChecked ? parent.width - width - 4 : 4
-                            width: switchChecked ? 24 : 16
+                            x: root.switchChecked ? parent.width - width - 4 : 4
+                            width: root.switchChecked ? 24 : 16
                             height: width
-                            radius: width / 2
-                            color: switchChecked ? colors.onPrimary : colors.outline
+                            radius: width * 0.5
+                            color: root.switchChecked ? colors.onPrimary : colors.outline
                             Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
                             Behavior on width { NumberAnimation { duration: 150 } }
                         }
@@ -265,32 +255,29 @@ Item {
                     MouseArea {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            switchChecked = !switchChecked
-                            switchToggled(switchChecked)
-                        }
+                        onClicked: { root.switchChecked = !root.switchChecked; root.switchToggled(root.switchChecked) }
                     }
                 }
 
                 // Trailing text
                 Text {
                     id: trailingLabel
-                    visible: !showSwitch && trailingText !== ""
+                    visible: !root.showSwitch && root.trailingText !== ""
                     anchors.centerIn: parent
-                    text: trailingText
-                    font.family: "Roboto"
-                    font.pixelSize: currentSize.secondarySize
+                    text: root.trailingText
+                    font.family: Theme.ChiTheme.fontFamily
+                    font.pixelSize: cs.secondarySize
                     color: colors.onSurfaceVariant
                     Behavior on color { ColorAnimation { duration: 150 } }
                 }
 
                 // Trailing icon
                 Text {
-                    visible: !showSwitch && trailingText === "" && trailingIcon !== ""
+                    visible: !root.showSwitch && root.trailingText === "" && root.trailingIcon !== ""
                     anchors.centerIn: parent
-                    text: trailingIcon
-                    font.family: "Material Icons"
-                    font.pixelSize: currentSize.iconSize
+                    text: root.trailingIcon
+                    font.family: Theme.ChiTheme.iconFamily
+                    font.pixelSize: cs.iconSize
                     color: colors.onSurfaceVariant
                     Behavior on color { ColorAnimation { duration: 150 } }
 
@@ -298,7 +285,7 @@ Item {
                         anchors.fill: parent
                         anchors.margins: -8
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: trailingClicked()
+                        onClicked: root.trailingClicked()
                     }
                 }
             }

@@ -1,5 +1,5 @@
 import QtQuick
-import QtQuick.Layouts
+import QtQuick.Effects
 import "../../theme" as Theme
 
 Item {
@@ -16,66 +16,50 @@ Item {
     readonly property bool hasLabel: label !== ""
     readonly property bool isVibrant: toolbarType === "vibrant"
 
+    // Cached content color — shared by icon and label
+    readonly property color _contentColor: selected ? colors.onSecondaryContainer :
+        (isVibrant ? colors.onPrimaryContainer : colors.onSurfaceVariant)
+
     implicitWidth: hasLabel ? contentRow.implicitWidth + 32 : 48
     implicitHeight: 48
 
     opacity: enabled ? 1.0 : 0.38
 
     property var colors: Theme.ChiTheme.colors
+    readonly property var _typo: Theme.ChiTheme.typography
 
     Rectangle {
         id: container
         anchors.centerIn: parent
-        width: hasLabel ? parent.width : 40
+        width: root.hasLabel ? parent.width : 40
         height: 40
         radius: mouseArea.pressed ? 8 : 100
 
-        color: {
-            if (selected) {
-                return colors.secondaryContainer
-            }
-            return "transparent"
-        }
+        color: root.selected ? colors.secondaryContainer : "transparent"
 
-        Behavior on color {
-            ColorAnimation { duration: 150 }
-        }
-        Behavior on radius {
-            NumberAnimation { duration: 100 }
-        }
+        Behavior on color { ColorAnimation { duration: 150 } }
+        Behavior on radius { NumberAnimation { duration: 100 } }
 
         // State layer
         Rectangle {
             anchors.fill: parent
             radius: parent.radius
-            color: {
-                if (selected) {
-                    return isVibrant ? colors.onSecondaryContainer : colors.onSecondaryContainer
-                }
-                return isVibrant ? colors.onPrimaryContainer : colors.onSurfaceVariant
-            }
-            opacity: {
-                if (!enabled) return 0
-                if (mouseArea.pressed) return 0.1
-                if (mouseArea.containsMouse) return 0.08
-                if (root.activeFocus) return 0.1
-                return 0
-            }
-
-            Behavior on opacity {
-                NumberAnimation { duration: 100 }
-            }
+            color: root._contentColor
+            opacity: !root.enabled ? 0 :
+                     (mouseArea.pressed ? 0.1 :
+                     (mouseArea.containsMouse ? 0.08 :
+                     (root.activeFocus ? 0.1 : 0)))
+            Behavior on opacity { NumberAnimation { duration: 100 } }
         }
 
         // Elevation on hover for labeled buttons
-        layer.enabled: hasLabel && mouseArea.containsMouse && !selected
-        layer.effect: DropShadow {
-            transparentBorder: true
-            horizontalOffset: 0
-            verticalOffset: 1
-            radius: 3
-            samples: 9
-            color: Qt.rgba(0, 0, 0, 0.2)
+        layer.enabled: root.hasLabel && mouseArea.containsMouse && !root.selected
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowColor: Qt.rgba(0, 0, 0, 0.2)
+            shadowHorizontalOffset: 0
+            shadowVerticalOffset: 1
+            shadowBlur: 0.15
         }
 
         Row {
@@ -85,42 +69,26 @@ Item {
 
             // Icon
             Text {
-                visible: icon !== ""
-                text: icon
-                font.family: icon.length > 2 ? "Material Icons" : undefined
+                visible: root.icon !== ""
+                text: root.icon
+                font.family: root.icon.length > 2 ? Theme.ChiTheme.iconFamily : undefined
                 font.pixelSize: 24
-                color: {
-                    if (selected) {
-                        return colors.onSecondaryContainer
-                    }
-                    return isVibrant ? colors.onPrimaryContainer : colors.onSurfaceVariant
-                }
+                color: root._contentColor
                 anchors.verticalCenter: parent.verticalCenter
-
-                Behavior on color {
-                    ColorAnimation { duration: 150 }
-                }
+                Behavior on color { ColorAnimation { duration: 150 } }
             }
 
             // Label
             Text {
-                visible: hasLabel
-                text: label
-                font.family: "Roboto"
-                font.pixelSize: 14
+                visible: root.hasLabel
+                text: root.label
+                font.family: Theme.ChiTheme.fontFamily
+                font.pixelSize: _typo.labelLarge.size
                 font.weight: Font.Medium
-                font.letterSpacing: 0.1
-                color: {
-                    if (selected) {
-                        return colors.onSecondaryContainer
-                    }
-                    return isVibrant ? colors.onPrimaryContainer : colors.onSurfaceVariant
-                }
+                font.letterSpacing: _typo.labelLarge.spacing
+                color: root._contentColor
                 anchors.verticalCenter: parent.verticalCenter
-
-                Behavior on color {
-                    ColorAnimation { duration: 150 }
-                }
+                Behavior on color { ColorAnimation { duration: 150 } }
             }
         }
 
@@ -130,7 +98,6 @@ Item {
             enabled: root.enabled
             hoverEnabled: true
             cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-
             onClicked: root.clicked()
         }
     }
