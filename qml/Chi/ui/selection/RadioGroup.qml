@@ -14,6 +14,7 @@ Column {
 
     spacing: 8
     property var colors: Theme.ChiTheme.colors
+    readonly property string fontFamily: Theme.ChiTheme.fontFamily
     
     // Track our radio buttons separately
     property var radioButtons: []
@@ -23,7 +24,7 @@ Column {
         id: labelText
         visible: label !== ""
         text: label
-        font.family: "Roboto"
+        font.family: fontFamily
         font.pixelSize: 14
         font.weight: Font.Medium
         color: colors.onSurface

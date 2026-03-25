@@ -18,6 +18,7 @@ Item {
     z: 1500
 
     property var colors: Theme.ChiTheme.colors
+    readonly property string fontFamily: Theme.ChiTheme.fontFamily
 
     // Backdrop
     Rectangle {
@@ -67,7 +68,7 @@ Item {
 
                 Text {
                     text: "Notifications"
-                    font.family: "Roboto"
+                    font.family: fontFamily
                     font.pixelSize: 22
                     font.weight: Font.Normal
                     color: colors.onSurface
@@ -94,7 +95,7 @@ Item {
                         id: clearLabel
                         anchors.centerIn: parent
                         text: "Clear all"
-                        font.family: "Roboto"
+                        font.family: fontFamily
                         font.pixelSize: 14
                         font.weight: Font.Medium
                         color: colors.primary
@@ -177,7 +178,7 @@ Item {
 
                     Text {
                         text: "No notifications"
-                        font.family: "Roboto"
+                        font.family: fontFamily
                         font.pixelSize: 16
                         color: colors.onSurfaceVariant
                         anchors.horizontalCenter: parent.horizontalCenter

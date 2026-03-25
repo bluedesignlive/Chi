@@ -21,6 +21,7 @@ Item {
     implicitHeight: 300
 
     property var colors: Theme.ChiTheme.colors
+    readonly property string fontFamily: Theme.ChiTheme.fontFamily
 
     Flickable {
         anchors.fill: parent
@@ -122,7 +123,7 @@ Item {
                     // Label
                     Text {
                         text: nodeColumn.nodeData.label || nodeColumn.nodeData.text || ""
-                        font.family: "Roboto"
+                        font.family: fontFamily
                         font.pixelSize: 14
                         color: colors.onSurface
                         elide: Text.ElideRight
@@ -146,7 +147,7 @@ Item {
                             id: badgeText
                             anchors.centerIn: parent
                             text: nodeColumn.nodeData.badge
-                            font.family: "Roboto"
+                            font.family: fontFamily
                             font.pixelSize: 11
                             color: colors.onSecondaryContainer
                         }

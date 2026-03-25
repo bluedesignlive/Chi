@@ -1,27 +1,33 @@
+// FABMenuItem.qml - Material 3 FAB Menu Item
+// Uses shared components following Dieter Rams principles
+
 import QtQuick
+import QtQuick.Effects
 import "../../theme" as Theme
+import "../common" as Common
 
 Item {
     id: menuItem
 
+    // ─── Public API ───────────────────────────────────────────
     property string text: "Action"
-    property string icon: "★"
-    property string variant: "primary"
+    property string icon: "star"
+    property string variant: "primary"       // primary | secondary | tertiary
     property bool enabled: true
 
     signal clicked()
 
-    opacity: enabled ? 1.0 : 0.38
-    Behavior on opacity {
-        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-    }
+    // ─── Theme Tokens ───────────────────────────────────────────
+    readonly property var colors: Theme.ChiTheme.colors
+    readonly property var motion: Theme.ChiTheme.motion
+    readonly property var typography: Theme.ChiTheme.typography
+    readonly property string fontFamily: Theme.ChiTheme.fontFamily
 
     implicitWidth: contentRow.implicitWidth + 48
     implicitHeight: 56
 
-    property var colors: Theme.ChiTheme.colors
-
-    readonly property color _cc: {
+    // ─── Variant Colors ──────────────────────────────────────────
+    readonly property color _containerColor: {
         switch (variant) {
             case "secondary": return colors.secondaryContainer
             case "tertiary": return colors.tertiaryContainer
@@ -29,7 +35,7 @@ Item {
         }
     }
 
-    readonly property color _occ: {
+    readonly property color _contentColor: {
         switch (variant) {
             case "secondary": return colors.onSecondaryContainer
             case "tertiary": return colors.onTertiaryContainer
@@ -37,38 +43,47 @@ Item {
         }
     }
 
+    opacity: enabled ? 1.0 : 0.38
+    Behavior on opacity {
+        NumberAnimation { duration: motion.durationMedium; easing.type: motion.easeStandard }
+    }
+
+    // ─── Visual Container ───────────────────────────────────────
     Rectangle {
         id: container
         anchors.fill: parent
         radius: 28
         clip: true
-        color: menuItem._cc
+        color: menuItem._containerColor
 
-        Rectangle {
-            anchors.fill: parent
-            radius: parent.radius
-            color: menuItem._occ
-            opacity: 0
-            SequentialAnimation on opacity {
-                id: rippleAnimation
-                running: false
-                NumberAnimation { from: 0; to: 0.16; duration: 90; easing.type: Easing.OutCubic }
-                NumberAnimation { to: 0; duration: 210; easing.type: Easing.OutCubic }
-            }
+        // Shadow
+        layer.enabled: menuItem.enabled
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowColor: Qt.rgba(0, 0, 0, 0.2)
+            shadowHorizontalOffset: 0
+            shadowVerticalOffset: mouseArea.containsMouse ? 3 : 2
+            shadowBlur: mouseArea.containsMouse ? 0.3 : 0.15
         }
 
-        Rectangle {
-            anchors.fill: parent
+        // State Layer
+        Common.StateLayer {
+            color: menuItem._contentColor
             radius: parent.radius
-            color: menuItem._occ
-            opacity: mouseArea.pressed ? 0.12 :
-                     (menuItem.activeFocus ? 0.12 :
-                     (mouseArea.containsMouse ? 0.08 : 0))
-            Behavior on opacity {
-                NumberAnimation { duration: mouseArea.pressed ? 50 : 150; easing.type: Easing.OutCubic }
-            }
+            pressed: mouseArea.pressed
+            hovered: mouseArea.containsMouse
+            focused: menuItem.activeFocus
+            enabled: menuItem.enabled
         }
 
+        // Ripple
+        Common.Ripple {
+            color: menuItem._contentColor
+            radius: parent.radius
+            enabled: menuItem.enabled
+        }
+
+        // Content
         Row {
             id: contentRow
             anchors.right: parent.right
@@ -78,26 +93,24 @@ Item {
 
             Text {
                 text: menuItem.text
-                font.family: "Roboto"
+                font.family: fontFamily
                 font.weight: Font.Medium
-                font.pixelSize: 16
-                font.letterSpacing: 0.15
-                lineHeight: 24
-                lineHeightMode: Text.FixedHeight
+                font.pixelSize: typography.titleMedium.size
+                font.letterSpacing: typography.titleMedium.spacing
                 horizontalAlignment: Text.AlignRight
-                color: menuItem._occ
+                color: menuItem._contentColor
                 anchors.verticalCenter: parent.verticalCenter
             }
 
-            Text {
-                text: menuItem.icon
-                font.family: "Material Icons"
-                font.pixelSize: 24
-                color: menuItem._occ
+            Common.Icon {
+                source: menuItem.icon
+                size: 24
+                color: menuItem._contentColor
                 anchors.verticalCenter: parent.verticalCenter
             }
         }
 
+        // Focus indicator
         Rectangle {
             visible: menuItem.activeFocus && !mouseArea.pressed
             anchors.fill: parent
@@ -109,13 +122,22 @@ Item {
         }
     }
 
+    // ─── Input ──────────────────────────────────────────────────
     MouseArea {
         id: mouseArea
         anchors.fill: parent
         enabled: menuItem.enabled
         hoverEnabled: true
         cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-        onPressed: rippleAnimation.restart()
         onClicked: menuItem.clicked()
+    }
+
+    // ─── Keyboard Support ───────────────────────────────────────
+    Keys.onSpacePressed:  if (enabled) activate()
+    Keys.onEnterPressed:  if (enabled) activate()
+    Keys.onReturnPressed: if (enabled) activate()
+
+    function activate() {
+        clicked()
     }
 }

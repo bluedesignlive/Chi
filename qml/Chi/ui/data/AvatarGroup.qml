@@ -21,6 +21,7 @@ Item {
     implicitHeight: avatarSize
 
     property var colors: Theme.ChiTheme.colors
+    readonly property string fontFamily: Theme.ChiTheme.fontFamily
 
     Row {
         anchors.fill: parent
@@ -76,7 +77,7 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text: "+" + extraCount
-                    font.family: "Roboto"
+                    font.family: fontFamily
                     font.pixelSize: avatarSize * 0.35
                     font.weight: Font.Medium
                     color: colors.onSurfaceVariant

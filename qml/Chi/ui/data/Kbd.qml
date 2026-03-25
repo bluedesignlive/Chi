@@ -20,6 +20,7 @@ Row {
     spacing: 4
 
     property var colors: Theme.ChiTheme.colors
+    readonly property string fontFamily: Theme.ChiTheme.fontFamily
 
     Repeater {
         model: keys
@@ -43,7 +44,7 @@ Row {
                     id: keyLabel
                     anchors.centerIn: parent
                     text: modelData
-                    font.family: "Roboto"
+                    font.family: fontFamily
                     font.pixelSize: currentSize.fontSize
                     font.weight: Font.Medium
                     color: colors.onSurface
@@ -57,7 +58,7 @@ Row {
             Text {
                 visible: index < keys.length - 1
                 text: separator
-                font.family: "Roboto"
+                font.family: fontFamily
                 font.pixelSize: currentSize.fontSize
                 color: colors.onSurfaceVariant
                 anchors.verticalCenter: parent.verticalCenter

@@ -22,6 +22,7 @@ Rectangle {
     implicitHeight: Math.max(80, codeColumn.implicitHeight + 24)
 
     property var colors: Theme.ChiTheme.colors
+    readonly property string fontFamily: Theme.ChiTheme.fontFamily
 
     radius: 8
     color: colors.surfaceContainerHighest
@@ -61,7 +62,7 @@ Rectangle {
 
             Text {
                 text: language
-                font.family: "Roboto"
+                font.family: fontFamily
                 font.pixelSize: 12
                 font.weight: Font.Medium
                 color: colors.onSurfaceVariant

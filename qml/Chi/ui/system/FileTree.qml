@@ -23,6 +23,7 @@ Item {
     implicitHeight: 400
 
     property var colors: Theme.ChiTheme.colors
+    readonly property string fontFamily: Theme.ChiTheme.fontFamily
 
     property var fileIcons: ({
         folder: "📁",
@@ -170,7 +171,7 @@ Item {
 
                     Text {
                         text: delegateColumn.itemData.name
-                        font.family: "Roboto"
+                        font.family: fontFamily
                         font.pixelSize: 14
                         color: delegateColumn.isHidden ? colors.onSurfaceVariant : colors.onSurface
                         elide: Text.ElideMiddle

@@ -1,34 +1,38 @@
+// SegmentedButton.qml - Material 3 Segmented Button
+// Uses shared components (Icon, StateLayer, SizeSpecs)
+
 import QtQuick
 import QtQuick.Layouts
 import "../../theme" as Theme
+import "../common" as Common
 
 Item {
     id: root
 
+    // ─── Public API ───────────────────────────────────────────
     property int selectedIndex: 0
     property var segments: []                // [{text: "", icon: ""}]
     property bool multiSelect: false
     property var selectedIndices: [0]
     property bool enabled: true
-    property string size: "medium"           // "small", "medium", "large"
+    property string size: "medium"           // small | medium | large
 
     signal selectionChanged(var indices)
 
-    readonly property var sizeSpecs: ({
-        small: { height: 32, fontSize: 12, iconSize: 16, padding: 12 },
-        medium: { height: 40, fontSize: 14, iconSize: 18, padding: 16 },
-        large: { height: 48, fontSize: 16, iconSize: 20, padding: 20 }
-    })
+    // ─── Theme Tokens ───────────────────────────────────────────
+    readonly property var colors: Theme.ChiTheme.colors
+    readonly property var motion: Theme.ChiTheme.motion
+    readonly property var typography: Theme.ChiTheme.typography
+    readonly property string fontFamily: Theme.ChiTheme.fontFamily
+    readonly property var spec: Theme.SizeSpecs.getSpec(Theme.SizeSpecs.segmentedButton, size)
 
-    readonly property var currentSize: sizeSpecs[size] || sizeSpecs.medium
-
+    // ─── Geometry ───────────────────────────────────────────────
     implicitWidth: segmentsRow.implicitWidth
-    implicitHeight: currentSize.height
+    implicitHeight: spec.height
 
     opacity: enabled ? 1.0 : 0.38
 
-    property var colors: Theme.ChiTheme.colors
-
+    // ─── Visual Container ───────────────────────────────────────
     Rectangle {
         anchors.fill: parent
         radius: height / 2
@@ -37,7 +41,7 @@ Item {
         border.color: colors.outline
 
         Behavior on border.color {
-            ColorAnimation { duration: 200 }
+            ColorAnimation { duration: motion.durationMedium }
         }
 
         Row {
@@ -48,7 +52,7 @@ Item {
                 model: segments
 
                 Item {
-                    width: segmentContent.implicitWidth + currentSize.padding * 2
+                    width: segmentContent.implicitWidth + spec.padding * 2
                     height: parent.height
 
                     property bool isSelected: multiSelect ?
@@ -61,8 +65,6 @@ Item {
                     Rectangle {
                         anchors.fill: parent
                         color: isSelected ? colors.secondaryContainer : "transparent"
-
-                        // Round appropriate corners
                         radius: parent.height / 2
 
                         // Mask for non-rounded edges
@@ -85,7 +87,7 @@ Item {
                         }
 
                         Behavior on color {
-                            ColorAnimation { duration: 150 }
+                            ColorAnimation { duration: motion.durationFast }
                         }
                     }
 
@@ -103,7 +105,7 @@ Item {
                             selectedIndex === index - 1)) ? 0 : 1
 
                         Behavior on opacity {
-                            NumberAnimation { duration: 150 }
+                            NumberAnimation { duration: motion.durationFast }
                         }
                     }
 
@@ -131,39 +133,39 @@ Item {
                         }
 
                         Behavior on opacity {
-                            NumberAnimation { duration: 100 }
+                            NumberAnimation { duration: motion.durationFast }
                         }
                     }
 
+                    // Content
                     Row {
                         id: segmentContent
                         anchors.centerIn: parent
                         spacing: 8
 
                         // Checkmark for selected
-                        Text {
+                        Common.Icon {
                             visible: isSelected
-                            text: "✓"
-                            font.pixelSize: currentSize.iconSize
+                            source: "check"
+                            size: spec.iconSize
                             color: colors.onSecondaryContainer
                             anchors.verticalCenter: parent.verticalCenter
 
                             Behavior on color {
-                                ColorAnimation { duration: 150 }
+                                ColorAnimation { duration: motion.durationFast }
                             }
                         }
 
-                        // Icon
-                        Text {
+                        // Icon - using shared Icon component
+                        Common.Icon {
                             visible: modelData.icon && modelData.icon !== ""
-                            text: modelData.icon || ""
-                            font.family: "Material Icons"
-                            font.pixelSize: currentSize.iconSize
+                            source: modelData.icon || ""
+                            size: spec.iconSize
                             color: isSelected ? colors.onSecondaryContainer : colors.onSurface
                             anchors.verticalCenter: parent.verticalCenter
 
                             Behavior on color {
-                                ColorAnimation { duration: 150 }
+                                ColorAnimation { duration: motion.durationFast }
                             }
                         }
 
@@ -171,18 +173,19 @@ Item {
                         Text {
                             visible: modelData.text && modelData.text !== ""
                             text: modelData.text || ""
-                            font.family: "Roboto"
-                            font.pixelSize: currentSize.fontSize
+                            font.family: fontFamily
+                            font.pixelSize: spec.fontSize
                             font.weight: Font.Medium
                             color: isSelected ? colors.onSecondaryContainer : colors.onSurface
                             anchors.verticalCenter: parent.verticalCenter
 
                             Behavior on color {
-                                ColorAnimation { duration: 150 }
+                                ColorAnimation { duration: motion.durationFast }
                             }
                         }
                     }
 
+                    // Input
                     MouseArea {
                         id: segmentMouse
                         anchors.fill: parent

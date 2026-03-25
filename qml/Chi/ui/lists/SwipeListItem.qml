@@ -21,6 +21,8 @@ T.SwipeDelegate {
     signal endActionTriggered()
 
     property var colors: Theme.ChiTheme.colors
+    readonly property string fontFamily: Theme.ChiTheme.fontFamily
+    readonly property string iconFamily: Theme.ChiTheme.iconFamily
     
     implicitWidth: 360
     implicitHeight: 72
@@ -50,7 +52,7 @@ T.SwipeDelegate {
             Text {
                 anchors.centerIn: parent
                 text: control.leadingIcon
-                font.family: "Material Icons"
+                font.family: iconFamily
                 font.pixelSize: 24
                 color: colors.onSurfaceVariant
             }
@@ -61,7 +63,7 @@ T.SwipeDelegate {
             spacing: 2
             Text {
                 text: control.headline
-                font.family: "Roboto"
+                font.family: fontFamily
                 font.pixelSize: 16
                 color: colors.onSurface
                 elide: Text.ElideRight
@@ -69,7 +71,7 @@ T.SwipeDelegate {
             }
             Text {
                 text: control.supportingText
-                font.family: "Roboto"
+                font.family: fontFamily
                 font.pixelSize: 14
                 color: colors.onSurfaceVariant
                 elide: Text.ElideRight
@@ -80,7 +82,7 @@ T.SwipeDelegate {
 
         Text {
             text: control.trailingText
-            font.family: "Roboto"
+            font.family: fontFamily
             font.pixelSize: 12
             color: colors.onSurfaceVariant
             visible: control.trailingText !== ""
@@ -95,7 +97,7 @@ T.SwipeDelegate {
         clip: true
         Text {
             text: control.startActionIcon
-            font.family: "Material Icons"
+            font.family: iconFamily
             font.pixelSize: 24
             color: colors.onPrimaryContainer
             anchors.left: parent.left; anchors.leftMargin: 24; anchors.verticalCenter: parent.verticalCenter
@@ -110,7 +112,7 @@ T.SwipeDelegate {
         clip: true
         Text {
             text: control.endActionIcon
-            font.family: "Material Icons"
+            font.family: iconFamily
             font.pixelSize: 24
             color: colors.onErrorContainer
             anchors.right: parent.right; anchors.rightMargin: 24; anchors.verticalCenter: parent.verticalCenter

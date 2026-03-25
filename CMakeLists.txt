@@ -11,7 +11,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Quick Qml)
+find_package(Qt6 6.10 REQUIRED COMPONENTS Quick Qml)
 
 # ── Qt QML install path ──────────────────────────────────────
 get_target_property(QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)

@@ -123,6 +123,8 @@ Item {
 
     property var colors: Theme.ChiTheme.colors
     property var motion: Theme.ChiTheme.motion
+    property var typography: Theme.ChiTheme.typography
+    property string fontFamily: Theme.ChiTheme.fontFamily
 
     // ═══════════════════════════════════════════════════════════════════
     // CLIPBOARD HELPER
@@ -320,7 +322,7 @@ Item {
                 text: label
                 z: 3
 
-                font.family: "Roboto"
+                font.family: fontFamily
                 font.pixelSize: labelFloated ? currentSize.labelFontSize : currentSize.fontSize
                 font.weight: Font.Normal
 
@@ -442,7 +444,7 @@ Item {
                     verticalAlignment: Text.AlignVCenter
 
                     text: root.text
-                    font.family: "Roboto"
+                    font.family: fontFamily
                     font.pixelSize: currentSize.fontSize
                     color: enabled ? colors.onSurface : colors.onSurface
                     selectionColor: colors.primaryContainer
@@ -608,7 +610,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.leftMargin: effectivePadding
                 text: error && errorText !== "" ? errorText : supportingText
-                font.family: "Roboto"
+                font.family: fontFamily
                 font.pixelSize: 12
                 color: error ? colors.error : colors.onSurfaceVariant
                 wrapMode: Text.WordWrap
@@ -628,7 +630,7 @@ Item {
                 visible: showCharacterCount && maxLength > 0
                 Layout.rightMargin: effectivePadding
                 text: textInput.text.length + "/" + maxLength
-                font.family: "Roboto"
+                font.family: fontFamily
                 font.pixelSize: 12
                 color: {
                     if (error) return colors.error

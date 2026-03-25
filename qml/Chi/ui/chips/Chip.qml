@@ -32,6 +32,8 @@ Item {
     opacity: enabled ? 1.0 : 0.38
 
     property var colors: Theme.ChiTheme.colors
+    readonly property string fontFamily: Theme.ChiTheme.fontFamily
+    readonly property string iconFamily: Theme.ChiTheme.iconFamily
 
     Rectangle {
         id: container
@@ -60,7 +62,7 @@ Item {
             Text {
                 visible: root.hasLeadingIcon || root._fs
                 text: (root._fs && !root.hasLeadingIcon) ? "✓" : root.leadingIcon
-                font.family: "Material Icons"
+                font.family: iconFamily
                 font.pixelSize: root._iconSize
                 color: root._fs ? colors.onSecondaryContainer : colors.primary
                 anchors.verticalCenter: parent.verticalCenter
@@ -68,7 +70,7 @@ Item {
 
             Text {
                 text: root.text
-                font.family: "Roboto"
+                font.family: fontFamily
                 font.pixelSize: root._fontSize
                 font.weight: Font.Medium
                 color: root._fs ? colors.onSecondaryContainer : colors.onSurface
@@ -78,7 +80,7 @@ Item {
             Text {
                 visible: root.hasTrailingIcon
                 text: root.trailingIcon
-                font.family: "Material Icons"
+                font.family: iconFamily
                 font.pixelSize: root._iconSize
                 color: colors.onSurfaceVariant
                 anchors.verticalCenter: parent.verticalCenter

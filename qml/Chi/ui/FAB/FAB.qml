@@ -1,28 +1,30 @@
+// FAB.qml - Material 3 Floating Action Button
+// Uses shared components (Icon, Ripple, StateLayer) following Dieter Rams principles
+
 import QtQuick
 import QtQuick.Effects
 import "../../theme" as Theme
+import "../common" as Common
 
 Item {
     id: fab
 
-    property string icon: "+"
-    property string variant: "primary"
+    // ─── Public API ───────────────────────────────────────────
+    property string icon: "add"
+    property string variant: "primary"       // primary | secondary | tertiary | surface
+    property string size: "medium"           // small | medium | large
     property bool enabled: true
     property bool menuOpen: false
 
     signal clicked()
 
-    opacity: enabled ? 1.0 : 0.38
-    Behavior on opacity {
-        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-    }
+    // ─── Theme Tokens ───────────────────────────────────────────
+    readonly property var colors: Theme.ChiTheme.colors
+    readonly property var motion: Theme.ChiTheme.motion
+    readonly property var spec: Theme.SizeSpecs.getSpec(Theme.SizeSpecs.fab, size)
 
-    implicitWidth: 56
-    implicitHeight: 56
-
-    property var colors: Theme.ChiTheme.colors
-
-    readonly property color _cc: {
+    // ─── Variant Colors ──────────────────────────────────────────
+    readonly property color _containerColor: {
         switch (variant) {
             case "secondary": return colors.secondaryContainer
             case "tertiary": return colors.tertiaryContainer
@@ -31,7 +33,7 @@ Item {
         }
     }
 
-    readonly property color _occ: {
+    readonly property color _contentColor: {
         switch (variant) {
             case "secondary": return colors.onSecondaryContainer
             case "tertiary": return colors.onTertiaryContainer
@@ -40,13 +42,24 @@ Item {
         }
     }
 
+    // ─── Geometry ───────────────────────────────────────────────
+    implicitWidth: spec.size
+    implicitHeight: spec.size
+
+    opacity: enabled ? 1.0 : 0.38
+    Behavior on opacity {
+        NumberAnimation { duration: motion.durationMedium; easing.type: motion.easeStandard }
+    }
+
+    // ─── Visual Container ───────────────────────────────────────
     Rectangle {
         id: container
         anchors.fill: parent
-        radius: 16
+        radius: spec.radius
         clip: true
-        color: fab._cc
+        color: fab._containerColor
 
+        // Shadow
         layer.enabled: fab.enabled
         layer.effect: MultiEffect {
             shadowEnabled: true
@@ -56,46 +69,51 @@ Item {
             shadowBlur: mouseArea.containsMouse ? 0.4 : 0.2
         }
 
-        Rectangle {
+        // State Layer
+        Common.StateLayer {
+            color: fab._contentColor
+            radius: parent.radius
+            pressed: mouseArea.pressed
+            hovered: mouseArea.containsMouse
+            focused: fab.activeFocus
+            enabled: fab.enabled
+        }
+
+        // Ripple
+        Common.Ripple {
             id: ripple
-            anchors.fill: parent
+            color: fab._contentColor
             radius: parent.radius
-            color: fab._occ
-            opacity: 0
-            SequentialAnimation on opacity {
-                id: rippleAnimation
-                running: false
-                NumberAnimation { from: 0; to: 0.12; duration: 90 }
-                NumberAnimation { to: 0; duration: 210 }
-            }
+            enabled: fab.enabled
         }
 
-        Rectangle {
-            anchors.fill: parent
-            radius: parent.radius
-            color: fab._occ
-            opacity: mouseArea.pressed ? 0.12 : (mouseArea.containsMouse ? 0.08 : 0)
-            Behavior on opacity { NumberAnimation { duration: 150 } }
-        }
-
-        Text {
+        // Icon - using shared Icon component
+        Common.Icon {
             anchors.centerIn: parent
-            text: fab.icon
-            font.family: "Material Icons"
-            font.pixelSize: 24
-            color: fab._occ
+            source: fab.icon
+            size: spec.iconSize
+            color: fab._contentColor
             rotation: fab.menuOpen ? 45 : 0
-            Behavior on rotation { NumberAnimation { duration: 200 } }
+            Behavior on rotation { NumberAnimation { duration: motion.durationMedium } }
         }
     }
 
+    // ─── Input ──────────────────────────────────────────────────
     MouseArea {
         id: mouseArea
         anchors.fill: parent
         enabled: fab.enabled
         hoverEnabled: true
         cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-        onPressed: rippleAnimation.restart()
         onClicked: fab.clicked()
+    }
+
+    // ─── Keyboard Support ───────────────────────────────────────
+    Keys.onSpacePressed:  if (enabled) activate()
+    Keys.onEnterPressed:  if (enabled) activate()
+    Keys.onReturnPressed: if (enabled) activate()
+
+    function activate() {
+        clicked()
     }
 }

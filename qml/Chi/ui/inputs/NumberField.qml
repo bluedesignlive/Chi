@@ -33,6 +33,7 @@ Item {
 
     property var colors: Theme.ChiTheme.colors
     property var motion: Theme.ChiTheme.motion
+    readonly property string fontFamily: Theme.ChiTheme.fontFamily
 
     Rectangle {
         anchors.fill: parent
@@ -108,7 +109,7 @@ Item {
                     width: parent.width - 8
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
-                    font.family: "Roboto"
+                    font.family: fontFamily
                     font.pixelSize: currentSize.fontSize
                     font.weight: Font.Medium
                     color: colors.onSurface

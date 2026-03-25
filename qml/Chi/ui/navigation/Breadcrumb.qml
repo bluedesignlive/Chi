@@ -18,6 +18,7 @@ Item {
     implicitHeight: 32
 
     property var colors: Theme.ChiTheme.colors
+    readonly property string fontFamily: Theme.ChiTheme.fontFamily
 
     Row {
         id: breadcrumbRow
@@ -57,7 +58,7 @@ Item {
         Text {
             visible: showHome && items.length > 0
             text: separator
-            font.family: "Roboto"
+            font.family: fontFamily
             font.pixelSize: 14
             color: colors.onSurfaceVariant
             anchors.verticalCenter: parent.verticalCenter
@@ -98,7 +99,7 @@ Item {
 
                         Text {
                             text: modelData.text
-                            font.family: "Roboto"
+                            font.family: fontFamily
                             font.pixelSize: 14
                             font.weight: isLast ? Font.Medium : Font.Normal
                             color: isLast ? colors.onSurface : colors.onSurfaceVariant
@@ -123,7 +124,7 @@ Item {
                 Text {
                     visible: index < items.length - 1
                     text: separator
-                    font.family: "Roboto"
+                    font.family: fontFamily
                     font.pixelSize: 14
                     color: colors.onSurfaceVariant
                     anchors.verticalCenter: parent.verticalCenter

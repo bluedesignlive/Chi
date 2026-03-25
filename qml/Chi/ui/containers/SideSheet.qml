@@ -28,6 +28,7 @@ Item {
     z: _modal ? 1000 : 0
 
     property var colors: Theme.ChiTheme.colors
+    readonly property string fontFamily: Theme.ChiTheme.fontFamily
 
     readonly property bool _modal: variant === "modal"
     readonly property bool _left: position === "left"
@@ -114,7 +115,7 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.verticalCenterOffset: 6
                             text: root.title
-                            font.family: "Roboto"
+                            font.family: fontFamily
                             font.pixelSize: 22
                             font.weight: Font.Normal
                             color: colors.onSurfaceVariant

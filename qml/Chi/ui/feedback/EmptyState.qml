@@ -25,6 +25,7 @@ Item {
     implicitHeight: contentColumn.implicitHeight
 
     property var colors: Theme.ChiTheme.colors
+    readonly property string fontFamily: Theme.ChiTheme.fontFamily
 
     ColumnLayout {
         id: contentColumn
@@ -45,7 +46,7 @@ Item {
         Text {
             visible: title !== ""
             text: title
-            font.family: "Roboto"
+            font.family: fontFamily
             font.pixelSize: currentSize.titleSize
             font.weight: Font.Medium
             color: colors.onSurface
@@ -63,7 +64,7 @@ Item {
         Text {
             visible: description !== ""
             text: description
-            font.family: "Roboto"
+            font.family: fontFamily
             font.pixelSize: currentSize.descSize
             color: colors.onSurfaceVariant
             horizontalAlignment: Text.AlignHCenter
@@ -101,7 +102,7 @@ Item {
                 id: actionLabel
                 anchors.centerIn: parent
                 text: actionText
-                font.family: "Roboto"
+                font.family: fontFamily
                 font.pixelSize: 14
                 font.weight: Font.Medium
                 color: colors.onPrimary

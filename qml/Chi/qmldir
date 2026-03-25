@@ -4,6 +4,7 @@ plugin ChiPlugin
 # ─── Theme ───────────────────────────────────────────────────
 singleton ChiTheme 1.0 theme/ChiTheme.qml
 singleton IconFont 1.0 theme/IconFont.qml
+singleton SizeSpecs 1.0 theme/SizeSpecs.qml
 
 # ─── Buttons ─────────────────────────────────────────────────
 Button 1.0 ui/Buttons/Button.qml
@@ -56,6 +57,7 @@ SegmentedButton 1.0 ui/selection/SegmentedButton.qml
 
 # ─── Containers ──────────────────────────────────────────────
 Card 1.0 ui/containers/Card.qml
+SurfaceCard 1.0 ui/surfaces/SurfaceCard.qml
 Divider 1.0 ui/containers/Divider.qml
 SideSheet 1.0 ui/containers/SideSheet.qml
 Toolbar 1.0 ui/containers/Toolbar.qml
@@ -124,6 +126,8 @@ CarouselItem 1.0 ui/carousel/CarouselItem.qml
 
 # ─── Common ──────────────────────────────────────────────────
 Icon 1.0 ui/common/Icon.qml
+Ripple 1.0 ui/common/Ripple.qml
+StateLayer 1.0 ui/common/StateLayer.qml
 
 # ─── Application Window ─────────────────────────────────────
 ChiApplicationWindow 1.0 ui/applicationwindow/ChiApplicationWindow.qml

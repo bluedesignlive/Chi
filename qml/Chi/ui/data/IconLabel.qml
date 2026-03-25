@@ -27,6 +27,7 @@ Item {
     implicitHeight: layout === "horizontal" ? contentRow.implicitHeight : contentColumn.implicitHeight
 
     property var colors: Theme.ChiTheme.colors
+    readonly property string fontFamily: Theme.ChiTheme.fontFamily
 
     // Horizontal layout
     Row {
@@ -50,7 +51,7 @@ Item {
         Text {
             visible: text !== ""
             text: root.text
-            font.family: "Roboto"
+            font.family: fontFamily
             font.pixelSize: currentSize.fontSize
             font.weight: fontWeight
             color: textColor
@@ -83,7 +84,7 @@ Item {
         Text {
             visible: text !== ""
             text: root.text
-            font.family: "Roboto"
+            font.family: fontFamily
             font.pixelSize: currentSize.fontSize
             font.weight: fontWeight
             color: textColor

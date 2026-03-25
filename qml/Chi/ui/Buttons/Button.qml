@@ -1,5 +1,6 @@
 // ui/Buttons/Button.qml
-// SmartUI Button — Desktop-first, Dieter Rams principles applied.
+// Chi Button — Material 3 Expressive Design System
+// Dieter Rams 10 Principles of Good Design applied throughout:
 // #1  Innovative — MultiEffect shadow, no legacy GraphicalEffects
 // #2  Useful — Five sizes tuned for pointer-driven interfaces
 // #3  Aesthetic — Compact, rhythmic spacing; nothing superfluous
@@ -8,18 +9,19 @@
 // #6  Honest — No fake depth unless elevated; states are truthful
 // #7  Long-lasting — Theme-driven tokens; zero hardcoded values
 // #8  Thorough — Every padding, radius, and opacity is intentional
-// #9  Environmentally friendly — Minimal redraws, no unnecessary layers
+// #9  Environmentally friendly — Minimal redraws, shared components
 // #10 As little design as possible — Less, but better
 
 import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Effects
 import "../../theme" as Theme
+import "../common" as Common
 
 Item {
     id: root
 
-    // ─── Public API (unchanged) ─────────────────────────────
+    // ─── Public API ───────────────────────────────────────────
     property string text: "Button"
     property string variant: "filled"       // filled | elevated | tonal | outlined | text
     property string size: "medium"          // xsmall | small | medium | large | xlarge
@@ -31,71 +33,17 @@ Item {
 
     signal clicked()
 
-    // ─── Theme Tokens ───────────────────────────────────────
-    readonly property var colors:     Theme.ChiTheme.colors
+    // ─── Theme Tokens ───────────────────────────────────────────
+    readonly property var colors: Theme.ChiTheme.colors
     readonly property var typography: Theme.ChiTheme.typography
-    readonly property var motion:     Theme.ChiTheme.motion
+    readonly property var motion: Theme.ChiTheme.motion
     readonly property string fontFamily: Theme.ChiTheme.fontFamily
     readonly property string iconFamily: Theme.ChiTheme.iconFamily
 
-    // ─── Size Specifications — Desktop-Compact ──────────────
-    //
-    //  xsmall  24px — inline actions, dense toolbars, chips
-    //  small   28px — secondary actions, table rows, filters
-    //  medium  32px — the workhorse; 90% of desktop UI
-    //  large   40px — primary CTA, dialog confirm/cancel
-    //  xlarge  48px — hero actions, onboarding, one per view
-    //
-    readonly property var sizeSpecs: ({
-        xsmall: {
-            height: 24,
-            verticalPadding: 4,
-            horizontalPadding: 8,
-            gap: 4,
-            iconSize: 14,
-            typo: "labelSmall",
-            squareRadius: 6
-        },
-        small: {
-            height: 28,
-            verticalPadding: 4,
-            horizontalPadding: 10,
-            gap: 4,
-            iconSize: 16,
-            typo: "labelMedium",
-            squareRadius: 6
-        },
-        medium: {
-            height: 34,
-            verticalPadding: 6,
-            horizontalPadding: 14,
-            gap: 6,
-            iconSize: 18,
-            typo: "labelLarge",
-            squareRadius: 8
-        },
-        large: {
-            height: 40,
-            verticalPadding: 10,
-            horizontalPadding: 20,
-            gap: 8,
-            iconSize: 20,
-            typo: "labelLarge",
-            squareRadius: 10
-        },
-        xlarge: {
-            height: 48,
-            verticalPadding: 12,
-            horizontalPadding: 24,
-            gap: 8,
-            iconSize: 22,
-            typo: "titleMedium",
-            squareRadius: 12
-        }
-    })
-
-    // ─── Derived (computed once, not per-binding) ───────────
-    readonly property var spec: sizeSpecs[size] ?? sizeSpecs.medium
+    // ─── Size Specifications — Material 3 Expressive ────────────
+    // Expressive design uses larger touch targets for better accessibility
+    // Desktop minimum: 40px, Mobile minimum: 48px
+    readonly property var spec: Theme.SizeSpecs.getSpec(Theme.SizeSpecs.button, size)
     readonly property var typo: typography[spec.typo] ?? typography.labelLarge
 
     readonly property bool isIconImage: icon.endsWith(".svg")
@@ -132,7 +80,7 @@ Item {
     readonly property bool needsShadow: enabled
         && (isElevated || (isFilled && root.state === "hovered"))
 
-    // ─── Geometry ───────────────────────────────────────────
+    // ─── Geometry ───────────────────────────────────────────────
     implicitWidth: content.implicitWidth
     implicitHeight: spec.height
 
@@ -145,7 +93,7 @@ Item {
         }
     }
 
-    // ─── Interaction States ─────────────────────────────────
+    // ─── Interaction States ─────────────────────────────────────
     states: [
         State { name: "disabled"; when: !enabled },
         State { name: "pressed";  when: mouseArea.pressed && enabled },
@@ -154,7 +102,7 @@ Item {
         State { name: "idle";     when: enabled }
     ]
 
-    // ─── Visual Container ───────────────────────────────────
+    // ─── Visual Container ───────────────────────────────────────
     Rectangle {
         id: container
         anchors.fill: parent
@@ -179,53 +127,21 @@ Item {
             return colors.outline
         }
 
-        // State layer — hover / focus / press feedback
-        Rectangle {
-            anchors.fill: parent
-            radius: parent.radius
+        // State layer — hover / focus / press feedback (using shared component)
+        Common.StateLayer {
             color: overlayColor
-
-            opacity: {
-                switch (root.state) {
-                case "pressed": return 0.12
-                case "focused": return 0.12
-                case "hovered": return 0.08
-                default:        return 0
-                }
-            }
-
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: root.state === "pressed"
-                             ? motion.durationFast
-                             : motion.durationMedium
-                    easing.type: motion.easeStandard
-                }
-            }
+            radius: parent.radius
+            pressed: mouseArea.pressed
+            hovered: mouseArea.containsMouse
+            focused: root.activeFocus
+            enabled: root.enabled
         }
 
-        // Ripple — full-surface flash, follows container shape
-        Rectangle {
-            id: ripple
-            anchors.fill: parent
-            radius: parent.radius
+        // Ripple — full-surface flash
+        Common.Ripple {
             color: overlayColor
-            opacity: 0
-
-            SequentialAnimation on opacity {
-                id: rippleAnim
-                running: false
-                NumberAnimation {
-                    from: 0; to: 0.16
-                    duration: 90
-                    easing.type: Easing.OutCubic
-                }
-                NumberAnimation {
-                    to: 0
-                    duration: 210
-                    easing.type: Easing.OutCubic
-                }
-            }
+            radius: parent.radius
+            enabled: root.enabled
         }
 
         // Content row — icon + label
@@ -239,20 +155,10 @@ Item {
             leftPadding:   spec.horizontalPadding
             rightPadding:  spec.horizontalPadding
 
-            Image {
-                visible: showIcon && icon !== "" && root.isIconImage
-                width:  spec.iconSize
-                height: spec.iconSize
-                source: visible ? icon : ""
-                fillMode: Image.PreserveAspectFit
-                anchors.verticalCenter: parent.verticalCenter
-            }
-
-            Text {
-                visible: showIcon && icon !== "" && !root.isIconImage
-                text: icon
-                font.family:    iconFamily
-                font.pixelSize: spec.iconSize
+            Common.Icon {
+                visible: showIcon && icon !== ""
+                source: icon
+                size: spec.iconSize
                 color: contentColor
                 anchors.verticalCenter: parent.verticalCenter
             }
@@ -273,7 +179,7 @@ Item {
         }
     }
 
-    // ─── Elevation — Modern MultiEffect (replaces DropShadow) ───
+    // ─── Elevation — Modern MultiEffect ──────────────────────────
     MultiEffect {
         source: container
         anchors.fill: container
@@ -301,7 +207,7 @@ Item {
         }
     }
 
-    // ─── Input ──────────────────────────────────────────────
+    // ─── Input ──────────────────────────────────────────────────
     MouseArea {
         id: mouseArea
         anchors.fill: parent
@@ -309,7 +215,6 @@ Item {
         hoverEnabled: true
         cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
 
-        onPressed: rippleAnim.restart()
         onClicked: root.clicked()
     }
 
@@ -318,7 +223,6 @@ Item {
     Keys.onReturnPressed: if (enabled && !loading) activate()
 
     function activate() {
-        rippleAnim.restart()
         clicked()
     }
 }

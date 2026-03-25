@@ -35,6 +35,7 @@ Item {
     implicitHeight: contentContainer.implicitHeight
 
     property var colors: Theme.ChiTheme.colors
+    readonly property string fontFamily: Theme.ChiTheme.fontFamily
 
     Item {
         id: contentContainer
@@ -73,7 +74,7 @@ Item {
             visible: !isDot && hasText
             anchors.centerIn: parent
             text: displayText
-            font.family: "Roboto"
+            font.family: fontFamily
             font.pixelSize: currentSize.fontSize
             font.weight: Font.Medium
             color: colors.onError

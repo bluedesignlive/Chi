@@ -762,6 +762,7 @@ Item {
 
     signal clicked()
     property var colors: Theme.ChiTheme.colors
+    readonly property string fontFamily: Theme.ChiTheme.fontFamily
 
     // --- Sizing ---
     // Implicit height helps the parent calculate max height,
@@ -863,7 +864,7 @@ Item {
                 visible: root.text !== ""
                 text: root.text
                 Layout.alignment: Qt.AlignHCenter
-                font.family: "Roboto"; font.pixelSize: 14; font.weight: Font.Medium; font.letterSpacing: 0.1
+                font.family: fontFamily; font.pixelSize: 14; font.weight: Font.Medium; font.letterSpacing: 0.1
                 color: root.selected ? root.colors.primary : root.colors.onSurfaceVariant
                 horizontalAlignment: Text.AlignHCenter
                 Behavior on color { ColorAnimation { duration: 150 } }
@@ -891,7 +892,7 @@ Item {
                 visible: root.text !== ""
                 text: root.text
                 Layout.alignment: Qt.AlignVCenter
-                font.family: "Roboto"; font.pixelSize: 14; font.weight: Font.Medium; font.letterSpacing: 0.1
+                font.family: fontFamily; font.pixelSize: 14; font.weight: Font.Medium; font.letterSpacing: 0.1
                 color: root.selected ? root.colors.onSurface : root.colors.onSurfaceVariant
                 horizontalAlignment: Text.AlignHCenter
                 Behavior on color { ColorAnimation { duration: 150 } }
@@ -913,7 +914,7 @@ Item {
                 visible: root.badgeText !== ""
                 anchors.centerIn: parent
                 text: root.badgeText
-                font.family: "Roboto"; font.pixelSize: 11; font.weight: Font.Medium
+                font.family: fontFamily; font.pixelSize: 11; font.weight: Font.Medium
                 color: root.colors.onError
             }
         }

@@ -25,6 +25,7 @@ Window {
     property string title: "Application"
     property bool showControls: true
     property var colors: Theme.ChiTheme.colors
+    readonly property string fontFamily: Theme.ChiTheme.fontFamily
 
     // ═══════════════════════════════════════════════════════════════
     // TOOLBAR CONFIGURATION
@@ -431,7 +432,7 @@ Window {
                 anchors.verticalCenter: parent.verticalCenter
 
                 text: root.title
-                font.family: "Roboto"
+                font.family: fontFamily
                 font.weight: Font.Medium
                 font.pixelSize: 14
                 color: colors.onSurface
@@ -472,6 +473,8 @@ Window {
 
     // ═══════════════════════════════════════════════════════════════
     // WINDOW BORDER
+    // Uses outlineVariant for proper contrast in both light/dark modes
+    // This ensures overlapping windows have visible edge separation
     // ═══════════════════════════════════════════════════════════════
 
     Rectangle {
@@ -479,7 +482,7 @@ Window {
         radius: windowRadius
         color: "transparent"
         border.width: 1
-        border.color: Qt.rgba(colors.shadow.r, colors.shadow.g, colors.shadow.b, 0.15)
+        border.color: colors.outlineVariant
         visible: !root.isMaximized
         z: 1000
     }
@@ -577,7 +580,7 @@ Window {
             id: menuLabel
             anchors.centerIn: parent
             text: menuData.title || ""
-            font.family: "Roboto"
+            font.family: fontFamily
             font.pixelSize: 13
             font.weight: Font.Medium
             color: colors.onSurface

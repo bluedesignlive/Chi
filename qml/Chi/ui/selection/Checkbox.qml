@@ -32,6 +32,7 @@ Item {
     }
 
     property var colors: Theme.ChiTheme.colors
+    readonly property string fontFamily: Theme.ChiTheme.fontFamily
 
     Row {
         anchors.verticalCenter: parent.verticalCenter
@@ -104,7 +105,7 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text: indeterminate ? "─" : "✓"
-                    font.family: "Roboto"
+                    font.family: fontFamily
                     font.pixelSize: currentSize.iconSize
                     font.weight: Font.Bold
                     color: colors.onPrimary
@@ -148,7 +149,7 @@ Item {
             id: labelText
             visible: hasLabel
             text: label
-            font.family: "Roboto"
+            font.family: fontFamily
             font.pixelSize: currentSize.fontSize
             color: enabled ? colors.onSurface : colors.onSurface
             anchors.verticalCenter: parent.verticalCenter

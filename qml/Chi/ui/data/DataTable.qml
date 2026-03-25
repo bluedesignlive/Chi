@@ -26,6 +26,7 @@ Rectangle {
     implicitHeight: 400
 
     property var colors: Theme.ChiTheme.colors
+    readonly property string fontFamily: Theme.ChiTheme.fontFamily
 
     color: colors.surface
     radius: 12
@@ -132,7 +133,7 @@ Rectangle {
 
                             Text {
                                 text: modelData.label || modelData.key
-                                font.family: "Roboto"
+                                font.family: fontFamily
                                 font.pixelSize: 14
                                 font.weight: Font.Medium
                                 color: colors.onSurfaceVariant
@@ -290,7 +291,7 @@ Rectangle {
                                         anchors.leftMargin: 16
                                         anchors.rightMargin: 16
                                         text: rows[index][modelData.key] || ""
-                                        font.family: "Roboto"
+                                        font.family: fontFamily
                                         font.pixelSize: 14
                                         color: colors.onSurface
                                         elide: Text.ElideRight

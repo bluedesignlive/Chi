@@ -31,6 +31,7 @@ Item {
     opacity: enabled ? 1.0 : 0.38
 
     property var colors: Theme.ChiTheme.colors
+    readonly property string fontFamily: Theme.ChiTheme.fontFamily
 
     Rectangle {
         anchors.fill: parent
@@ -100,7 +101,7 @@ Item {
                     anchors.centerIn: parent
                     width: parent.width - 8
                     horizontalAlignment: Text.AlignHCenter
-                    font.family: "Roboto"
+                    font.family: fontFamily
                     font.pixelSize: currentSize.fontSize
                     font.weight: Font.Medium
                     color: colors.onSurface

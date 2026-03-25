@@ -39,6 +39,7 @@ Item {
     }
 
     property var colors: Theme.ChiTheme.colors
+    readonly property string fontFamily: Theme.ChiTheme.fontFamily
 
     // Track container
     Item {
@@ -185,7 +186,7 @@ Item {
                     id: valueLabel
                     anchors.centerIn: parent
                     text: stepSize >= 1 ? Math.round(value) : value.toFixed(1)
-                    font.family: "Roboto"
+                    font.family: fontFamily
                     font.pixelSize: 12
                     font.weight: Font.Medium
                     color: colors.onPrimary

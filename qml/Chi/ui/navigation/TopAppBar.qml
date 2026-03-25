@@ -37,6 +37,8 @@ Rectangle {
     implicitHeight: currentHeight
 
     property var colors: Theme.ChiTheme.colors
+    readonly property string fontFamily: Theme.ChiTheme.fontFamily
+    readonly property string iconFamily: Theme.ChiTheme.iconFamily
 
     color: _hasShadow ? colors.surfaceContainer : colors.surface
 
@@ -76,7 +78,7 @@ Rectangle {
             Text {
                 anchors.centerIn: parent
                 text: root.navigationIcon
-                font.family: root.navigationIcon.length > 2 ? "Material Icons" : "Roboto"
+                font.family: root.navigationIcon.length > 2 ? iconFamily : fontFamily
                 font.pixelSize: 24
                 color: colors.onSurface
                 Behavior on color { ColorAnimation { duration: 200 } }
@@ -99,7 +101,7 @@ Rectangle {
         Text {
             visible: root._isSmall || root._isCenter || root.scrollProgress > 0.5
             text: root.title
-            font.family: "Roboto"
+            font.family: fontFamily
             font.pixelSize: 22
             font.weight: Font.Normal
             color: colors.onSurface
@@ -136,7 +138,7 @@ Rectangle {
 
         Text {
             text: root.title
-            font.family: "Roboto"
+            font.family: fontFamily
             font.pixelSize: root._isLarge ? 36 : 28
             font.weight: Font.Normal
             color: colors.onSurface
@@ -148,7 +150,7 @@ Rectangle {
         Text {
             visible: root.subtitle !== "" && root._isMedium
             text: root.subtitle
-            font.family: "Roboto"
+            font.family: fontFamily
             font.pixelSize: 14
             color: colors.onSurfaceVariant
             elide: Text.ElideRight
