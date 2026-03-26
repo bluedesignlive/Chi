@@ -129,8 +129,8 @@ Item {
 
         // State layer — hover / focus / press feedback (using shared component)
         Common.StateLayer {
-            color: overlayColor
-            radius: parent.radius
+            stateColor: overlayColor
+            stateRadius: parent.radius
             pressed: mouseArea.pressed
             hovered: mouseArea.containsMouse
             focused: root.activeFocus
