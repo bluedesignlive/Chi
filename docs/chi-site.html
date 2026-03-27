@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi — Life in every pixel</title>
+    <meta name="description" content="A modern UI library for Unix-based systems. Built to make apps feel timeless, elegant, expressive, and deeply human.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #1D1B20;
+            --surface: #211F24;
+            --surface-high: #2C292F;
+            --surface-highest: #36343B;
+            --on-surface: #E7E0E8;
+            --on-surface-variant: #CBC4CF;
+            --primary: #D3BCFD;
+            --on-primary: #38265C;
+            --primary-container: #4F3D74;
+            --outline: #948F99;
+            --outline-variant: #49454E;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--on-surface);
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* ═══ LIVING BACKGROUND ═══ */
+
+        .gradient-bg {
+            position: fixed; inset: 0; z-index: -1; overflow: hidden;
+        }
+
+        .orb {
+            position: absolute; border-radius: 50%;
+            filter: blur(90px); opacity: 0.12;
+            will-change: transform;
+        }
+
+        .orb-1 {
+            width: 700px; height: 700px; background: var(--primary);
+            top: -250px; left: -150px;
+            animation: f1 22s ease-in-out infinite;
+        }
+
+        .orb-2 {
+            width: 500px; height: 500px; background: #F0B7C5;
+            bottom: -150px; right: -100px;
+            animation: f2 28s ease-in-out infinite;
+        }
+
+        .orb-3 {
+            width: 350px; height: 350px; background: #82AAFF;
+            top: 35%; left: 55%;
+            animation: f3 19s ease-in-out infinite;
+        }
+
+        @keyframes f1 {
+            0%, 100% { transform: translate(0,0) scale(1); }
+            33% { transform: translate(120px,60px) scale(1.1); }
+            66% { transform: translate(-60px,120px) scale(0.9); }
+        }
+
+        @keyframes f2 {
+            0%, 100% { transform: translate(0,0) scale(1); }
+            33% { transform: translate(-90px,-70px) scale(1.15); }
+            66% { transform: translate(70px,-40px) scale(0.85); }
+        }
+
+        @keyframes f3 {
+            0%, 100% { transform: translate(0,0) scale(1); }
+            50% { transform: translate(-140px,90px) scale(1.2); }
+        }
+
+        /* ═══ SCROLL PROGRESS ═══ */
+
+        .scroll-progress {
+            position: fixed; top: 0; left: 0; right: 0;
+            height: 2px; z-index: 200;
+            background: linear-gradient(90deg, var(--primary), #F0B7C5, #82AAFF);
+            transform-origin: left; scale: 0 1;
+            animation: sp linear; animation-timeline: scroll(root);
+        }
+
+        @keyframes sp { to { scale: 1 1; } }
+
+        /* ═══ NAV ═══ */
+
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            padding: 0 32px; height: 56px;
+            background: rgba(29,27,32,0.6);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border-bottom: 1px solid rgba(73,69,78,0.4);
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.3s;
+        }
+
+        nav.scrolled { background: rgba(29,27,32,0.92); }
+
+        nav .inner {
+            max-width: 960px; width: 100%;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+
+        nav .logo {
+            font-size: 20px; font-weight: 600; color: var(--primary);
+            text-decoration: none; letter-spacing: -0.03em;
+        }
+
+        nav .logo span {
+            color: var(--on-surface-variant); font-weight: 400;
+            font-size: 13px; margin-left: 8px; opacity: 0.7;
+        }
+
+        nav .links { display: flex; gap: 4px; list-style: none; }
+
+        nav .links a {
+            color: var(--on-surface-variant); text-decoration: none;
+            font-size: 13px; font-weight: 500; padding: 7px 14px;
+            border-radius: 10px; transition: all 0.2s;
+        }
+
+        nav .links a:hover {
+            color: var(--on-surface); background: rgba(255,255,255,0.06);
+        }
+
+        /* ═══ LAYOUT ═══ */
+
+        .container { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+
+        section { padding: 100px 0; position: relative; }
+
+        .divider {
+            height: 1px; border: none; margin: 0;
+            background: var(--outline-variant);
+        }
+
+        /* ═══ TYPE ═══ */
+
+        .label {
+            font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
+            text-transform: uppercase; color: var(--primary);
+            margin-bottom: 12px; display: inline-block;
+        }
+
+        h1 {
+            font-size: clamp(44px, 9vw, 76px); font-weight: 700;
+            letter-spacing: -0.04em; line-height: 1.02;
+        }
+
+        h2 {
+            font-size: clamp(28px, 5vw, 42px); font-weight: 600;
+            letter-spacing: -0.03em; line-height: 1.15;
+        }
+
+        h3 { font-size: 17px; font-weight: 600; }
+
+        .accent { color: var(--primary); }
+
+        .sub {
+            font-size: 18px; color: var(--on-surface-variant);
+            max-width: 520px; line-height: 1.75;
+        }
+
+        .muted { color: var(--on-surface-variant); }
+
+        /* ═══ BUTTONS ═══ */
+
+        .btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 13px 28px; border-radius: 14px;
+            font-size: 14px; font-weight: 500; text-decoration: none;
+            transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+            border: none; cursor: pointer; position: relative;
+            overflow: hidden;
+        }
+
+        .btn::after {
+            content: ''; position: absolute; inset: 0;
+            background: white; opacity: 0; transition: opacity 0.2s;
+        }
+
+        .btn:hover::after { opacity: 0.08; }
+        .btn:active { transform: scale(0.97); }
+
+        .btn-p { background: var(--primary); color: var(--on-primary); }
+
+        .btn-o {
+            background: transparent; color: var(--on-surface);
+            border: 1px solid var(--outline-variant);
+        }
+
+        .btn-o:hover {
+            border-color: var(--outline);
+            background: rgba(255,255,255,0.03);
+        }
+
+        .btn .material-icons { font-size: 18px; }
+
+        .actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+        /* ═══ CARDS ═══ */
+
+        .card {
+            padding: 24px; border-radius: 16px;
+            background: rgba(33,31,36,0.5);
+            border: 1px solid var(--outline-variant);
+            backdrop-filter: blur(8px);
+            transition: transform 0.35s cubic-bezier(0.4,0,0.2,1),
+                        border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: var(--outline);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+        }
+
+        .card-i {
+            width: 44px; height: 44px; border-radius: 12px;
+            background: var(--primary-container);
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .card-i .material-icons { font-size: 22px; color: var(--primary); }
+
+        /* ═══ QUOTE ═══ */
+
+        .quote {
+            font-size: clamp(22px, 3.5vw, 32px); font-weight: 500;
+            letter-spacing: -0.02em; line-height: 1.45;
+            border-left: 3px solid var(--primary);
+            padding-left: 28px; max-width: 620px;
+        }
+
+        .quote em { color: var(--primary); font-style: normal; }
+
+        /* ═══ PRINCIPLE CARD ═══ */
+
+        .principle {
+            padding: 32px; margin-bottom: 12px;
+        }
+
+        .principle h3 { font-size: 20px; margin-bottom: 8px; }
+        .principle p { font-size: 15px; max-width: 560px; }
+
+        .num { color: var(--primary); margin-right: 8px; }
+
+        /* ═══ GRIDS ═══ */
+
+        .g2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; }
+        .g3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+        .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+
+        .tag {
+            display: inline-block; padding: 8px 16px; border-radius: 10px;
+            background: var(--surface); border: 1px solid var(--outline-variant);
+            font-size: 13px; color: var(--on-surface-variant);
+            transition: all 0.2s;
+        }
+
+        .tag:hover {
+            border-color: var(--primary); color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        /* ═══ CODE ═══ */
+
+        .code {
+            background: var(--surface); border: 1px solid var(--outline-variant);
+            border-radius: 16px; overflow: hidden;
+        }
+
+        .code-h {
+            padding: 12px 16px; border-bottom: 1px solid var(--outline-variant);
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .dot:nth-child(1) { background: #FF5F57; }
+        .dot:nth-child(2) { background: #FEBC2E; }
+        .dot:nth-child(3) { background: #28C840; }
+
+        .code-h span {
+            margin-left: 8px; font-size: 12px;
+            color: var(--on-surface-variant);
+        }
+
+        pre {
+            padding: 24px; overflow-x: auto;
+            font-family: 'JetBrains Mono','SF Mono','Fira Code',monospace;
+            font-size: 13px; line-height: 1.9;
+            color: var(--on-surface-variant);
+        }
+
+        .kw { color: #C792EA; }
+        .ty { color: #82AAFF; }
+        .st { color: #C3E88D; }
+        .pr { color: #F78C6C; }
+        .br { color: #89DDFF; }
+
+        /* ═══ DENSITY TABLE ═══ */
+
+        .density-card { text-align: center; }
+        .density-card h3 { margin-bottom: 4px; }
+        .density-card p { font-size: 13px; }
+        .density-card.active { border-color: var(--primary); }
+        .density-card.active h3 { color: var(--primary); }
+
+        /* ═══ COMPONENT SECTION ═══ */
+
+        .comp-group { margin-bottom: 40px; }
+        .comp-group:last-child { margin-bottom: 0; }
+
+        /* ═══ CTA ═══ */
+
+        .cta { text-align: center; }
+
+        /* ═══ FOOTER ═══ */
+
+        footer {
+            border-top: 1px solid var(--outline-variant);
+            padding: 48px 0; text-align: center;
+        }
+
+        footer p {
+            font-size: 13px; color: var(--on-surface-variant);
+            line-height: 1.8;
+        }
+
+        footer a { color: var(--primary); text-decoration: none; }
+
+        footer .tl {
+            font-style: italic; margin-top: 6px;
+            color: var(--outline);
+        }
+
+        /* ═══ SCROLL REVEAL ═══ */
+
+        @keyframes ru {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes rs {
+            from { opacity: 0; transform: scale(0.92) translateY(24px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .r {
+            animation: ru linear both;
+            animation-timeline: view();
+            animation-range: entry 0% entry 25%;
+        }
+
+        .rs {
+            animation: rs linear both;
+            animation-timeline: view();
+            animation-range: entry 0% entry 30%;
+        }
+
+        /* Stagger children */
+        .stg > :nth-child(1) { animation-delay: 0ms; }
+        .stg > :nth-child(2) { animation-delay: 50ms; }
+        .stg > :nth-child(3) { animation-delay: 100ms; }
+        .stg > :nth-child(4) { animation-delay: 150ms; }
+        .stg > :nth-child(5) { animation-delay: 200ms; }
+        .stg > :nth-child(6) { animation-delay: 250ms; }
+
+        /* ═══ HERO ENTRANCE ═══ */
+
+        @keyframes hero-in {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-anim > * {
+            animation: hero-in 0.7s cubic-bezier(0.4,0,0.2,1) both;
+        }
+
+        .hero-anim > :nth-child(1) { animation-delay: 0.1s; }
+        .hero-anim > :nth-child(2) { animation-delay: 0.25s; }
+        .hero-anim > :nth-child(3) { animation-delay: 0.4s; }
+        .hero-anim > :nth-child(4) { animation-delay: 0.55s; }
+
+        /* ═══ RESPONSIVE ═══ */
+
+        @media (max-width: 768px) {
+            .g2, .g3 { grid-template-columns: 1fr; }
+            section { padding: 64px 0; }
+        }
+
+        @media (max-width: 500px) {
+            nav .links { display: none; }
+            .hero { padding-top: 120px !important; }
+        }
+
+        /* ═══ REDUCED MOTION ═══ */
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+            .orb { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- LIVING BACKGROUND -->
+<div class="gradient-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+</div>
+
+<!-- SCROLL PROGRESS -->
+<div class="scroll-progress"></div>
+
+<!-- NAV -->
+<nav id="nav">
+    <div class="inner">
+        <a href="#top" class="logo">Chi <span>by Smart</span></a>
+        <ul class="links">
+            <li><a href="#top">Home</a></li>
+            <li><a href="#philosophy">Philosophy</a></li>
+            <li><a href="#design">Design</a></li>
+            <li><a href="#components">Components</a></li>
+            <li><a href="https://github.com/bluedesignlive/chi">GitHub</a></li>
+        </ul>
+    </div>
+</nav>
+
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- HERO                                                    -->
+<!-- ════════════════════════════════════════════════════════ -->
+
+<section id="top" style="padding-top: 180px; padding-bottom: 100px;">
+    <div class="container hero-anim">
+        <div class="label">A Smart Design System</div>
+        <h1>Life in <span class="accent">every</span> pixel.</h1>
+        <p class="sub" style="margin-bottom: 40px;">A modern UI library for Unix-based systems. Built to make apps feel timeless, elegant, expressive, and deeply human.</p>
+        <div class="actions">
+            <a href="https://github.com/bluedesignlive/chi" class="btn btn-p">
+                <span class="material-icons">code</span> View on GitHub
+            </a>
+            <a href="#philosophy" class="btn btn-o">Our philosophy</a>
+        </div>
+    </div>
+</section>
+
+<hr class="divider">
+
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- OPENING BELIEF                                          -->
+<!-- ════════════════════════════════════════════════════════ -->
+
+<section>
+    <div class="container r">
+        <div class="quote">
+            Open-source desktops deserve the <em>same care</em> that went into the software underneath them.
+        </div>
+    </div>
+</section>
+
+<hr class="divider">
+
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- WHAT CHI IS                                             -->
+<!-- ════════════════════════════════════════════════════════ -->
+
+<section>
+    <div class="container">
+        <div class="label r">What Chi Is</div>
+        <h2 class="r" style="margin-bottom: 12px;">A clean, modern component system.</h2>
+        <p class="sub r" style="margin-bottom: 48px;">Chi aims to help developers build applications that feel intuitive, refined, and timeless — and in doing so, bring fresh energy to the Unix software landscape.</p>
+
+        <div class="g2 stg">
+            <div class="card rs">
+                <div class="card-i"><span class="material-icons">bolt</span></div>
+                <h3>Performance</h3>
+                <p class="muted" style="margin-top: 8px; font-size: 14px;">Transform-only animations, gated GPU layers, no unnecessary redraws.</p>
+            </div>
+            <div class="card rs">
+                <div class="card-i"><span class="material-icons">verified</span></div>
+                <h3>Reliability</h3>
+                <p class="muted" style="margin-top: 8px; font-size: 14px;">Modern Qt6, zero legacy dependencies. Production-ready.</p>
+            </div>
+            <div class="card rs">
+                <div class="card-i"><span class="material-icons">visibility</span></div>
+                <h3>Clarity</h3>
+                <p class="muted" style="margin-top: 8px; font-size: 14px;">Declare what you want. Chi handles the rest.</p>
+            </div>
+            <div class="card rs">
+                <div class="card-i"><span class="material-icons">tune</span></div>
+                <h3>Customisability</h3>
+                <p class="muted" style="margin-top: 8px; font-size: 14px;">One theme singleton. Change once, update everywhere.</p>
+            </div>
+            <div class="card rs">
+                <div class="card-i"><span class="material-icons">auto_awesome</span></div>
+                <h3>Design Principles</h3>
+                <p class="muted" style="margin-top: 8px; font-size: 14px;">Every component follows Dieter Rams' ten principles of good design.</p>
+            </div>
+            <div class="card rs">
+                <div class="card-i"><span class="material-icons">palette</span></div>
+                <h3>Visual Language</h3>
+                <p class="muted" style="margin-top: 8px; font-size: 14px;">Material Design 3 tokens, three densities, dark and light.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<hr class="divider">
+
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- BUILT FOR                                               -->
+<!-- ════════════════════════════════════════════════════════ -->
+
+<section>
+    <div class="container">
+        <div class="label r">Built For</div>
+        <h2 class="r" style="margin-bottom: 32px;">Everyone who believes in something more.</h2>
+        <div class="g3 stg">
+            <div class="card rs" style="text-align:center; padding: 28px 16px;">
+                <span class="material-icons" style="font-size:28px; color:var(--primary); margin-bottom:12px;">person</span>
+                <p class="muted" style="font-size:14px;">New users &amp; modern audiences</p>
+            </div>
+            <div class="card rs" style="text-align:center; padding: 28px 16px;">
+                <span class="material-icons" style="font-size:28px; color:var(--primary); margin-bottom:12px;">favorite</span>
+                <p class="muted" style="font-size:14px;">Everyday people</p>
+            </div>
+            <div class="card rs" style="text-align:center; padding: 28px 16px;">
+                <span class="material-icons" style="font-size:28px; color:var(--primary); margin-bottom:12px;">brush</span>
+                <p class="muted" style="font-size:14px;">Creators &amp; dreamers</p>
+            </div>
+            <div class="card rs" style="text-align:center; padding: 28px 16px;">
+                <span class="material-icons" style="font-size:28px; color:var(--primary); margin-bottom:12px;">palette</span>
+                <p class="muted" style="font-size:14px;">Developers who care about beauty</p>
+            </div>
+            <div class="card rs" style="text-align:center; padding: 28px 16px;">
+                <span class="material-icons" style="font-size:28px; color:var(--primary); margin-bottom:12px;">public</span>
+                <p class="muted" style="font-size:14px;">Open-source communities</p>
+            </div>
+            <div class="card rs" style="text-align:center; padding: 28px 16px;">
+                <span class="material-icons" style="font-size:28px; color:var(--primary); margin-bottom:12px;">devices</span>
+                <p class="muted" style="font-size:14px;">Linux, BSD &amp; Unix users</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<hr class="divider">
+
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- PHILOSOPHY                                              -->
+<!-- ════════════════════════════════════════════════════════ -->
+
+<section id="philosophy">
+    <div class="container">
+        <div class="label r">Philosophy</div>
+        <h2 class="r" style="margin-bottom: 40px;">Why Chi exists.</h2>
+
+        <div class="quote r" style="margin-bottom: 60px;">
+            Unix systems are powerful, stable, and free. They should also be beautiful, personal, and <em>alive</em>.
+        </div>
+
+        <h3 class="r" style="font-size: 22px; margin-bottom: 16px;">The care gap.</h3>
+        <p class="muted r" style="font-size:16px; margin-bottom:20px; max-width:600px;">We've used Unix-based systems for years. We love what they stand for — openness, freedom, ownership. But somewhere along the way, the visual layer got left behind.</p>
+        <p class="muted r" style="font-size:16px; margin-bottom:20px; max-width:600px;">The people building interfaces and the people designing experiences became two different worlds. And users — real, everyday people — got caught in the middle.</p>
+        <p class="r" style="font-size:16px; margin-bottom:60px; max-width:600px;"><strong>Not because the technology wasn't there. But because design and engineering never shared a room.</strong></p>
+
+        <h3 class="r" style="font-size: 22px; margin-bottom: 16px;">What we believe.</h3>
+        <p class="muted r" style="font-size:16px; margin-bottom:20px; max-width:600px;">At Smart, we believe the future of Unix-based systems should not feel outdated, overly technical, or difficult for new users to approach.</p>
+        <p class="muted r" style="font-size:16px; margin-bottom:20px; max-width:600px;">We believe these systems can be powerful <strong>and</strong> beautiful, flexible <strong>and</strong> welcoming.</p>
+        <p class="muted r" style="font-size:16px; margin-bottom:20px; max-width:600px;">We believe open-source software can feel warm, polished, and emotionally resonant.</p>
+        <p class="r" style="font-size:16px; margin-bottom:60px; max-width:600px;"><strong>Chi exists to help move that future forward.</strong></p>
+
+        <h3 class="r" style="font-size: 22px; margin-bottom: 16px;">Not a criticism. A contribution.</h3>
+        <p class="muted r" style="font-size:16px; margin-bottom:20px; max-width:600px;">We don't build Chi to replace what exists. The foundations of open-source software are extraordinary — decades of brilliant engineering that changed the world.</p>
+        <p class="muted r" style="font-size:16px; margin-bottom:20px; max-width:600px;">We build Chi because we believe those foundations deserve a visual layer that matches their quality. Because the way software looks and moves is how it <em>communicates</em> with the person using it.</p>
+        <p class="r" style="font-size:16px; max-width:600px;"><strong>Beauty isn't superficial. It's how software says "I was made with you in mind."</strong></p>
+    </div>
+</section>
+
+<hr class="divider">
+
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- DESIGN PRINCIPLES                                       -->
+<!-- ════════════════════════════════════════════════════════ -->
+
+<section id="design">
+    <div class="container">
+        <div class="label r">Design</div>
+        <h2 class="r" style="margin-bottom: 12px;">Principles that breathe.</h2>
+        <p class="sub r" style="margin-bottom: 40px;">Every decision in Chi traces back to five core beliefs about how software should work.</p>
+
+        <div class="card principle rs">
+            <h3><span class="num">01</span> Beautiful by default</h3>
+            <p class="muted">If the developer writes zero styling code, the app should still look intentional. Chi components ship with considered spacing, typography, colour, and motion. Beauty isn't opt-in — it's the baseline.</p>
+        </div>
+        <div class="card principle rs">
+            <h3><span class="num">02</span> Declare, don't configure</h3>
+            <p class="muted">Say what you want, not how to render it. A NavigationDrawer takes data and pages — sections, dividers, transitions, breakpoints, and selection are handled internally. The library does the work.</p>
+        </div>
+        <div class="card principle rs">
+            <h3><span class="num">03</span> Motion is meaning</h3>
+            <p class="muted">Animation isn't decoration — it's communication. Every transition tells the user where they are and where they came from. Shared-axis page transitions, state layers, interaction feedback — all built in, all purposeful.</p>
+        </div>
+        <div class="card principle rs">
+            <h3><span class="num">04</span> One source of truth</h3>
+            <p class="muted">Colours, typography, motion, density — all from one theme singleton. Change a value once, every component updates. Globally. Instantly. No component defines its own sizes.</p>
+        </div>
+        <div class="card principle rs" style="margin-bottom: 0;">
+            <h3><span class="num">05</span> Performance is invisible</h3>
+            <p class="muted">Transform-only animations. Gated GPU layers. No unnecessary redraws. The best optimisation is the one the user never notices because nothing ever stuttered.</p>
+        </div>
+    </div>
+</section>
+
+<hr class="divider">
+
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- FOUNDATION & DENSITY                                    -->
+<!-- ════════════════════════════════════════════════════════ -->
+
+<section>
+    <div class="container">
+        <h2 class="r" style="margin-bottom: 24px;">The foundation.</h2>
+        <p class="muted r" style="font-size:16px; margin-bottom:20px; max-width:600px;">Chi follows <strong>Dieter Rams' ten principles of good design</strong> — innovative, useful, aesthetic, understandable, unobtrusive, honest, long-lasting, thorough, environmentally friendly, and as little design as possible.</p>
+        <p class="muted r" style="font-size:16px; margin-bottom:20px; max-width:600px;">On top of that foundation, Chi implements <strong>Material Design 3</strong> tokens — colour roles, typography scales, motion curves, and density tiers — adapted for the desktop-first context of Unix systems.</p>
+        <p class="r" style="font-size:16px; margin-bottom:48px; max-width:600px;"><strong>The result: components that feel both principled and alive.</strong></p>
+
+        <h3 class="r" style="font-size: 22px; margin-bottom: 8px;">Three densities.</h3>
+        <p class="muted r" style="font-size:16px; margin-bottom:24px; max-width:600px;">One word changes the entire library.</p>
+
+        <div class="g3 stg">
+            <div class="card density-card rs">
+                <h3>Small</h3>
+                <p class="muted">36dp items · 200dp drawer<br>OS-level density</p>
+            </div>
+            <div class="card density-card active rs">
+                <h3>Compact</h3>
+                <p class="muted">40dp items · 240dp drawer<br>Desktop default</p>
+            </div>
+            <div class="card density-card rs">
+                <h3>Standard</h3>
+                <p class="muted">56dp items · 360dp drawer<br>Touch &amp; tablet</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<hr class="divider">
+
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- CODE                                                    -->
+<!-- ════════════════════════════════════════════════════════ -->
+
+<section>
+    <div class="container">
+        <div class="label r">Declare, Don't Configure</div>
+        <h2 class="r" style="margin-bottom: 8px;">You write data. Chi builds the experience.</h2>
+        <p class="sub r" style="margin-bottom: 32px;">A navigation sidebar with sections, animated page transitions, and responsive breakpoints — in 15 lines.</p>
+
+        <div class="code rs">
+            <div class="code-h">
+                <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                <span>main.qml</span>
+            </div>
+<pre><span class="kw">import</span> <span class="ty">Chi</span>
+
+<span class="ty">NavigationDrawer</span> <span class="br">{</span>
+    <span class="pr">items</span>: <span class="br">[</span>
+        <span class="br">{</span> <span class="pr">section</span>: <span class="st">"Mail"</span>, <span class="pr">items</span>: <span class="br">[</span>
+            <span class="br">{</span> <span class="pr">text</span>: <span class="st">"Inbox"</span>,  <span class="pr">icon</span>: <span class="st">"inbox"</span> <span class="br">}</span>,
+            <span class="br">{</span> <span class="pr">text</span>: <span class="st">"Sent"</span>,   <span class="pr">icon</span>: <span class="st">"send"</span> <span class="br">}</span>,
+            <span class="br">{</span> <span class="pr">text</span>: <span class="st">"Drafts"</span>, <span class="pr">icon</span>: <span class="st">"edit"</span> <span class="br">}</span>,
+        <span class="br">]}</span>,
+    <span class="br">]</span>
+
+    <span class="pr">pages</span>: <span class="br">[</span>
+        <span class="ty">InboxPage</span>  <span class="br">{}</span>,
+        <span class="ty">SentPage</span>   <span class="br">{}</span>,
+        <span class="ty">DraftsPage</span> <span class="br">{}</span>,
+    <span class="br">]</span>
+<span class="br">}</span></pre>
+        </div>
+    </div>
+</section>
+
+<hr class="divider">
+
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- COMPONENTS                                              -->
+<!-- ════════════════════════════════════════════════════════ -->
+
+<section id="components">
+    <div class="container">
+        <div class="label r">70+ Components</div>
+        <h2 class="r" style="margin-bottom: 8px;">Everything you need. Nothing you don't.</h2>
+        <p class="sub r" style="margin-bottom: 48px;">All from one import. All themed from one singleton. All animated by default.</p>
+
+        <div class="comp-group">
+            <div class="label r">Actions</div>
+            <div class="tags r">
+                <span class="tag">Button</span><span class="tag">Icon Button</span><span class="tag">Toggle Button</span><span class="tag">Split Button</span><span class="tag">Button Group</span><span class="tag">Connected Button Group</span><span class="tag">FAB</span><span class="tag">FAB Menu</span>
+            </div>
+        </div>
+
+        <div class="comp-group">
+            <div class="label r">Selection</div>
+            <div class="tags r">
+                <span class="tag">Checkbox</span><span class="tag">Radio Button</span><span class="tag">Radio Group</span><span class="tag">Switch</span><span class="tag">Segmented Button</span><span class="tag">Slider</span><span class="tag">Chip</span><span class="tag">Chip Group</span>
+            </div>
+        </div>
+
+        <div class="comp-group">
+            <div class="label r">Inputs</div>
+            <div class="tags r">
+                <span class="tag">Text Field</span><span class="tag">Number Field</span><span class="tag">Stepper</span><span class="tag">Search Bar</span>
+            </div>
+        </div>
+
+        <div class="comp-group">
+            <div class="label r">Navigation</div>
+            <div class="tags r">
+                <span class="tag">Navigation Drawer</span><span class="tag">Navigation Bar</span><span class="tag">Navigation Rail</span><span class="tag">Top App Bar</span><span class="tag">Tabs</span><span class="tag">Bottom Sheet</span><span class="tag">Breadcrumb</span>
+            </div>
+        </div>
+
+        <div class="comp-group">
+            <div class="label r">Containers</div>
+            <div class="tags r">
+                <span class="tag">Card</span><span class="tag">Divider</span><span class="tag">Side Sheet</span><span class="tag">Toolbar</span><span class="tag">Carousel</span>
+            </div>
+        </div>
+
+        <div class="comp-group">
+            <div class="label r">Menus &amp; Overlays</div>
+            <div class="tags r">
+                <span class="tag">Menu</span><span class="tag">Context Menu</span><span class="tag">Dropdown Menu</span><span class="tag">Overflow Menu</span><span class="tag">Tooltip</span><span class="tag">Dialog</span><span class="tag">Alert Dialog</span><span class="tag">Confirm Dialog</span><span class="tag">Fullscreen Dialog</span><span class="tag">File Dialog</span><span class="tag">Command Palette</span>
+            </div>
+        </div>
+
+        <div class="comp-group">
+            <div class="label r">Feedback</div>
+            <div class="tags r">
+                <span class="tag">Snackbar</span><span class="tag">Badge</span><span class="tag">Skeleton</span><span class="tag">Empty State</span><span class="tag">Notification</span><span class="tag">Notification Center</span><span class="tag">Progress (Linear)</span><span class="tag">Progress (Circular)</span>
+            </div>
+        </div>
+
+        <div class="comp-group">
+            <div class="label r">Data</div>
+            <div class="tags r">
+                <span class="tag">Data Table</span><span class="tag">File Table</span><span class="tag">Tree View</span><span class="tag">Avatar</span><span class="tag">Avatar Group</span><span class="tag">Code Block</span><span class="tag">Color Swatch</span><span class="tag">Tag</span><span class="tag">Icon Label</span><span class="tag">Kbd</span>
+            </div>
+        </div>
+
+        <div class="comp-group">
+            <div class="label r">Pickers</div>
+            <div class="tags r">
+                <span class="tag">Color Picker</span><span class="tag">Date Picker</span><span class="tag">Time Picker</span>
+            </div>
+        </div>
+
+        <div class="comp-group">
+            <div class="label r">System</div>
+            <div class="tags r">
+                <span class="tag">Application Window</span><span class="tag">Window Controls</span><span class="tag">File Tree</span><span class="tag">Splitter</span><span class="tag">Terminal</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<hr class="divider">
+
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- STATUS                                                  -->
+<!-- ════════════════════════════════════════════════════════ -->
+
+<section class="cta">
+    <div class="container">
+        <div class="label r">Status</div>
+        <h2 class="r" style="margin-bottom: 16px;">Early Development</h2>
+        <p class="sub r" style="text-align:center; margin: 0 auto 32px; max-width: 480px;">Chi is under active development. Documentation, installation guides, and contribution guidelines are coming soon.</p>
+        <a href="https://github.com/bluedesignlive/chi" class="btn btn-p r">
+            <span class="material-icons">star</span> Star on GitHub
+        </a>
+    </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- FOOTER                                                  -->
+<!-- ════════════════════════════════════════════════════════ -->
+
+<footer>
+    <div class="container">
+        <p><strong>Chi</strong> is a <a href="#">Smart</a> design system.</p>
+        <p class="tl">Made for people who believe open-source deserves to feel alive.</p>
+    </div>
+</footer>
+
+
+<!-- NAV SCROLL EFFECT -->
+<script>
+    const n = document.getElementById('nav');
+    let t = false;
+    window.addEventListener('scroll', () => {
+        const s = window.scrollY > 40;
+        if (s !== t) { n.classList.toggle('scrolled', s); t = s; }
+    }, { passive: true });
+</script>
+
+</body>
+</html>
