@@ -1,15 +1,16 @@
 // IconButtonToggle — Toggleable icon button with selected/unselected states
 import QtQuick
-import QtQuick.Controls.Basic  // ToolTip
+import QtQuick.Controls.Basic
 import "../../theme" as Theme
+import "../common" as Common
 
 Item {
-    id: toggleIconButton
+    id: root
 
-    property string icon: "☆"
-    property string selectedIcon: "★"
-    property string size: "small"         // xsmall..xlarge
-    property string widthMode: "default"  // narrow, default, wide
+    property string icon: "star_outline"
+    property string selectedIcon: "star"
+    property string size: "small"
+    property string widthMode: "default"
     property bool selected: false
     property bool enabled: true
     property string tooltip: ""
@@ -19,48 +20,37 @@ Item {
     opacity: enabled ? 1.0 : 0.38
     Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
 
-    readonly property var sizeSpecs: ({
-        xsmall: { height: 32, iconSize: 20, squareRadius: 8,  narrowWidth: 24,  defaultWidth: 32,  wideWidth: 44 },
-        small:  { height: 40, iconSize: 24, squareRadius: 12, narrowWidth: 32,  defaultWidth: 40,  wideWidth: 52 },
-        medium: { height: 56, iconSize: 24, squareRadius: 12, narrowWidth: 48,  defaultWidth: 56,  wideWidth: 68 },
-        large:  { height: 96, iconSize: 32, squareRadius: 20, narrowWidth: 64,  defaultWidth: 96,  wideWidth: 128 },
-        xlarge: { height: 136, iconSize: 40, squareRadius: 28, narrowWidth: 104, defaultWidth: 136, wideWidth: 184 }
-    })
-
+    readonly property var sizeSpecs: Theme.SizeSpecs.iconButton
     readonly property var cs: sizeSpecs[size] || sizeSpecs.small
-    readonly property int containerWidth: widthMode === "narrow" ? cs.narrowWidth :
-                                          (widthMode === "wide" ? cs.wideWidth : cs.defaultWidth)
+
+    readonly property int containerWidth: {
+        if (widthMode === "narrow") return cs.narrowWidth
+        if (widthMode === "wide") return cs.wideWidth
+        return cs.defaultWidth
+    }
 
     readonly property string effectiveIcon:
         selected && selectedIcon !== "" ? selectedIcon : icon
 
-    // Safe image detection
-    readonly property bool isIconImage: {
-        var s = effectiveIcon
-        return s.indexOf(".svg") !== -1 || s.indexOf(".png") !== -1 ||
-               s.indexOf(".jpg") !== -1 || s.indexOf("qrc:/") === 0
-    }
+    property var colors: Theme.ChiTheme.colors
 
-    // Cached interactive color — shared by ripple, state layer, and icon
     readonly property color _interactColor: selected ? colors.onPrimary : colors.onSurfaceVariant
     readonly property color _iconColor: enabled ? _interactColor : colors.onSurface
 
     implicitWidth: containerWidth
     implicitHeight: cs.height
 
-    property var colors: Theme.ChiTheme.colors
-
     Rectangle {
         id: container
         anchors.centerIn: parent
-        width: toggleIconButton.containerWidth
+        width: root.containerWidth
         height: cs.height
         clip: true
-        radius: toggleIconButton.selected ? cs.squareRadius : 100
+        radius: root.selected ? cs.squareRadius : height / 2
 
-        color: !toggleIconButton.enabled ?
-            Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.12) :
-            (toggleIconButton.selected ? colors.primary : colors.surfaceContainer)
+        color: !root.enabled
+            ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.12)
+            : (root.selected ? colors.primary : colors.surfaceContainer)
 
         Behavior on radius { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
         Behavior on color { ColorAnimation { duration: 200; easing.type: Easing.OutCubic } }
@@ -69,8 +59,9 @@ Item {
         Rectangle {
             anchors.fill: parent
             radius: parent.radius
-            color: toggleIconButton._interactColor
+            color: root._interactColor
             opacity: 0
+
             SequentialAnimation on opacity {
                 id: rippleAnimation
                 running: false
@@ -83,39 +74,32 @@ Item {
         Rectangle {
             anchors.fill: parent
             radius: parent.radius
-            color: toggleIconButton._interactColor
-            opacity: !toggleIconButton.enabled ? 0 :
-                     (mouseArea.pressed ? 0.12 :
-                     (toggleIconButton.activeFocus ? 0.12 :
-                     (mouseArea.containsMouse ? 0.08 : 0)))
+            color: root._interactColor
+            opacity: !root.enabled ? 0
+                : mouseArea.pressed ? 0.12
+                : root.activeFocus ? 0.12
+                : mouseArea.containsMouse ? 0.08
+                : 0
+
             Behavior on opacity {
-                NumberAnimation { duration: mouseArea.pressed ? 50 : 150; easing.type: Easing.OutCubic }
+                NumberAnimation {
+                    duration: mouseArea.pressed ? 50 : 150
+                    easing.type: Easing.OutCubic
+                }
             }
         }
 
-        // Image icon
-        Image {
-            visible: toggleIconButton.effectiveIcon !== "" && toggleIconButton.isIconImage
+        // Icon — uses Common.Icon for cross-platform reliability
+        Common.Icon {
             anchors.centerIn: parent
-            width: cs.iconSize; height: cs.iconSize
-            source: toggleIconButton.isIconImage ? toggleIconButton.effectiveIcon : ""
-            fillMode: Image.PreserveAspectFit
-            smooth: true
-        }
-
-        // Text/ligature icon
-        Text {
-            visible: toggleIconButton.effectiveIcon !== "" && !toggleIconButton.isIconImage
-            anchors.centerIn: parent
-            text: toggleIconButton.effectiveIcon
-            font.family: Theme.ChiTheme.iconFamily
-            font.pixelSize: cs.iconSize
-            color: toggleIconButton._iconColor
+            source: root.effectiveIcon
+            size: cs.iconSize
+            color: root._iconColor
         }
 
         // Focus indicator
         Rectangle {
-            visible: toggleIconButton.activeFocus && !mouseArea.pressed
+            visible: root.activeFocus && !mouseArea.pressed
             anchors.fill: parent
             anchors.margins: 2
             radius: parent.radius
@@ -128,24 +112,24 @@ Item {
     MouseArea {
         id: mouseArea
         anchors.fill: parent
-        enabled: toggleIconButton.enabled
+        enabled: root.enabled
         hoverEnabled: true
         cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
         onPressed: rippleAnimation.restart()
         onClicked: {
-            toggleIconButton.selected = !toggleIconButton.selected
-            toggleIconButton.toggled(toggleIconButton.selected)
+            root.selected = !root.selected
+            root.toggled(root.selected)
         }
     }
 
     ToolTip {
-        visible: toggleIconButton.tooltip !== "" && mouseArea.containsMouse
-        text: toggleIconButton.tooltip
+        visible: root.tooltip !== "" && mouseArea.containsMouse
+        text: root.tooltip
         delay: 500
     }
 
-    Keys.onSpacePressed:  if (enabled) _activate()
-    Keys.onEnterPressed:  if (enabled) _activate()
+    Keys.onSpacePressed: if (enabled) _activate()
+    Keys.onEnterPressed: if (enabled) _activate()
     Keys.onReturnPressed: if (enabled) _activate()
 
     function _activate() {

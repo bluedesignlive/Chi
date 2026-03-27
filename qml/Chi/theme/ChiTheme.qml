@@ -7,7 +7,7 @@ Item {
     readonly property color seed: "#673AB7"
 
     readonly property string fontFamily: "Roboto"
-    readonly property string iconFamily: "Material Icons"
+    readonly property string iconFamily: IconFont.family
 
     readonly property var typography: ({
         displayLarge:   { family: "Roboto", size: 57, weight: 400, spacing: -0.25, lineHeight: 64 },

@@ -1,6 +1,6 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
-    <qresource prefix="/SmartUI">
+    <qresource prefix="/Chi">
         <file alias="fonts/MaterialSymbolsRounded.ttf">assets/fonts/MaterialSymbolsRounded.ttf</file>
     </qresource>
 </RCC>
