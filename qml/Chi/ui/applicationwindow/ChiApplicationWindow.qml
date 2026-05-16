@@ -41,6 +41,7 @@ Window {
     // ═══════════════════════════════════════════════════════════════
 
     property string leadingIcon: ""
+    property string leadingTooltip: "Back"
     property bool showTitle: true
     property bool centerTitle: true
     property bool autoHideTitle: true
@@ -135,13 +136,13 @@ Window {
         readonly property bool globalMenuAvailable: {
             if (isMacOS) return true
             if (isLinux) {
-                var desktop = (Qt.getenv("XDG_CURRENT_DESKTOP") || "").toLowerCase()
-                var session = (Qt.getenv("DESKTOP_SESSION") || "").toLowerCase()
+                var desktop = (Qt.runtime.environmentVariable("XDG_CURRENT_DESKTOP") || "").toLowerCase()
+                var session = (Qt.runtime.environmentVariable("DESKTOP_SESSION") || "").toLowerCase()
                 return desktop.indexOf("kde") >= 0
                     || desktop.indexOf("plasma") >= 0
                     || desktop.indexOf("unity") >= 0
                     || desktop.indexOf("budgie") >= 0
-                    || Qt.getenv("UBUNTU_MENUPROXY") !== ""
+                    || Qt.runtime.environmentVariable("UBUNTU_MENUPROXY") !== ""
             }
             return false
         }
@@ -196,7 +197,8 @@ Window {
     // ═══════════════════════════════════════════════════════════════
 
     readonly property bool isMaximized:  visibility === Window.Maximized
-    readonly property real windowRadius: isMaximized ? 0 : 24
+    readonly property bool isFullScreen: visibility === Window.FullScreen
+    readonly property real windowRadius: (isMaximized || isFullScreen) ? 0 : 24
 
     readonly property string _resolvedMenuStyle: {
         if (!showMenu || globalMenuActive) return "none"
@@ -210,8 +212,10 @@ Window {
         (toolbarActions.length * 40) + (controlsOnLeft ? 0 : 120)
 
     property bool _toolbarAutoHidden: false
+    property bool _anyMenuOpen: false
 
     readonly property bool _showToolbar: {
+        if (isFullScreen) return false
         if (!toolbarVisible) return false
         if (toolbarBehavior === "autoHide")
             return !_toolbarAutoHidden || _hoverTrigger.containsMouse
@@ -308,19 +312,6 @@ Window {
         enabled: root.showMenu
         onActivated: root._toggleToolbarAutoHide()
     }
-    Shortcut {
-        sequence: "F10"
-        enabled: root.showMenu && root._resolvedMenuStyle === "overflow"
-        onActivated: {
-            root._keyboardFocusActive = true
-            _overflowMenu.open()
-        }
-    }
-    Shortcut {
-        sequence: "Escape"
-        enabled: _overflowMenu.visible
-        onActivated: _overflowMenu.close()
-    }
 
     // ═══════════════════════════════════════════════════════════════
     //  VISUAL TREE
@@ -371,17 +362,34 @@ Window {
 
         Rectangle {
             id: _toolbar
-            height: root._showToolbar ? root.toolbarHeight : 0
-            visible: height > 0
+            height: root.toolbarHeight
             anchors { top: parent.top; left: parent.left; right: parent.right }
             z: 100
-            clip: true
             color: colors.surfaceContainer
 
             Accessible.role: Accessible.ToolBar
             Accessible.name: "Application toolbar"
 
-            Behavior on height {
+            readonly property bool _shouldShow: root._showToolbar
+            property real _toolbarOpacity: 0.0
+            visible: _toolbarOpacity > 0.001
+            opacity: _toolbarOpacity
+
+            on_ShouldShowChanged: {
+                if (_shouldShow) {
+                    _toolbarOpacity = 0.0
+                    visible = true
+                    _toolbarOpacity = 1.0
+                } else {
+                    _toolbarOpacity = 0.0
+                }
+            }
+            on_ToolbarOpacityChanged: {
+                if (_toolbarOpacity <= 0.001)
+                    visible = false
+            }
+
+            Behavior on _toolbarOpacity {
                 NumberAnimation {
                     duration: motion.durationMedium
                     easing.type: motion.easeStandard
@@ -449,6 +457,7 @@ Window {
                             id: _overflowMenu
                             menus: root._allMenus
                             maxHeight: root.height - 100
+                            onVisibleChanged: root._anyMenuOpen = visible
                             onItemTriggered: function(menuId, itemId) {
                                 root._handleMenuAction(menuId, itemId)
                             }
@@ -467,9 +476,9 @@ Window {
                     ToolbarIconButton {
                         visible: root.leadingIcon !== ""
                         iconName: root.leadingIcon
-                        tooltipText: "Back"
+                        tooltipText: root.leadingTooltip
                         onClicked: root.leadingActionTriggered()
-                        Accessible.name: "Back"
+                        Accessible.name: root.leadingTooltip
                     }
 
                     // Traditional menu bar
@@ -631,79 +640,21 @@ Window {
         Item {
             id: _contentContainer
             anchors {
-                top: _toolbar.bottom
+                top: parent.top
                 left: parent.left
                 right: parent.right
                 bottom: parent.bottom
             }
             clip: true
-        }
-    }
 
-    // ═══════════════════════════════════════════════════════════════
-    //  FLOATING WINDOW CONTROLS BUBBLE
-    //
-    //  Visible when toolbar is hidden (auto-hide or explicit).
-    //  Crossfades with toolbar height. Draggable.
-    // ═══════════════════════════════════════════════════════════════
+            readonly property real _topInset: root._showToolbar ? root.toolbarHeight : 0
+            anchors.topMargin: _topInset
 
-    Rectangle {
-        id: _floatingControls
-        z: 200
-
-        anchors {
-            top: parent.top
-            topMargin: 8
-        }
-        x: root.controlsOnLeft ? 8 : (root.width - width - 8)
-
-        width: _floatingRow.implicitWidth + 16
-        height: _floatingRow.implicitHeight + 10
-        radius: 16
-
-        color: Qt.rgba(colors.surfaceContainerHigh.r,
-                       colors.surfaceContainerHigh.g,
-                       colors.surfaceContainerHigh.b, 0.92)
-        border.width: 1
-        border.color: colors.outlineVariant
-
-        opacity: {
-            if (!root.showControls || !_ctx.showWindowControls) return 0
-            if (root.toolbarHeight <= 0) return 0
-            return Math.max(0, 1.0 - (_toolbar.height / root.toolbarHeight))
-        }
-        visible: opacity > 0
-
-        Behavior on opacity {
-            NumberAnimation {
-                duration: root.motion.durationMedium
-                easing.type: root.motion.easeStandard
-            }
-        }
-
-        Accessible.role: Accessible.ToolBar
-        Accessible.name: "Window controls"
-
-        MouseArea {
-            anchors.fill: parent
-            z: -1
-            hoverEnabled: false
-            onPressed: root.startSystemMove()
-            onDoubleClicked: {
-                if (root.isMaximized) root.showNormal()
-                else root.showMaximized()
-            }
-        }
-
-        Row {
-            id: _floatingRow
-            anchors.centerIn: parent
-            spacing: 4
-
-            WindowControls {
-                targetWindow: root
-                variant: root.controlsStyle
-                anchors.verticalCenter: parent.verticalCenter
+            Behavior on anchors.topMargin {
+                NumberAnimation {
+                    duration: root.motion.durationMedium
+                    easing.type: root.motion.easeStandard
+                }
             }
         }
     }
@@ -718,8 +669,16 @@ Window {
         color: "transparent"
         border.width: 1
         border.color: colors.outlineVariant
-        visible: !root.isMaximized
+        visible: opacity > 0
+        opacity: (!root.isMaximized && !root.isFullScreen) ? 1.0 : 0.0
         z: 1000
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: root.motion.durationFast
+                easing.type: Easing.OutCubic
+            }
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -730,8 +689,8 @@ Window {
         id: _resizeHandles
         anchors.fill: parent
         z: 1010
-        visible: !root.isMaximized
-        enabled: !root.isMaximized
+        visible: !root.isMaximized && !root.isFullScreen
+        enabled: !root.isMaximized && !root.isFullScreen
         Accessible.ignored: true
 
         readonly property int edge: 8
@@ -887,22 +846,14 @@ Window {
                                   && _tbtn.enabled
                                   && !_tooltipDelay.running
                                   && _tooltipReady
+                                  && !root._anyMenuOpen
 
             property bool _tooltipReady: false
 
-            // Delay before showing
             Timer {
                 id: _tooltipDelay
-                interval: 500
+                interval: 1000
                 onTriggered: _tooltipPopup._tooltipReady = true
-            }
-
-            // Auto-dismiss after timeout
-            Timer {
-                id: _tooltipTimeout
-                interval: 4000
-                running: _tooltipPopup._shown
-                onTriggered: _tooltipPopup._tooltipReady = false
             }
 
             Connections {
@@ -913,7 +864,6 @@ Window {
                         _tooltipDelay.restart()
                     } else {
                         _tooltipDelay.stop()
-                        _tooltipTimeout.stop()
                         _tooltipPopup._tooltipReady = false
                     }
                 }
@@ -977,6 +927,7 @@ Window {
     component MenuBarButton: Item {
         id: _mbtn
         property var menuData: ({})
+        property string tooltipText: ""
         signal itemTriggered(string itemId)
 
         implicitWidth: _mbtnLabel.implicitWidth + 24
@@ -1042,6 +993,94 @@ Window {
                 root._keyboardFocusActive = false
                 _mbtn.forceActiveFocus()
                 _ddMenu.open()
+            }
+        }
+
+        // Tooltip
+        Item {
+            id: _mbtnTooltip
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: _mbtnTooltipShown ? parent.height + 6 : parent.height + 2
+            width: _mbtnTooltipLabel.implicitWidth + 20
+            height: 32
+            z: 2000
+
+            readonly property string _text: _mbtn.tooltipText || _mbtn.menuData.title || ""
+            property bool _mbtnTooltipShown: _mbtnMouse.containsMouse
+                                              && _text !== ""
+                                              && !_mbtnTooltipDelay.running
+                                              && _mbtnTooltipReady
+                                              && !root._anyMenuOpen
+
+            property bool _mbtnTooltipReady: false
+
+            Timer {
+                id: _mbtnTooltipDelay
+                interval: 1000
+                onTriggered: _mbtnTooltip._mbtnTooltipReady = true
+            }
+
+            Connections {
+                target: _mbtnMouse
+                function onContainsMouseChanged() {
+                    if (_mbtnMouse.containsMouse) {
+                        _mbtnTooltip._mbtnTooltipReady = false
+                        _mbtnTooltipDelay.restart()
+                    } else {
+                        _mbtnTooltipDelay.stop()
+                        _mbtnTooltip._mbtnTooltipReady = false
+                    }
+                }
+            }
+
+            scale: _mbtnTooltipShown ? 1.0 : 0.85
+            opacity: _mbtnTooltipShown ? 1.0 : 0
+            visible: opacity > 0
+            transformOrigin: Item.Top
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: _mbtnTooltip._mbtnTooltipShown ? 250 : 150
+                    easing.type: _mbtnTooltip._mbtnTooltipShown ? Easing.OutQuart : Easing.InQuart
+                }
+            }
+            Behavior on scale {
+                NumberAnimation {
+                    duration: _mbtnTooltip._mbtnTooltipShown ? 300 : 150
+                    easing.type: _mbtnTooltip._mbtnTooltipShown ? Easing.OutBack : Easing.InQuart
+                    easing.overshoot: 1.3
+                }
+            }
+            Behavior on y {
+                NumberAnimation {
+                    duration: _mbtnTooltip._mbtnTooltipShown ? 250 : 150
+                    easing.type: _mbtnTooltip._mbtnTooltipShown ? Easing.OutQuart : Easing.InQuart
+                }
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                radius: 8
+                color: root.colors.inverseSurface
+
+                layer.enabled: true
+                layer.effect: MultiEffect {
+                    shadowEnabled: true
+                    shadowColor: Qt.rgba(0, 0, 0, 0.2)
+                    shadowBlur: 0.3
+                    shadowVerticalOffset: 2
+                    shadowHorizontalOffset: 0
+                }
+            }
+
+            Text {
+                id: _mbtnTooltipLabel
+                anchors.centerIn: parent
+                text: _mbtnTooltip._text
+                font.family: root.fontFamily
+                font.pixelSize: root.typography.bodySmall.size
+                font.weight: root.typography.bodySmall.weight
+                color: root.colors.inverseOnSurface
             }
         }
 

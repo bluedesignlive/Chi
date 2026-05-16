@@ -58,6 +58,7 @@ Item {
                 visible: root.showClose
                 baseColor: "#FF5F57"
                 iconType: "close"
+                tooltipText: "Close window"
                 groupHovered: macGroupHover.hovered
                 onClicked: root.targetWindow?.close()
             }
@@ -66,6 +67,7 @@ Item {
                 visible: root.showMinimize
                 baseColor: "#FEBC2E"
                 iconType: "minimize"
+                tooltipText: "Minimize"
                 groupHovered: macGroupHover.hovered
                 onClicked: root.targetWindow?.showMinimized()
             }
@@ -75,6 +77,8 @@ Item {
                 baseColor: "#28C840"
                 iconType: root.targetWindow?.visibility === Window.Maximized
                           ? "restore" : "maximize"
+                tooltipText: root.targetWindow?.visibility === Window.Maximized
+                             ? "Restore" : "Maximize"
                 groupHovered: macGroupHover.hovered
                 onClicked: {
                     if (root.targetWindow) {
@@ -101,6 +105,7 @@ Item {
         WindowsButton {
             visible: root.showMinimize
             iconName: root.minimizeIcon
+            tooltipText: "Minimize"
             accentColor: root.colors.tertiary
             onClicked: root.targetWindow?.showMinimized()
         }
@@ -109,6 +114,8 @@ Item {
             visible: root.showMaximize
             iconName: root.targetWindow?.visibility === Window.Maximized
                       ? root.restoreIcon : root.maximizeIcon
+            tooltipText: root.targetWindow?.visibility === Window.Maximized
+                         ? "Restore" : "Maximize"
             accentColor: root.colors.secondary
             onClicked: {
                 if (root.targetWindow) {
@@ -123,6 +130,7 @@ Item {
         WindowsButton {
             visible: root.showClose
             iconName: root.closeIcon
+            tooltipText: "Close window"
             accentColor: root.colors.error
             onClicked: root.targetWindow?.close()
         }
@@ -143,6 +151,7 @@ Item {
 
         property color baseColor: "#888"
         property string iconType: "close"
+        property string tooltipText: ""
         property bool groupHovered: false
 
         signal clicked()
@@ -203,9 +212,6 @@ Item {
                     switch (tlBtn.iconType) {
 
                     case "close":
-                        //  ╲ ╱
-                        //   ╳
-                        //  ╱ ╲
                         ctx.beginPath()
                         ctx.moveTo(1, 1)
                         ctx.lineTo(7, 7)
@@ -215,7 +221,6 @@ Item {
                         break
 
                     case "minimize":
-                        //  ———
                         ctx.beginPath()
                         ctx.moveTo(1, 4)
                         ctx.lineTo(7, 4)
@@ -223,8 +228,6 @@ Item {
                         break
 
                     case "maximize":
-                        //  ┐  (top-right corner bracket)
-                        //    └ (bottom-left corner bracket)
                         ctx.beginPath()
                         ctx.moveTo(4, 1)
                         ctx.lineTo(7, 1)
@@ -238,7 +241,6 @@ Item {
                         break
 
                     case "restore":
-                        //  └ ┘ (inward brackets)
                         ctx.beginPath()
                         ctx.moveTo(7, 3)
                         ctx.lineTo(5, 3)
@@ -265,6 +267,76 @@ Item {
             cursorShape: Qt.PointingHandCursor
             onClicked: tlBtn.clicked()
         }
+
+        // Tooltip
+        Item {
+            id: tlTooltip
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: tlTooltipShown ? parent.height + 8 : parent.height + 2
+            width: tlTooltipLabel.implicitWidth + 16
+            height: 24
+            z: 2000
+
+            property bool tlTooltipShown: tlMouse.containsMouse
+                                          && tlBtn.tooltipText !== ""
+                                          && !tlTooltipDelay.running
+                                          && tlTooltipReady
+
+            property bool tlTooltipReady: false
+
+            Timer {
+                id: tlTooltipDelay
+                interval: 1000
+                onTriggered: tlTooltip.tlTooltipReady = true
+            }
+
+            Connections {
+                target: tlMouse
+                function onContainsMouseChanged() {
+                    if (tlMouse.containsMouse) {
+                        tlTooltip.tlTooltipReady = false
+                        tlTooltipDelay.restart()
+                    } else {
+                        tlTooltipDelay.stop()
+                        tlTooltip.tlTooltipReady = false
+                    }
+                }
+            }
+
+            scale: tlTooltipShown ? 1.0 : 0.85
+            opacity: tlTooltipShown ? 1.0 : 0
+            visible: opacity > 0
+            transformOrigin: Item.Top
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: tlTooltip.tlTooltipShown ? 200 : 120
+                    easing.type: tlTooltip.tlTooltipShown ? Easing.OutQuart : Easing.InQuart
+                }
+            }
+            Behavior on scale {
+                NumberAnimation {
+                    duration: tlTooltip.tlTooltipShown ? 250 : 120
+                    easing.type: tlTooltip.tlTooltipShown ? Easing.OutBack : Easing.InQuart
+                    easing.overshoot: 1.2
+                }
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                radius: 4
+                color: root.colors.inverseSurface
+            }
+
+            Text {
+                id: tlTooltipLabel
+                anchors.centerIn: parent
+                text: tlBtn.tooltipText
+                font.pixelSize: 11
+                font.weight: Font.Medium
+                color: root.colors.inverseOnSurface
+            }
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -278,6 +350,7 @@ Item {
         id: winBtn
 
         property string iconName: ""
+        property string tooltipText: ""
         property color accentColor: root.colors.primary
 
         signal clicked()
@@ -319,6 +392,76 @@ Item {
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: winBtn.clicked()
+        }
+
+        // Tooltip
+        Item {
+            id: winTooltip
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: winTooltipShown ? parent.height + 6 : parent.height + 2
+            width: winTooltipLabel.implicitWidth + 16
+            height: 24
+            z: 2000
+
+            property bool winTooltipShown: winBtnMouse.containsMouse
+                                           && winBtn.tooltipText !== ""
+                                           && !winTooltipDelay.running
+                                           && winTooltipReady
+
+            property bool winTooltipReady: false
+
+            Timer {
+                id: winTooltipDelay
+                interval: 1000
+                onTriggered: winTooltip.winTooltipReady = true
+            }
+
+            Connections {
+                target: winBtnMouse
+                function onContainsMouseChanged() {
+                    if (winBtnMouse.containsMouse) {
+                        winTooltip.winTooltipReady = false
+                        winTooltipDelay.restart()
+                    } else {
+                        winTooltipDelay.stop()
+                        winTooltip.winTooltipReady = false
+                    }
+                }
+            }
+
+            scale: winTooltipShown ? 1.0 : 0.85
+            opacity: winTooltipShown ? 1.0 : 0
+            visible: opacity > 0
+            transformOrigin: Item.Top
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: winTooltip.winTooltipShown ? 200 : 120
+                    easing.type: winTooltip.winTooltipShown ? Easing.OutQuart : Easing.InQuart
+                }
+            }
+            Behavior on scale {
+                NumberAnimation {
+                    duration: winTooltip.winTooltipShown ? 250 : 120
+                    easing.type: winTooltip.winTooltipShown ? Easing.OutBack : Easing.InQuart
+                    easing.overshoot: 1.2
+                }
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                radius: 4
+                color: root.colors.inverseSurface
+            }
+
+            Text {
+                id: winTooltipLabel
+                anchors.centerIn: parent
+                text: winBtn.tooltipText
+                font.pixelSize: 11
+                font.weight: Font.Medium
+                color: root.colors.inverseOnSurface
+            }
         }
     }
 }
