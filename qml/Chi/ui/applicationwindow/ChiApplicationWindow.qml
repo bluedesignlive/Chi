@@ -433,6 +433,7 @@ Window {
                                  && _ctx.showWindowControls
                         targetWindow: root
                         variant: root.controlsStyle
+                        menuOpen: root._anyMenuOpen
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
@@ -551,6 +552,7 @@ Window {
                                  && _ctx.showWindowControls
                         targetWindow: root
                         variant: root.controlsStyle
+                        menuOpen: root._anyMenuOpen
                         anchors.verticalCenter: parent.verticalCenter
                     }
                 }
@@ -1088,6 +1090,7 @@ Window {
             id: _ddMenu
             y: parent.height + 4
             items: _mbtn.menuData.items || []
+            onVisibleChanged: root._anyMenuOpen = visible
             onItemClicked: function(itemId) {
                 _mbtn.itemTriggered(itemId)
             }

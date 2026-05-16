@@ -21,6 +21,7 @@ Item {
     property bool showClose: true
 
     property string variant: "macOS"
+    property bool menuOpen: false
 
     implicitWidth: variant === "macOS" ? macContainer.implicitWidth : winRow.implicitWidth
     implicitHeight: variant === "macOS" ? 24 : 36
@@ -281,6 +282,7 @@ Item {
                                           && tlBtn.tooltipText !== ""
                                           && !tlTooltipDelay.running
                                           && tlTooltipReady
+                                          && !root.menuOpen
 
             property bool tlTooltipReady: false
 
@@ -407,6 +409,7 @@ Item {
                                            && winBtn.tooltipText !== ""
                                            && !winTooltipDelay.running
                                            && winTooltipReady
+                                           && !root.menuOpen
 
             property bool winTooltipReady: false
 
