@@ -584,22 +584,22 @@ Window {
                 }
                 Menus.MenuItem {
                     text: "100%"
-                    checked: Math.abs(root.opacity - 1.0) < 0.01
+                    selected: Math.abs(root.opacity - 1.0) < 0.01
                     onClicked: root.opacity = 1.0
                 }
                 Menus.MenuItem {
                     text: "80%"
-                    checked: Math.abs(root.opacity - 0.8) < 0.01
+                    selected: Math.abs(root.opacity - 0.8) < 0.01
                     onClicked: root.opacity = 0.8
                 }
                 Menus.MenuItem {
                     text: "60%"
-                    checked: Math.abs(root.opacity - 0.6) < 0.01
+                    selected: Math.abs(root.opacity - 0.6) < 0.01
                     onClicked: root.opacity = 0.6
                 }
                 Menus.MenuItem {
                     text: "40%"
-                    checked: Math.abs(root.opacity - 0.4) < 0.01
+                    selected: Math.abs(root.opacity - 0.4) < 0.01
                     onClicked: root.opacity = 0.4
                 }
             }
