@@ -427,6 +427,7 @@ Window {
             // Window menu on right-click title bar
             Menus.ContextMenu {
                 id: _windowMenu
+                maxWidth: 176
                 onOpenChanged: root._anyMenuOpen = open
 
                 Menus.MenuItem {
@@ -457,6 +458,7 @@ Window {
                 Menus.MenuDivider {}
                 Menus.MenuItem {
                     text: "Close"
+                    trailingText: "Alt+F4"
                     onClicked: root.close()
                 }
             }
@@ -727,7 +729,7 @@ Window {
     Rectangle {
         anchors.fill: parent
         color: "#000000"
-        z: 999
+        z: 100000
         opacity: root.active ? 0.0 : 0.08
         visible: opacity > 0
 
@@ -1089,6 +1091,22 @@ Window {
                 root._keyboardFocusActive = false
                 _mbtn.forceActiveFocus()
                 _ddMenu.open()
+            }
+        }
+
+        // Hover-open: open dropdown after short hover delay
+        Timer {
+            id: _mbtnHoverTimer
+            interval: 200
+            onTriggered: _ddMenu.open()
+        }
+        Connections {
+            target: _mbtnMouse
+            function onContainsMouseChanged() {
+                if (_mbtnMouse.containsMouse)
+                    _mbtnHoverTimer.restart()
+                else
+                    _mbtnHoverTimer.stop()
             }
         }
 

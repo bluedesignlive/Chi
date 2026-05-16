@@ -23,6 +23,11 @@ Item {
     property string variant: "macOS"
     property bool menuOpen: false
 
+    // Group tooltip hot state — when true, subsequent buttons skip
+    // the 1000ms delay when moving between buttons in the same group.
+    property bool _macTooltipsHot: false
+    property bool _winTooltipsHot: false
+
     implicitWidth: variant === "macOS" ? macContainer.implicitWidth : winRow.implicitWidth
     implicitHeight: variant === "macOS" ? 24 : 36
 
@@ -50,6 +55,21 @@ Item {
 
         HoverHandler { id: macGroupHover }
 
+        // Hot state: after first tooltip shows, moving between buttons
+        // skips the delay until the cursor leaves the group.
+        Timer {
+            id: macTooltipsHotTimer
+            interval: 500
+            onTriggered: root._macTooltipsHot = false
+        }
+        Connections {
+            target: macGroupHover
+            function onHoveredChanged() {
+                if (!macGroupHover.hovered)
+                    macTooltipsHotTimer.restart()
+            }
+        }
+
         Row {
             id: macRow
             anchors.centerIn: parent
@@ -59,7 +79,7 @@ Item {
                 visible: root.showClose
                 baseColor: "#FF5F57"
                 iconType: "close"
-                tooltipText: "Close window"
+                tooltipText: "Close  Alt+F4"
                 groupHovered: macGroupHover.hovered
                 onClicked: root.targetWindow?.close()
             }
@@ -103,6 +123,21 @@ Item {
         anchors.centerIn: parent
         spacing: 2
 
+        HoverHandler { id: winGroupHover }
+
+        Timer {
+            id: winTooltipsHotTimer
+            interval: 500
+            onTriggered: root._winTooltipsHot = false
+        }
+        Connections {
+            target: winGroupHover
+            function onHoveredChanged() {
+                if (!winGroupHover.hovered)
+                    winTooltipsHotTimer.restart()
+            }
+        }
+
         WindowsButton {
             visible: root.showMinimize
             iconName: root.minimizeIcon
@@ -131,7 +166,7 @@ Item {
         WindowsButton {
             visible: root.showClose
             iconName: root.closeIcon
-            tooltipText: "Close window"
+            tooltipText: "Close window  Alt+F4"
             accentColor: root.colors.error
             onClicked: root.targetWindow?.close()
         }
@@ -285,6 +320,12 @@ Item {
                                           && !root.menuOpen
 
             property bool tlTooltipReady: false
+            onTlTooltipShownChanged: {
+                if (tlTooltipShown) {
+                    root._macTooltipsHot = true
+                    macTooltipsHotTimer.stop()
+                }
+            }
 
             Timer {
                 id: tlTooltipDelay
@@ -296,8 +337,12 @@ Item {
                 target: tlMouse
                 function onContainsMouseChanged() {
                     if (tlMouse.containsMouse) {
-                        tlTooltip.tlTooltipReady = false
-                        tlTooltipDelay.restart()
+                        if (root._macTooltipsHot) {
+                            tlTooltip.tlTooltipReady = true
+                        } else {
+                            tlTooltip.tlTooltipReady = false
+                            tlTooltipDelay.restart()
+                        }
                     } else {
                         tlTooltipDelay.stop()
                         tlTooltip.tlTooltipReady = false
@@ -412,6 +457,12 @@ Item {
                                            && !root.menuOpen
 
             property bool winTooltipReady: false
+            onWinTooltipShownChanged: {
+                if (winTooltipShown) {
+                    root._winTooltipsHot = true
+                    winTooltipsHotTimer.stop()
+                }
+            }
 
             Timer {
                 id: winTooltipDelay
@@ -423,8 +474,12 @@ Item {
                 target: winBtnMouse
                 function onContainsMouseChanged() {
                     if (winBtnMouse.containsMouse) {
-                        winTooltip.winTooltipReady = false
-                        winTooltipDelay.restart()
+                        if (root._winTooltipsHot) {
+                            winTooltip.winTooltipReady = true
+                        } else {
+                            winTooltip.winTooltipReady = false
+                            winTooltipDelay.restart()
+                        }
                     } else {
                         winTooltipDelay.stop()
                         winTooltip.winTooltipReady = false
