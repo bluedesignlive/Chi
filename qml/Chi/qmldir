@@ -90,7 +90,6 @@ Dialog 1.0 ui/dialogs/Dialog.qml
 AlertDialog 1.0 ui/dialogs/AlertDialog.qml
 ConfirmDialog 1.0 ui/dialogs/ConfirmDialog.qml
 FullscreenDialog 1.0 ui/dialogs/FullscreenDialog.qml
-FileDialog 1.0 ui/dialogs/FileDialog.qml
 singleton DialogManager 1.0 ui/dialogs/DialogManager.qml
 
 # ─── Pickers ─────────────────────────────────────────────────
@@ -132,3 +131,4 @@ StateLayer 1.0 ui/common/StateLayer.qml
 # ─── Application Window ─────────────────────────────────────
 ChiApplicationWindow 1.0 ui/applicationwindow/ChiApplicationWindow.qml
 WindowControls 1.0 ui/applicationwindow/WindowControls.qml
+FileDialog 1.0 ui/dialogs/FileDialog.qml

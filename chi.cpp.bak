@@ -1,4 +1,3 @@
-#include "register_types.h"
 #include "chi.h"
 #include <QDebug>
 #include <QColor>
@@ -304,7 +303,6 @@ QList<int> ChiDBusMenuExporter::AboutToShowGroup(const QList<int> &ids) { Q_UNUS
 
 void ChiPlugin::registerTypes(const char *uri) {
     Q_ASSERT(QLatin1String(uri) == QLatin1String("Chi"));
-    registerFileDialogTypes(uri);
     qmlRegisterSingletonType<ThemeBackend>(uri, 1, 0, "ThemeBackend",
         [](QQmlEngine *, QJSEngine *) -> QObject * {
             if (!s_instance) s_instance = new ThemeBackend();
@@ -321,7 +319,6 @@ static ClipboardHelper *s_clipboard = nullptr;
 
 void ChiPlugin::initializeEngine(QQmlEngine *engine, const char *uri) {
     Q_UNUSED(uri)
-    initializeFileDialogEngine(engine);
     if (!s_instance) s_instance = new ThemeBackend();
     engine->rootContext()->setContextProperty("_chiBackend", s_instance);
     if (!s_clipboard) s_clipboard = new ClipboardHelper();

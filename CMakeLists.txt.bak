@@ -11,7 +11,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 6.10 REQUIRED COMPONENTS Quick Qml Concurrent)
+find_package(Qt6 6.10 REQUIRED COMPONENTS Quick Qml)
 
 # ── DBus (Linux only, for global menu support) ───────────────
 set(CHI_HAS_DBUS FALSE)
@@ -36,16 +36,13 @@ message(STATUS "Qt QML path: ${QT_QML_INSTALL_DIR}")
 message(STATUS "Chi will install to: ${QT_QML_INSTALL_DIR}/Chi")
 
 # ── Plugin library ────────────────────────────────────────────
-
-# ── FileDialog C++ backend ─────────────────────────────────
-add_subdirectory(src/filedialog)
 add_library(ChiPlugin SHARED
     chi.cpp
     chi.h
     resources.qrc
 )
 
-target_link_libraries(ChiPlugin PRIVATE Qt6::Quick Qt6::Qml Qt6::Concurrent ChiFileDialog)
+target_link_libraries(ChiPlugin PRIVATE Qt6::Quick Qt6::Qml)
 target_include_directories(ChiPlugin PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 if(CHI_HAS_DBUS)

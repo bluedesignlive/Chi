@@ -17,7 +17,6 @@
 #include <QClipboard>
 #include <QGuiApplication>
 #include <QUrl>
-#include "register_types.h"
 
 #ifdef Q_OS_LINUX
 #include <QDBusConnection>
