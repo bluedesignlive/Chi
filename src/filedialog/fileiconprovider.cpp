@@ -1,111 +1,160 @@
 #include "fileiconprovider.h"
-
+#include <QMimeDatabase>
+#include <QMimeType>
 #include <QHash>
-#include <QString>
-#include <QLatin1String>
+#include <QFileInfo>
 
 using namespace Qt::StringLiterals;
 
-using Map = QHash<QString, QString>;
+// ── Freedesktop generic icon name → Material Symbols ────────
+// This is the ONLY manually maintained list. ~40 entries covering
+// ALL file types via the freedesktop icon naming specification.
+// New file types are automatically handled by heuristic fallback.
 
-static const Map &extMap()
+static const QHash<QString, QString> &genericIconMap()
 {
-    static const Map m = [] {
-        Map m;
-        auto add = [&](const std::initializer_list<const char *> &exts,
-                       const QString &icon) {
-            for (const char *e : exts)
-                m.insert(QLatin1String(e), icon);
+    static const QHash<QString, QString> m = [] {
+        QHash<QString, QString> m;
+        auto add = [&](std::initializer_list<const char*> names, const QString &icon) {
+            for (const char *n : names) m.insert(QLatin1String(n), icon);
         };
 
-        add({"png","jpg","jpeg","gif","bmp","webp","svg","ico",
-             "tiff","tif","avif","heic","heif","raw","cr2","nef","arw"},
-            u"image"_s);
-        add({"pdf"},                      u"picture_as_pdf"_s);
-        add({"doc","docx","odt","rtf"},   u"description"_s);
-        add({"txt","md","markdown","rst"},u"description"_s);
-        add({"xls","xlsx","ods","csv"},   u"table_chart"_s);
-        add({"ppt","pptx","odp","key"},   u"slideshow"_s);
-        add({"zip","tar","gz","bz2","xz","7z","rar","zst","lz4"},
-            u"folder_zip"_s);
-        add({"mp3","wav","flac","m4a","ogg","opus","aac","wma","alac"},
-            u"music_note"_s);
-        add({"mp4","mkv","avi","mov","webm","wmv","flv","m4v","ts"},
-            u"movie"_s);
-        add({"js","ts","jsx","tsx","py","rb","rs","go","java","kt",
-             "c","h","cpp","hpp","cc","hh","cs","swift","zig",
-             "qml","html","htm","css","scss","sass","less","vue","svelte"},
-            u"code"_s);
-        add({"json","xml","yaml","yml","toml","ini","cfg","conf"},
-            u"data_object"_s);
-        add({"sh","bash","zsh","fish","ps1","bat","cmd"},
-            u"terminal"_s);
-        add({"lock"},                     u"lock"_s);
-        add({"log"},                      u"article"_s);
-        add({"iso","img","dmg"},          u"disc_full"_s);
-        add({"exe","msi","app","deb","rpm","flatpak","snap","appimage"},
-            u"apps"_s);
-        add({"ttf","otf","woff","woff2"}, u"font_download"_s);
+        add({"audio-x-generic"},                u"music_note"_s);
+        add({"video-x-generic"},                u"movie"_s);
+        add({"image-x-generic"},                u"image"_s);
+        add({"font-x-generic"},                 u"font_download"_s);
+        add({"inode-directory"},                u"folder"_s);
+        add({"inode-symlink"},                  u"link"_s);
+
+        add({"text-x-generic","text-plain","text-html",
+             "text-x-readme","text-x-changelog"},  u"description"_s);
+        add({"x-office-document"},              u"description"_s);
+        add({"x-office-spreadsheet"},           u"table_chart"_s);
+        add({"x-office-presentation"},          u"slideshow"_s);
+        add({"application-pdf"},                u"picture_as_pdf"_s);
+        add({"application-vnd.oasis.opendocument.text",
+             "application-vnd.oasis.opendocument.spreadsheet",
+             "application-vnd.oasis.opendocument.presentation"}, u"description"_s);
+
+        add({"text-x-script","text-x-python","text-x-perl",
+             "text-x-ruby","text-x-java","text-x-csrc",
+             "text-x-c++src","text-x-go","text-x-rust",
+             "text-x-sql","text-x-tex","text-x-makefile",
+             "text-x-diff","text-x-patch",
+             "text-x-gettext-translation"},     u"code"_s);
+        add({"application-javascript","application-x-python",
+             "application-x-ruby","application-x-perl",
+             "application-x-php","application-x-shellscript",
+             "application-x-lua"},              u"code"_s);
+        add({"application-x-executable",
+             "application-x-sharedlib"},        u"apps"_s);
+
+        add({"application-json","application-xml","text-xml",
+             "text-x-opml+xml","application-rss+xml",
+             "application-atom+xml"},           u"data_object"_s);
+
+        add({"application-zip","application-x-tar","application-gzip",
+             "application-x-bzip2","application-x-xz",
+             "application-x-7z-compressed",
+             "application-x-rar-compressed",
+             "application-x-compressed-tar",
+             "application-x-bzip-compressed-tar",
+             "package-x-generic"},              u"folder_zip"_s);
 
         return m;
     }();
     return m;
 }
 
-static const Map &mimeMap()
+// ── Constructor ─────────────────────────────────────────────
+
+FileIconProvider::FileIconProvider(QObject *parent) : QObject(parent) {}
+
+// ── Internal: MIME name + generic icon name → Material icon ─
+
+static QString mimeToIcon(const QString &mimeName, const QString &genericName)
 {
-    static const Map m = {
-        { u"image/"_s,                    u"image"_s },
-        { u"video/"_s,                    u"movie"_s },
-        { u"audio/"_s,                    u"music_note"_s },
-        { u"text/"_s,                     u"description"_s },
-        { u"application/pdf"_s,           u"picture_as_pdf"_s },
-        { u"application/zip"_s,           u"folder_zip"_s },
-        { u"application/x-tar"_s,         u"folder_zip"_s },
-        { u"application/gzip"_s,          u"folder_zip"_s },
-        { u"application/x-7z-compressed"_s, u"folder_zip"_s },
-        { u"application/x-rar-compressed"_s, u"folder_zip"_s },
-        { u"application/json"_s,          u"data_object"_s },
-        { u"application/xml"_s,           u"data_object"_s },
-        { u"application/javascript"_s,    u"code"_s },
-        { u"application/x-executable"_s,  u"apps"_s },
-        { u"application/x-sharedlib"_s,   u"code"_s },
-        { u"inode/directory"_s,           u"folder"_s },
-        { u"inode/symlink"_s,             u"link"_s },
-    };
-    return m;
-}
+    // 1. Fast prefix match (broad categories)
+    if (mimeName.startsWith(u"image/"_s)) return u"image"_s;
+    if (mimeName.startsWith(u"video/"_s)) return u"movie"_s;
+    if (mimeName.startsWith(u"audio/"_s)) return u"music_note"_s;
+    if (mimeName.startsWith(u"font/"_s))  return u"font_download"_s;
+    if (mimeName == u"inode/directory"_s)  return u"folder"_s;
+    if (mimeName == u"inode/symlink"_s)    return u"link"_s;
+    if (mimeName == u"application/pdf"_s)  return u"picture_as_pdf"_s;
 
-FileIconProvider::FileIconProvider(QObject *parent)
-    : QObject(parent)
-{}
+    // 2. Text/code detection via MIME name
+    if (mimeName.startsWith(u"text/"_s)) {
+        if (mimeName.contains(u"script"_s) || mimeName.contains(u"python"_s) ||
+            mimeName.contains(u"ruby"_s) || mimeName.contains(u"java"_s) ||
+            mimeName.contains(u"csrc"_s) || mimeName.contains(u"c++src"_s) ||
+            mimeName.contains(u"rust"_s) || mimeName.contains(u"go"_s) ||
+            mimeName.contains(u"sql"_s) || mimeName.contains(u"tex"_s))
+            return u"code"_s;
+        if (mimeName.contains(u"xml"_s) || mimeName.contains(u"json"_s) ||
+            mimeName.contains(u"yaml"_s) || mimeName.contains(u"toml"_s))
+            return u"data_object"_s;
+        return u"description"_s;
+    }
 
-QString FileIconProvider::iconForExtension(const QString &ext)
-{
-    const QString lower = ext.toLower();
-    const auto &m = extMap();
-    auto it = m.constFind(lower);
-    return (it != m.constEnd()) ? it.value() : u"insert_drive_file"_s;
-}
+    // 3. Application MIME heuristic
+    if (mimeName.contains(u"javascript"_s) || mimeName.contains(u"typescript"_s) ||
+        mimeName.contains(u"python"_s) || mimeName.contains(u"ruby"_s) ||
+        mimeName.contains(u"perl"_s) || mimeName.contains(u"php"_s) ||
+        mimeName.contains(u"lua"_s) || mimeName.contains(u"shell"_s))
+        return u"code"_s;
+    if (mimeName.contains(u"zip"_s) || mimeName.contains(u"tar"_s) ||
+        mimeName.contains(u"compress"_s) || mimeName.contains(u"archive"_s) ||
+        mimeName.contains(u"bzip"_s) || mimeName.contains(u"xz"_s) ||
+        mimeName.contains(u"rar"_s) || mimeName.contains(u"7z"_s))
+        return u"folder_zip"_s;
+    if (mimeName.contains(u"json"_s) || mimeName.contains(u"xml"_s))
+        return u"data_object"_s;
+    if (mimeName.contains(u"executable"_s) || mimeName.contains(u"sharedlib"_s))
+        return u"apps"_s;
 
-QString FileIconProvider::iconForMime(const QString &mimeName)
-{
-    const auto &m = mimeMap();
+    // 4. Freedesktop generic icon name → Material Symbols
+    if (!genericName.isEmpty()) {
+        const auto &gmap = genericIconMap();
+        auto it = gmap.constFind(genericName);
+        if (it != gmap.constEnd()) return it.value();
 
-    auto it = m.constFind(mimeName);
-    if (it != m.constEnd()) return it.value();
-
-    for (auto pit = m.constBegin(); pit != m.constEnd(); ++pit) {
-        if (pit.key().endsWith(u'/') && mimeName.startsWith(pit.key()))
-            return pit.value();
+        // Heuristic on generic name
+        if (genericName.startsWith(u"audio"_s))   return u"music_note"_s;
+        if (genericName.startsWith(u"video"_s))   return u"movie"_s;
+        if (genericName.startsWith(u"image"_s))   return u"image"_s;
+        if (genericName.startsWith(u"text"_s))    return u"description"_s;
+        if (genericName.startsWith(u"font"_s))    return u"font_download"_s;
+        if (genericName.startsWith(u"inode"_s))   return u"folder"_s;
     }
 
     return u"insert_drive_file"_s;
 }
 
+// ── Public API ──────────────────────────────────────────────
+
 QString FileIconProvider::iconForFile(const QString &fileName)
 {
-    const int dot = fileName.lastIndexOf(u'.');
-    if (dot < 0) return u"insert_drive_file"_s;
-    return iconForExtension(fileName.mid(dot + 1));
+    QMimeDatabase db;
+    QMimeType mime = db.mimeTypeForFile(fileName, QMimeDatabase::MatchExtension);
+    if (mime.isDefault()) {
+        // MIME database has no entry — try content-based or return generic
+        QMimeType contentMime = db.mimeTypeForFile(fileName, QMimeDatabase::MatchContent);
+        if (!contentMime.isDefault())
+            return mimeToIcon(contentMime.name(), contentMime.genericIconName());
+        return u"insert_drive_file"_s;
+    }
+    return mimeToIcon(mime.name(), mime.genericIconName());
+}
+
+QString FileIconProvider::iconForMime(const QString &mimeName)
+{
+    QMimeDatabase db;
+    QMimeType mime = db.mimeTypeForName(mimeName);
+    return mimeToIcon(mimeName, mime.isValid() ? mime.genericIconName() : QString());
+}
+
+QString FileIconProvider::iconForExtension(const QString &ext)
+{
+    return iconForFile(u"file."_s + ext.toLower());
 }

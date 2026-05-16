@@ -14,6 +14,8 @@ import "../navigation" as Nav
 Window {
     id: root
 
+    // ═══ PUBLIC API ═══════════════════════════════════════════
+
     property string mode: "open"
     property string title: mode === "save" ? "Save File"
                          : mode === "folder" ? "Select Folder"
@@ -38,6 +40,8 @@ Window {
     signal accepted()
     signal rejected()
 
+    // ═══ WINDOW ═══════════════════════════════════════════════
+
     visible: false
     color: "transparent"
     flags: Qt.Window | Qt.FramelessWindowHint
@@ -46,7 +50,6 @@ Window {
 
     property var colors: Theme.ChiTheme.colors
     readonly property var _t: Theme.ChiTheme.typography
-
     readonly property bool isMaximized: visibility === Window.Maximized
     readonly property real windowRadius: isMaximized ? 0 : 16
 
@@ -55,32 +58,51 @@ Window {
     property string _searchQuery: ""
     property var _selectedSet: ({})
 
-    // ── C++ MODEL ───────────────────────────────────────────────
+    // ═══ TYPE-AHEAD ═══════════════════════════════════════════
+
+    property string _typeAheadBuffer: ""
+    Timer { id: typeAheadTimer; interval: 800; onTriggered: root._typeAheadBuffer = "" }
+
+    function _jumpToFile(ch) {
+        _typeAheadBuffer += ch.toLowerCase()
+        typeAheadTimer.restart()
+        for (var i = 0; i < folderModel.count; i++) {
+            var name = folderModel.get(i, "fileName")
+            if (name && ("" + name).toLowerCase().indexOf(_typeAheadBuffer) === 0) {
+                selectedFile = folderModel.get(i, "fileUrl")
+                if (viewLoader.item && viewLoader.item.positionViewAtIndex)
+                    viewLoader.item.positionViewAtIndex(i, ListView.Contain)
+                break
+            }
+        }
+    }
+
+    // ═══ NEW FOLDER STATE ═════════════════════════════════════
+
+    readonly property bool _newFolderExists: {
+        var name = nfInput.text.trim()
+        if (name === "" || name.indexOf("/") >= 0 || name.indexOf("\\") >= 0) return false
+        var base = root.currentFolder.toString()
+        if (base.startsWith("file://")) base = base.substring(7)
+        return folderModel.fileExists(base + "/" + name)
+    }
+
+    // ═══ C++ MODEL ════════════════════════════════════════════
 
     ChiFileDialogModel {
         id: folderModel
         folder: root.currentFolder
-        showDirs: true
-        showFiles: root.mode !== "folder"
-        showHidden: root.showHidden
-        showDirsFirst: true
+        showDirs: true; showFiles: root.mode !== "folder"
+        showHidden: root.showHidden; showDirsFirst: true
         sortField: root.sortBy === "size" ? ChiFileDialogModel.SortBySize
                  : root.sortBy === "date" ? ChiFileDialogModel.SortByDate
                  : root.sortBy === "type" ? ChiFileDialogModel.SortByType
                  : ChiFileDialogModel.SortByName
         sortReversed: !root.sortAscending
-        nameFilters: root._computedFilters
-        searchQuery: root._searchQuery
+        nameFilters: root._computedFilters; searchQuery: root._searchQuery
     }
 
-    // Only attempt thumbnails for image/video/audio
-    function _canHaveThumbnail(mimeType) {
-        if (!mimeType) return false
-        var m = "" + mimeType
-        return m.indexOf("image/") === 0 || m.indexOf("video/") === 0 || m.indexOf("audio/") === 0
-    }
-
-    // ── QUICK ACCESS ────────────────────────────────────────────
+    // ═══ QUICK ACCESS ═════════════════════════════════════════
 
     readonly property url _homePath: StandardPaths.writableLocation(StandardPaths.HomeLocation)
     readonly property url _documentsPath: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
@@ -110,148 +132,92 @@ Window {
         return base
     }
 
-    // ── CORNER MASK ─────────────────────────────────────────────
+    // ═══ CORNER MASK ══════════════════════════════════════════
 
-    Rectangle {
-        id: cornerMask
-        anchors.fill: parent; radius: windowRadius; color: "#FFFFFF"
-        visible: false; layer.enabled: windowRadius > 0
-    }
+    Rectangle { id: cornerMask; anchors.fill: parent; radius: windowRadius; color: "#FFFFFF"; visible: false; layer.enabled: windowRadius > 0 }
 
     Item {
         id: windowSurface
         anchors.fill: parent
-        layer.enabled: windowRadius > 0
-        layer.smooth: true
-        layer.effect: MultiEffect {
-            maskEnabled: true; maskSource: cornerMask
-            maskThresholdMin: 0.5; maskSpreadAtMin: 0.5
-        }
+        layer.enabled: windowRadius > 0; layer.smooth: true
+        layer.effect: MultiEffect { maskEnabled: true; maskSource: cornerMask; maskThresholdMin: 0.5; maskSpreadAtMin: 0.5 }
 
         Rectangle { anchors.fill: parent; color: colors.surface }
 
         Keys.onPressed: function(event) {
-            if (event.key === Qt.Key_Escape) { root.rejected(); root.close() }
-            else if (event.key === Qt.Key_Backspace) _goUp()
-            else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                if (_canAccept()) _accept()
-            }
-            else if (event.key === Qt.Key_A && (event.modifiers & Qt.ControlModifier)) _selectAll()
-            else if (event.key === Qt.Key_H && (event.modifiers & Qt.ControlModifier)) root.showHidden = !root.showHidden
-            else if (event.text.length === 1 && /[a-zA-Z0-9]/.test(event.text)) _jumpToFile(event.text)
+            if (event.key === Qt.Key_Escape) { root.rejected(); root.close(); return }
+            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) { if (_canAccept()) _accept(); return }
+            if (event.key === Qt.Key_A && (event.modifiers & Qt.ControlModifier)) { _selectAll(); return }
+            if (event.key === Qt.Key_H && (event.modifiers & Qt.ControlModifier)) { root.showHidden = !root.showHidden; return }
+            if (event.key === Qt.Key_Backspace) { _goUp(); return }
+            if (event.text.length === 1 && /[a-zA-Z0-9]/.test(event.text) && event.modifiers === 0)
+                _jumpToFile(event.text)
         }
 
-        // ── HEADER ──────────────────────────────────────────────
+        // ── HEADER ──────────────────────────────────────────
 
         Rectangle {
-            id: header
-            anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right
+            id: header; anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right
             height: 52; color: colors.surfaceContainer
 
-            MouseArea {
-                anchors.fill: parent; z: -1
-                onPressed: root.startSystemMove()
-                onDoubleClicked: root.isMaximized ? root.showNormal() : root.showMaximized()
-            }
+            MouseArea { anchors.fill: parent; z: -1; onPressed: root.startSystemMove(); onDoubleClicked: root.isMaximized ? root.showNormal() : root.showMaximized() }
 
             Row {
-                id: headerLeft
-                anchors.left: parent.left; anchors.leftMargin: 16
-                anchors.verticalCenter: parent.verticalCenter; spacing: 8
-
-                Row {
-                    spacing: 8; anchors.verticalCenter: parent.verticalCenter
-                    Repeater {
-                        model: [
-                            { c: "#FF5F57", a: function() { root.rejected(); root.close() } },
-                            { c: "#FFBD2E", a: function() { root.showMinimized() } },
-                            { c: "#28C840", a: function() { root.isMaximized ? root.showNormal() : root.showMaximized() } }
-                        ]
-                        Rectangle {
-                            width: 14; height: 14; radius: 7
-                            color: wcM.pressed ? Qt.darker(modelData.c, 1.2) : wcM.containsMouse ? Qt.lighter(modelData.c, 1.1) : modelData.c
-                            border.width: 0.5; border.color: Qt.darker(modelData.c, 1.3)
-                            MouseArea { id: wcM; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: modelData.a() }
-                        }
-                    }
+                id: headerLeft; anchors.left: parent.left; anchors.leftMargin: 16; anchors.verticalCenter: parent.verticalCenter; spacing: 8
+                Row { spacing: 8; anchors.verticalCenter: parent.verticalCenter
+                    Repeater { model: [
+                        { c: "#FF5F57", a: function() { root.rejected(); root.close() } },
+                        { c: "#FFBD2E", a: function() { root.showMinimized() } },
+                        { c: "#28C840", a: function() { root.isMaximized ? root.showNormal() : root.showMaximized() } }
+                    ] Rectangle { width: 14; height: 14; radius: 7
+                        color: wcM.pressed ? Qt.darker(modelData.c, 1.2) : wcM.containsMouse ? Qt.lighter(modelData.c, 1.1) : modelData.c
+                        border.width: 0.5; border.color: Qt.darker(modelData.c, 1.3)
+                        MouseArea { id: wcM; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: modelData.a() }
+                    }}
                 }
-
                 Item { width: 4; height: 1 }
-
-                Row {
-                    spacing: 2; anchors.verticalCenter: parent.verticalCenter
-                    Repeater {
-                        model: [
-                            { icon: "chevron_left", enabled: root._historyIndex > 0, action: function() { _goBack() }, tip: "Back" },
-                            { icon: "chevron_right", enabled: root._historyIndex < root._navigationHistory.length - 1, action: function() { _goForward() }, tip: "Forward" },
-                            { icon: "expand_less", enabled: root.currentFolder.toString() !== "file:///", action: function() { _goUp() }, tip: "Up" }
-                        ]
-                        Rectangle {
-                            width: 36; height: 36; radius: 8
-                            opacity: modelData.enabled ? 1.0 : 0.4
-                            color: navM.pressed ? Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.15) :
-                                   navM.containsMouse ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.08) : "transparent"
-                            Icon { anchors.centerIn: parent; source: modelData.icon; size: 24; color: colors.onSurfaceVariant }
-                            MouseArea { id: navM; anchors.fill: parent; hoverEnabled: true; cursorShape: modelData.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor; onClicked: if (modelData.enabled) modelData.action() }
-                            ToolTip { visible: navM.containsMouse; text: modelData.tip; delay: 500 }
-                        }
-                    }
+                Row { spacing: 2; anchors.verticalCenter: parent.verticalCenter
+                    Repeater { model: [
+                        { icon: "chevron_left", enabled: root._historyIndex > 0, action: function() { _goBack() }, tip: "Back" },
+                        { icon: "chevron_right", enabled: root._historyIndex < root._navigationHistory.length - 1, action: function() { _goForward() }, tip: "Forward" },
+                        { icon: "expand_less", enabled: root.currentFolder.toString() !== "file:///", action: function() { _goUp() }, tip: "Up" }
+                    ] Rectangle { width: 36; height: 36; radius: 8
+                        opacity: modelData.enabled ? 1.0 : 0.4
+                        color: navM.pressed ? Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.15) : navM.containsMouse ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.08) : "transparent"
+                        Icon { anchors.centerIn: parent; source: modelData.icon; size: 24; color: colors.onSurfaceVariant }
+                        MouseArea { id: navM; anchors.fill: parent; hoverEnabled: true; cursorShape: modelData.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor; onClicked: if (modelData.enabled) modelData.action() }
+                        ToolTip { visible: navM.containsMouse; text: modelData.tip; delay: 500 }
+                    }}
                 }
             }
 
             Nav.PathSearchBar {
-                id: pathBar
-                anchors.left: headerLeft.right; anchors.leftMargin: 12
-                anchors.right: headerRight.left; anchors.rightMargin: 12
+                id: pathBar; anchors.left: headerLeft.right; anchors.leftMargin: 12; anchors.right: headerRight.left; anchors.rightMargin: 12
                 anchors.verticalCenter: parent.verticalCenter; height: 36
                 path: _getDisplayPath(root.currentFolder)
                 onPathAccepted: function(p) { _navigateTo(p.startsWith("file://") ? p : "file://" + p) }
-                onSearchToggled: function(active) {
-                    pathBar.searching = active
-                    if (!active) root._searchQuery = ""
-                }
+                onSearchToggled: function(active) { pathBar.searching = active; if (!active) root._searchQuery = "" }
             }
-
-            Connections {
-                target: pathBar
-                function onCurrentTextChanged() {
-                    if (pathBar.searching) root._searchQuery = pathBar.currentText
-                }
-            }
+            Connections { target: pathBar; function onCurrentTextChanged() { if (pathBar.searching) root._searchQuery = pathBar.currentText } }
 
             Row {
-                id: headerRight
-                anchors.right: parent.right; anchors.rightMargin: 16
-                anchors.verticalCenter: parent.verticalCenter; spacing: 2
-
-                Repeater {
-                    model: [
-                        { icon: "grid_view", checked: root.viewMode === "grid", action: function() { root.viewMode = "grid" } },
-                        { icon: "view_list", checked: root.viewMode === "list", action: function() { root.viewMode = "list" } },
-                        { icon: "account_tree", checked: root.viewMode === "tree", action: function() { root.viewMode = "tree" } }
-                    ]
-                    Rectangle {
-                        width: 36; height: 36; radius: 8
-                        color: modelData.checked ? colors.secondaryContainer :
-                               viewM.containsMouse ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.08) : "transparent"
-                        Icon { anchors.centerIn: parent; source: modelData.icon; size: 22; color: modelData.checked ? colors.onSecondaryContainer : colors.onSurfaceVariant }
-                        MouseArea { id: viewM; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: modelData.action() }
-                    }
-                }
-
+                id: headerRight; anchors.right: parent.right; anchors.rightMargin: 16; anchors.verticalCenter: parent.verticalCenter; spacing: 2
+                Repeater { model: [
+                    { icon: "grid_view", checked: root.viewMode === "grid", action: function() { root.viewMode = "grid" } },
+                    { icon: "view_list", checked: root.viewMode === "list", action: function() { root.viewMode = "list" } },
+                    { icon: "account_tree", checked: root.viewMode === "tree", action: function() { root.viewMode = "tree" } }
+                ] Rectangle { width: 36; height: 36; radius: 8
+                    color: modelData.checked ? colors.secondaryContainer : viewM.containsMouse ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.08) : "transparent"
+                    Icon { anchors.centerIn: parent; source: modelData.icon; size: 22; color: modelData.checked ? colors.onSecondaryContainer : colors.onSurfaceVariant }
+                    MouseArea { id: viewM; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: modelData.action() }
+                }}
                 Item { width: 8; height: 1 }
-
-                Rectangle {
-                    width: 36; height: 36; radius: 8
-                    color: root.showHidden ? colors.secondaryContainer :
-                           hiddenM.containsMouse ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.08) : "transparent"
+                Rectangle { width: 36; height: 36; radius: 8
+                    color: root.showHidden ? colors.secondaryContainer : hiddenM.containsMouse ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.08) : "transparent"
                     Icon { anchors.centerIn: parent; source: root.showHidden ? "visibility" : "visibility_off"; size: 22; color: root.showHidden ? colors.onSecondaryContainer : colors.onSurfaceVariant }
                     MouseArea { id: hiddenM; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.showHidden = !root.showHidden }
                 }
-
-                Rectangle {
-                    visible: root.mode === "save" || root.mode === "folder"
-                    width: 36; height: 36; radius: 8
+                Rectangle { visible: root.mode === "save" || root.mode === "folder"; width: 36; height: 36; radius: 8
                     color: nfBtnM.containsMouse ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.08) : "transparent"
                     Icon { anchors.centerIn: parent; source: "create_new_folder"; size: 22; color: colors.onSurfaceVariant }
                     MouseArea { id: nfBtnM; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: newFolderPopup.open() }
@@ -259,30 +225,23 @@ Window {
             }
         }
 
-        // ── BODY ────────────────────────────────────────────────
+        // ── BODY ────────────────────────────────────────────
 
         Item {
-            anchors.top: header.bottom; anchors.left: parent.left
-            anchors.right: parent.right; anchors.bottom: footer.top
+            anchors.top: header.bottom; anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: footer.top
 
             Row {
                 anchors.fill: parent
 
+                // Sidebar rail
                 Rectangle {
-                    id: navRail
-                    width: root.sidebarExpanded ? 0 : 56
-                    height: parent.height; color: colors.surfaceContainer; visible: width > 0
-
-                    Column {
-                        anchors.fill: parent; anchors.topMargin: 8; spacing: 4
+                    id: navRail; width: root.sidebarExpanded ? 0 : 56; height: parent.height; color: colors.surfaceContainer; visible: width > 0
+                    Column { anchors.fill: parent; anchors.topMargin: 8; spacing: 4
                         Buttons.IconButton { anchors.horizontalCenter: parent.horizontalCenter; icon: "menu"; size: "xsmall"; variant: "standard"; onClicked: root.sidebarExpanded = true }
                         Item { width: 1; height: 8 }
-                        Repeater {
-                            model: root._quickAccess
-                            Item {
-                                width: navRail.width; height: 48
-                                Rectangle {
-                                    anchors.centerIn: parent; width: 40; height: 40; radius: 12
+                        Repeater { model: root._quickAccess
+                            Item { width: navRail.width; height: 48
+                                Rectangle { anchors.centerIn: parent; width: 40; height: 40; radius: 12
                                     readonly property bool active: root.currentFolder.toString() === modelData.path.toString()
                                     color: active ? colors.secondaryContainer : railM.containsMouse ? colors.surfaceContainerHighest : "transparent"
                                     Icon { anchors.centerIn: parent; source: modelData.icon; size: 22; color: parent.active ? colors.onSecondaryContainer : colors.onSurfaceVariant }
@@ -294,16 +253,12 @@ Window {
                     }
                 }
 
+                // Sidebar expanded
                 Rectangle {
-                    id: sidebarPanel
-                    width: root.sidebarExpanded ? 200 : 0
-                    height: parent.height; color: colors.surfaceContainer; visible: width > 0; clip: true
+                    id: sidebarPanel; width: root.sidebarExpanded ? 200 : 0; height: parent.height; color: colors.surfaceContainer; visible: width > 0; clip: true
                     Behavior on width { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-
-                    Column {
-                        anchors.fill: parent; anchors.topMargin: 8; spacing: 4
-                        Rectangle {
-                            width: parent.width - 16; x: 8; height: 40; radius: 12
+                    Column { anchors.fill: parent; anchors.topMargin: 8; spacing: 4
+                        Rectangle { width: parent.width - 16; x: 8; height: 40; radius: 12
                             color: collapseM.containsMouse ? colors.surfaceContainerHighest : "transparent"
                             Row { anchors.left: parent.left; anchors.leftMargin: 14; anchors.verticalCenter: parent.verticalCenter; spacing: 12
                                 Icon { source: "menu_open"; size: 22; color: colors.onSurfaceVariant }
@@ -314,10 +269,8 @@ Window {
                         Item { width: 1; height: 8 }
                         Text { text: "PLACES"; font.family: _t.labelSmall.family; font.pixelSize: _t.labelSmall.size; font.weight: Font.Bold; font.letterSpacing: 0.5; color: colors.onSurfaceVariant; leftPadding: 16 }
                         Item { width: 1; height: 4 }
-                        Repeater {
-                            model: root._quickAccess
-                            Rectangle {
-                                width: sidebarPanel.width - 16; x: 8; height: 40; radius: 12
+                        Repeater { model: root._quickAccess
+                            Rectangle { width: sidebarPanel.width - 16; x: 8; height: 40; radius: 12
                                 readonly property bool active: root.currentFolder.toString() === modelData.path.toString()
                                 color: active ? colors.secondaryContainer : sideM.containsMouse ? colors.surfaceContainerHighest : "transparent"
                                 Row { anchors.left: parent.left; anchors.leftMargin: 14; anchors.verticalCenter: parent.verticalCenter; spacing: 12
@@ -330,17 +283,17 @@ Window {
                     }
                 }
 
+                // Content
                 Item {
                     id: contentArea
                     width: parent.width - (root.sidebarExpanded ? sidebarPanel.width : navRail.width)
                     height: parent.height
 
+                    // Column headers (list/tree only)
                     Rectangle {
-                        id: colHeaders; width: parent.width
-                        height: root.viewMode !== "grid" ? 36 : 0
-                        color: colors.surfaceContainerLow; visible: height > 0
+                        id: colHeaders; width: parent.width; height: root.viewMode !== "grid" ? 36 : 0; color: colors.surfaceContainerLow; visible: height > 0
                         RowLayout {
-                            anchors.fill: parent; anchors.leftMargin: root.viewMode === "tree" ? 56 : 16; anchors.rightMargin: 16; spacing: 0
+                            anchors.fill: parent; anchors.leftMargin: 16; anchors.rightMargin: 16; spacing: 0
                             HeaderCell { text: "Name"; Layout.fillWidth: true; sortKey: "name" }
                             HeaderCell { text: "Size"; Layout.preferredWidth: 80; sortKey: "size" }
                             HeaderCell { text: "Modified"; Layout.preferredWidth: 140; sortKey: "date" }
@@ -348,15 +301,42 @@ Window {
                         }
                     }
 
+                    // Loading
                     Rectangle {
-                        anchors.centerIn: parent; visible: folderModel.loading
-                        width: loadCol.implicitWidth + 32; height: loadCol.implicitHeight + 32
-                        radius: 16; color: colors.surfaceContainerHigh; z: 5
+                        anchors.centerIn: parent; visible: folderModel.loading; width: loadCol.implicitWidth + 32; height: loadCol.implicitHeight + 32; radius: 16; color: colors.surfaceContainerHigh; z: 5
                         Column { id: loadCol; anchors.centerIn: parent; spacing: 8
                             CircularProgressIndicator { anchors.horizontalCenter: parent.horizontalCenter; indeterminate: true }
                             Text { text: "Loading..."; font.family: _t.bodySmall.family; font.pixelSize: _t.bodySmall.size; color: colors.onSurfaceVariant; anchors.horizontalCenter: parent.horizontalCenter }
                         }
                     }
+
+                    // ── View Loader ──────────────────────────
+
+                    Component { id: gridComp; FileDialogGridView {
+                        anchors.fill: parent
+                        iconSize: root.gridIconSize; showThumbnails: root.showThumbnails
+                        colors: root.colors; selectMode: root.mode; selectedSet: root._selectedSet
+                        onFileClicked: function(u, d, n) { root._handleClick(u, d, n) }
+                        onFileDoubleClicked: function(u, d) { root._handleDoubleClick(u, d) }
+                        onContextMenuRequested: function(u, n, d, mx, my, a) { root._showCtxAt(u, n, d, mx, my, a) }
+                    }}
+
+                    Component { id: listComp; FileDialogListView {
+                        anchors.fill: parent
+                        showThumbnails: root.showThumbnails; colors: root.colors
+                        selectMode: root.mode; selectedSet: root._selectedSet
+                        onFileClicked: function(u, d, n) { root._handleClick(u, d, n) }
+                        onFileDoubleClicked: function(u, d) { root._handleDoubleClick(u, d) }
+                        onContextMenuRequested: function(u, n, d, mx, my, a) { root._showCtxAt(u, n, d, mx, my, a) }
+                    }}
+
+                    Component { id: treeComp; FileDialogTreeView {
+                        anchors.fill: parent; colors: root.colors
+                        onFileClicked: function(u, d, n) { root._handleClick(u, d, n) }
+                        onFileDoubleClicked: function(u, d) { root._handleDoubleClick(u, d) }
+                        onContextMenuRequested: function(u, n, d, mx, my, a) { root._showCtxAt(u, n, d, mx, my, a) }
+                        onNavigateTo: function(u) { root._navigateTo(u) }
+                    }}
 
                     Loader {
                         id: viewLoader
@@ -365,74 +345,52 @@ Window {
                         sourceComponent: root.viewMode === "grid" ? gridComp : root.viewMode === "list" ? listComp : treeComp
                     }
 
-                    MouseArea {
-                        anchors.fill: parent; acceptedButtons: Qt.RightButton; z: -1
-                        onClicked: function(mouse) { bgCtxMenu.popup(mouse.x, mouse.y) }
-                    }
-
+                    // Empty state
                     Column {
                         anchors.centerIn: parent; spacing: 12; visible: folderModel.count === 0 && !folderModel.loading
                         Icon { source: "folder_off"; size: 64; color: colors.onSurfaceVariant; opacity: 0.5; anchors.horizontalCenter: parent.horizontalCenter }
                         Text { text: root._searchQuery.length > 0 ? "No results for \"" + root._searchQuery + "\"" : "This folder is empty"; font.family: _t.bodyLarge.family; font.pixelSize: _t.bodyLarge.size; color: colors.onSurfaceVariant; anchors.horizontalCenter: parent.horizontalCenter }
                     }
 
+                    // Search result count
                     Rectangle {
                         visible: root._searchQuery.length > 0 && folderModel.count > 0
                         anchors.bottom: parent.bottom; anchors.right: parent.right; anchors.margins: 16
                         width: srText.implicitWidth + 16; height: 24; radius: 12; color: colors.secondaryContainer
                         Text { id: srText; anchors.centerIn: parent; text: folderModel.count + " result" + (folderModel.count !== 1 ? "s" : ""); font.family: _t.labelSmall.family; font.pixelSize: _t.labelSmall.size; color: colors.onSecondaryContainer }
                     }
+
+                    // Background context menu
+                    MouseArea { anchors.fill: parent; acceptedButtons: Qt.RightButton; z: -1; onClicked: function(m) { bgCtxMenu.popup(m.x, m.y) } }
                 }
             }
         }
 
-        // ── FOOTER ──────────────────────────────────────────────
+        // ── FOOTER ──────────────────────────────────────────
 
         Rectangle {
-            id: footer
-            anchors.bottom: parent.bottom; anchors.left: parent.left; anchors.right: parent.right
-            color: colors.surfaceContainer
+            id: footer; anchors.bottom: parent.bottom; anchors.left: parent.left; anchors.right: parent.right; color: colors.surfaceContainer
             implicitHeight: footerCol.implicitHeight + 32
 
             ColumnLayout {
-                id: footerCol
-                anchors.fill: parent
-                anchors.leftMargin: 16; anchors.rightMargin: 16
-                anchors.topMargin: 16; anchors.bottomMargin: 16
-                spacing: 12
-
-                RowLayout {
-                    visible: root.mode === "save"; Layout.fillWidth: true; spacing: 12
+                id: footerCol; anchors.fill: parent; anchors.leftMargin: 16; anchors.rightMargin: 16; anchors.topMargin: 16; anchors.bottomMargin: 16; spacing: 12
+                RowLayout { visible: root.mode === "save"; Layout.fillWidth: true; spacing: 12
                     Text { text: "Save as:"; font.family: _t.labelLarge.family; font.pixelSize: _t.labelLarge.size; font.weight: Font.Medium; color: colors.onSurfaceVariant }
-                    Rectangle {
-                        Layout.fillWidth: true; height: 40; radius: 20; color: colors.surfaceContainerHighest
-                        TextInput {
-                            id: fileNameInput; anchors.fill: parent; anchors.leftMargin: 16; anchors.rightMargin: 16
-                            verticalAlignment: Text.AlignVCenter; font.family: _t.bodyMedium.family; font.pixelSize: _t.bodyMedium.size
-                            color: colors.onSurface; selectionColor: colors.primaryContainer; selectedTextColor: colors.onPrimaryContainer
-                            selectByMouse: true; text: root.fileName; onTextChanged: root.fileName = text
-                            onAccepted: if (_canAccept()) _accept()
+                    Rectangle { Layout.fillWidth: true; height: 40; radius: 20; color: colors.surfaceContainerHighest
+                        TextInput { id: fileNameInput; anchors.fill: parent; anchors.leftMargin: 16; anchors.rightMargin: 16; verticalAlignment: Text.AlignVCenter; font.family: _t.bodyMedium.family; font.pixelSize: _t.bodyMedium.size; color: colors.onSurface; selectionColor: colors.primaryContainer; selectedTextColor: colors.onPrimaryContainer; selectByMouse: true; text: root.fileName; onTextChanged: root.fileName = text; onAccepted: if (_canAccept()) _accept()
                             Text { visible: !fileNameInput.text; text: "Enter file name"; font: fileNameInput.font; color: colors.onSurfaceVariant }
                         }
                     }
                 }
-
-                RowLayout {
-                    Layout.fillWidth: true; spacing: 12
-                    Rectangle {
-                        visible: root.nameFilters.length > 0 && root.mode !== "folder"
-                        width: 200; height: 36; radius: 18; color: colors.surfaceContainerHighest
+                RowLayout { Layout.fillWidth: true; spacing: 12
+                    Rectangle { visible: root.nameFilters.length > 0 && root.mode !== "folder"; width: 200; height: 36; radius: 18; color: colors.surfaceContainerHighest
                         Row { anchors.fill: parent; anchors.leftMargin: 14; anchors.rightMargin: 10
                             Text { width: parent.width - 28; anchors.verticalCenter: parent.verticalCenter; text: root.nameFilters[root.currentFilter] || "All Files"; font.family: _t.bodySmall.family; font.pixelSize: _t.bodySmall.size; color: colors.onSurface; elide: Text.ElideRight }
                             Icon { anchors.verticalCenter: parent.verticalCenter; source: "expand_more"; size: 18; color: colors.onSurfaceVariant }
                         }
                         MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: filterPopup.open() }
                     }
-                    Text {
-                        Layout.fillWidth: true
-                        text: root.mode === "openMultiple" && root.selectedFiles.length > 0 ? root.selectedFiles.length + " selected" : root.selectedFile.toString() !== "" ? root.selectedFile.toString().split("/").pop() : ""
-                        font.family: _t.bodySmall.family; font.pixelSize: _t.bodySmall.size; color: colors.onSurfaceVariant; elide: Text.ElideMiddle
-                    }
+                    Text { Layout.fillWidth: true; text: root.mode === "openMultiple" && root.selectedFiles.length > 0 ? root.selectedFiles.length + " selected" : root.selectedFile.toString() !== "" ? root.selectedFile.toString().split("/").pop() : ""; font.family: _t.bodySmall.family; font.pixelSize: _t.bodySmall.size; color: colors.onSurfaceVariant; elide: Text.ElideMiddle }
                     Buttons.Button { text: "Cancel"; variant: "outlined"; onClicked: { root.rejected(); root.close() } }
                     Buttons.Button { text: root.mode === "save" ? "Save" : root.mode === "folder" ? "Select" : "Open"; variant: "filled"; enabled: _canAccept(); onClicked: if (_canAccept()) _accept() }
                 }
@@ -440,10 +398,11 @@ Window {
         }
     }
 
+    // ── Window chrome ───────────────────────────────────────
+
     Rectangle { anchors.fill: parent; radius: windowRadius; color: "transparent"; border.width: 1; border.color: Qt.rgba(colors.shadow.r, colors.shadow.g, colors.shadow.b, 0.15); visible: !root.isMaximized; z: 1000 }
 
-    Loader {
-        active: !root.isMaximized; anchors.fill: parent; z: 1010
+    Loader { active: !root.isMaximized; anchors.fill: parent; z: 1010
         sourceComponent: Item {
             property int edge: 6; property int corner: 16
             MouseArea { anchors { top: parent.top; left: parent.left; right: parent.right } height: edge; cursorShape: Qt.SizeVerCursor; onPressed: root.startSystemResize(Qt.TopEdge) }
@@ -457,208 +416,7 @@ Window {
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // VIEW COMPONENTS — STACKED: icon always renders, thumbnail overlays
-    // ═══════════════════════════════════════════════════════════════
-
-    Component {
-        id: gridComp
-        GridView {
-            readonly property int cols: Math.max(1, Math.floor(width / (root.gridIconSize + 56)))
-            cellWidth: width / cols; cellHeight: root.gridIconSize + 56
-            clip: true; model: folderModel; boundsBehavior: Flickable.StopAtBounds
-            ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
-
-            delegate: Item {
-                id: gridDelegate
-                width: GridView.view.cellWidth; height: GridView.view.cellHeight
-                readonly property bool selected: _isSelected(model.fileUrl)
-                readonly property bool showThumb: root.showThumbnails && !model.fileIsDir && root._canHaveThumbnail(model.fileMimeType)
-
-                Rectangle {
-                    anchors.fill: parent; anchors.margins: 4; radius: 12
-                    color: selected ? colors.primaryContainer : gM.containsMouse ? colors.surfaceContainerHighest : "transparent"
-
-                    Rectangle {
-                        visible: root.mode === "openMultiple" && !model.fileIsDir && (selected || gM.containsMouse)
-                        anchors.top: parent.top; anchors.right: parent.right; anchors.topMargin: 8; anchors.rightMargin: 8
-                        width: 22; height: 22; radius: 6; z: 10
-                        color: _isInMultiSelection(model.fileUrl) ? colors.primary : "transparent"
-                        border.width: _isInMultiSelection(model.fileUrl) ? 0 : 1.5; border.color: colors.outlineVariant
-                        Icon { visible: _isInMultiSelection(model.fileUrl); anchors.centerIn: parent; source: "check"; size: 16; color: colors.onPrimary }
-                    }
-
-                    Column {
-                        anchors.fill: parent; anchors.margins: 10; spacing: 6
-                        Item {
-                            width: root.gridIconSize; height: root.gridIconSize; anchors.horizontalCenter: parent.horizontalCenter
-
-                            // BASE LAYER: icon always renders (folder, music_note, code, etc.)
-                            Icon {
-                                anchors.centerIn: parent; z: 0
-                                source: model.fileIsDir ? "folder" : model.fileIcon
-                                size: root.gridIconSize * 0.55
-                                color: model.fileIsDir ? colors.primary : colors.onSurfaceVariant
-                            }
-
-                            // OVERLAY: thumbnail covers icon only when loaded
-                            Rectangle {
-                                anchors.fill: parent; radius: 8; clip: true
-                                color: "transparent"; z: 1
-                                visible: showThumb && gridThumbImg.status === Image.Ready
-
-                                Image {
-                                    id: gridThumbImg
-                                    anchors.fill: parent
-                                    source: showThumb ? "image://thumb/" + model.filePath : ""
-                                    fillMode: Image.PreserveAspectCrop
-                                    asynchronous: true; cache: false; mipmap: true; smooth: true
-                                    sourceSize: Qt.size(root.gridIconSize * 2, root.gridIconSize * 2)
-                                }
-                            }
-                        }
-                        Text {
-                            width: parent.width; horizontalAlignment: Text.AlignHCenter
-                            text: model.fileName; font.family: _t.bodySmall.family; font.pixelSize: _t.bodySmall.size
-                            font.weight: selected ? Font.Medium : Font.Normal
-                            color: selected ? colors.onPrimaryContainer : colors.onSurface
-                            elide: Text.ElideMiddle; maximumLineCount: 2; wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                        }
-                    }
-
-                    MouseArea {
-                        id: gM; anchors.fill: parent; hoverEnabled: true
-                        acceptedButtons: Qt.LeftButton | Qt.RightButton; cursorShape: Qt.PointingHandCursor
-                        onClicked: function(mouse) {
-                            if (mouse.button === Qt.RightButton) _showCtxAt(model.fileUrl, model.fileName, model.fileIsDir, mouse, gM)
-                            else _handleClick(model.fileUrl, model.fileIsDir, model.fileName)
-                        }
-                        onDoubleClicked: _handleDoubleClick(model.fileUrl, model.fileIsDir)
-                    }
-                }
-            }
-        }
-    }
-
-    Component {
-        id: listComp
-        ListView {
-            clip: true; model: folderModel; spacing: 2; boundsBehavior: Flickable.StopAtBounds
-            ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
-
-            delegate: Rectangle {
-                id: listDelegate
-                width: ListView.view.width; height: 42; radius: 10
-                readonly property bool selected: _isSelected(model.fileUrl)
-                readonly property bool showThumb: root.showThumbnails && !model.fileIsDir && root._canHaveThumbnail(model.fileMimeType)
-                color: selected ? colors.primaryContainer : lM.containsMouse ? colors.surfaceContainerHighest : "transparent"
-
-                RowLayout {
-                    anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 12; spacing: 0
-
-                    Item {
-                        Layout.preferredWidth: root.mode === "openMultiple" && !model.fileIsDir ? 32 : 0; Layout.preferredHeight: 32
-                        visible: root.mode === "openMultiple" && !model.fileIsDir
-                        Rectangle {
-                            anchors.centerIn: parent; width: 22; height: 22; radius: 6
-                            visible: _isInMultiSelection(model.fileUrl) || lM.containsMouse
-                            color: _isInMultiSelection(model.fileUrl) ? colors.primary : "transparent"
-                            border.width: _isInMultiSelection(model.fileUrl) ? 0 : 1.5; border.color: colors.outlineVariant
-                            Icon { visible: _isInMultiSelection(model.fileUrl); anchors.centerIn: parent; source: "check"; size: 16; color: colors.onPrimary }
-                        }
-                    }
-
-                    Item {
-                        Layout.preferredWidth: 32; Layout.preferredHeight: 32; Layout.leftMargin: root.mode === "openMultiple" && !model.fileIsDir ? 0 : 4
-
-                        // Icon base layer
-                        Icon {
-                            anchors.centerIn: parent; z: 0
-                            source: model.fileIsDir ? "folder" : model.fileIcon; size: 22
-                            color: model.fileIsDir ? colors.primary : colors.onSurfaceVariant
-                        }
-
-                        // Thumbnail overlay
-                        Rectangle {
-                            anchors.fill: parent; radius: 6; clip: true
-                            color: "transparent"; z: 1
-                            visible: showThumb && listThumbImg.status === Image.Ready
-
-                            Image {
-                                id: listThumbImg
-                                anchors.fill: parent
-                                source: showThumb ? "image://thumb/" + model.filePath : ""
-                                fillMode: Image.PreserveAspectCrop
-                                asynchronous: true; cache: false; mipmap: true; smooth: true
-                                sourceSize: Qt.size(64, 64)
-                            }
-                        }
-                    }
-
-                    Text { Layout.fillWidth: true; Layout.leftMargin: 12; text: model.fileName; font.family: _t.bodyMedium.family; font.pixelSize: _t.bodyMedium.size; color: selected ? colors.onPrimaryContainer : colors.onSurface; elide: Text.ElideMiddle }
-                    Text { Layout.preferredWidth: 80; text: model.fileIsDir ? "--" : _formatSize(model.fileSize); font.family: _t.bodySmall.family; font.pixelSize: _t.bodySmall.size; color: colors.onSurfaceVariant; horizontalAlignment: Text.AlignRight }
-                    Text { Layout.preferredWidth: 140; Layout.leftMargin: 16; text: Qt.formatDateTime(model.fileModified, "MMM d, yyyy"); font.family: _t.bodySmall.family; font.pixelSize: _t.bodySmall.size; color: colors.onSurfaceVariant }
-                    Text { Layout.preferredWidth: 100; Layout.leftMargin: 16; text: model.fileIsDir ? "Folder" : model.fileTypeLabel; font.family: _t.bodySmall.family; font.pixelSize: _t.bodySmall.size; color: colors.onSurfaceVariant; elide: Text.ElideRight }
-                }
-
-                MouseArea {
-                    id: lM; anchors.fill: parent; hoverEnabled: true
-                    acceptedButtons: Qt.LeftButton | Qt.RightButton; cursorShape: Qt.PointingHandCursor
-                    onClicked: function(mouse) {
-                        if (mouse.button === Qt.RightButton) _showCtxAt(model.fileUrl, model.fileName, model.fileIsDir, mouse, lM)
-                        else _handleClick(model.fileUrl, model.fileIsDir, model.fileName)
-                    }
-                    onDoubleClicked: _handleDoubleClick(model.fileUrl, model.fileIsDir)
-                }
-            }
-        }
-    }
-
-    Component {
-        id: treeComp
-        ListView {
-            clip: true; model: folderModel; spacing: 2; boundsBehavior: Flickable.StopAtBounds
-            ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
-
-            delegate: Rectangle {
-                width: ListView.view.width; height: 40; radius: 10
-                readonly property bool selected: _isSelected(model.fileUrl)
-                color: selected ? colors.primaryContainer : tM.containsMouse ? colors.surfaceContainerHighest : "transparent"
-
-                RowLayout {
-                    anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 12; spacing: 0
-
-                    Item {
-                        Layout.preferredWidth: 32; Layout.preferredHeight: 32
-                        Rectangle {
-                            anchors.fill: parent; radius: 6; visible: model.fileIsDir
-                            color: chevM.containsMouse ? colors.surfaceContainerHighest : "transparent"
-                            Icon { anchors.centerIn: parent; source: "chevron_right"; size: 22; color: colors.onSurfaceVariant }
-                            MouseArea { id: chevM; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: _navigateTo(model.fileUrl); z: 10 }
-                        }
-                    }
-
-                    Icon { source: model.fileIsDir ? "folder" : model.fileIcon; size: 22; color: model.fileIsDir ? colors.primary : colors.onSurfaceVariant }
-                    Text { Layout.fillWidth: true; Layout.leftMargin: 10; text: model.fileName; font.family: _t.bodyMedium.family; font.pixelSize: _t.bodyMedium.size; color: selected ? colors.onPrimaryContainer : colors.onSurface; elide: Text.ElideMiddle }
-                    Text { Layout.preferredWidth: 80; text: model.fileIsDir ? "--" : _formatSize(model.fileSize); font.family: _t.bodySmall.family; font.pixelSize: _t.bodySmall.size; color: colors.onSurfaceVariant; horizontalAlignment: Text.AlignRight }
-                    Text { Layout.preferredWidth: 140; Layout.leftMargin: 16; text: Qt.formatDateTime(model.fileModified, "MMM d, yyyy"); font.family: _t.bodySmall.family; font.pixelSize: _t.bodySmall.size; color: colors.onSurfaceVariant }
-                    Text { Layout.preferredWidth: 100; Layout.leftMargin: 16; text: model.fileIsDir ? "Folder" : model.fileTypeLabel; font.family: _t.bodySmall.family; font.pixelSize: _t.bodySmall.size; color: colors.onSurfaceVariant; elide: Text.ElideRight }
-                }
-
-                MouseArea {
-                    id: tM; anchors.fill: parent; hoverEnabled: true
-                    acceptedButtons: Qt.LeftButton | Qt.RightButton; cursorShape: Qt.PointingHandCursor
-                    onClicked: function(mouse) {
-                        if (mouse.button === Qt.RightButton) _showCtxAt(model.fileUrl, model.fileName, model.fileIsDir, mouse, tM)
-                        else _handleClick(model.fileUrl, model.fileIsDir, model.fileName)
-                    }
-                    onDoubleClicked: _handleDoubleClick(model.fileUrl, model.fileIsDir)
-                }
-            }
-        }
-    }
-
-    // ── INLINE COMPONENTS ───────────────────────────────────────
+    // ── Inline components ───────────────────────────────────
 
     component HeaderCell: Item {
         property string text; property string sortKey; height: 36
@@ -669,17 +427,11 @@ Window {
         MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: { if (root.sortBy === sortKey) root.sortAscending = !root.sortAscending; else { root.sortBy = sortKey; root.sortAscending = true } } }
     }
 
-    // ── CONTEXT MENUS ───────────────────────────────────────────
+    // ── Context menus ───────────────────────────────────────
 
-    QtObject {
-        id: ctxState
-        property url file: ""
-        property string name: ""
-        property bool isDir: false
-    }
+    QtObject { id: ctxState; property url file: ""; property string name: ""; property bool isDir: false }
 
-    Menus.ContextMenu {
-        id: fileCtxMenu
+    Menus.ContextMenu { id: fileCtxMenu
         Menus.MenuItem { text: ctxState.isDir ? "Open Folder" : "Open"; leadingIcon: ctxState.isDir ? "folder_open" : "open_in_new"; onClicked: ctxState.isDir ? _navigateTo(ctxState.file) : (function() { root.selectedFile = ctxState.file; _accept() })() }
         Menus.MenuDivider {}
         Menus.MenuItem { text: "New Folder"; leadingIcon: "create_new_folder"; onClicked: newFolderPopup.open() }
@@ -692,8 +444,7 @@ Window {
         Menus.MenuItem { text: "Copy Path"; leadingIcon: "content_copy"; onClicked: _copyToClipboard(ctxState.file.toString().replace("file://", "")) }
     }
 
-    Menus.ContextMenu {
-        id: bgCtxMenu
+    Menus.ContextMenu { id: bgCtxMenu
         Menus.MenuItem { text: "New Folder"; leadingIcon: "create_new_folder"; onClicked: newFolderPopup.open() }
         Menus.MenuDivider {}
         Menus.MenuItem { visible: root.mode === "openMultiple"; text: "Select All"; leadingIcon: "select_all"; onClicked: _selectAll() }
@@ -713,10 +464,9 @@ Window {
 
     TextInput { id: clipHelper; visible: false }
 
-    // ── POPUPS ──────────────────────────────────────────────────
+    // ── Popups ──────────────────────────────────────────────
 
-    Popup {
-        id: filterPopup; y: footer.y - height - 4; x: 16; width: 200; padding: 6
+    Popup { id: filterPopup; y: footer.y - height - 4; x: 16; width: 200; padding: 6
         background: Rectangle { color: colors.surfaceContainerHigh; radius: 12; border.width: 1; border.color: colors.outlineVariant }
         contentItem: Column { spacing: 2
             Repeater { model: root.nameFilters
@@ -728,36 +478,35 @@ Window {
         }
     }
 
-    Popup {
-        id: newFolderPopup; anchors.centerIn: parent; width: 320; modal: true; padding: 20
+    Popup { id: newFolderPopup; anchors.centerIn: parent; width: 340; modal: true; padding: 20
         background: Rectangle { color: colors.surfaceContainerHigh; radius: 16 }
-        contentItem: Column { spacing: 16
+        onOpened: { nfInput.text = ""; nfInput.forceActiveFocus() }
+        contentItem: Column { spacing: 12
             Text { text: "New Folder"; font.family: _t.titleMedium.family; font.pixelSize: _t.titleMedium.size; font.weight: Font.Medium; color: colors.onSurface }
             Rectangle { width: parent.width; height: 44; radius: 22; color: colors.surfaceContainerHighest
+                border.width: nfInput.text.trim() !== "" && root._newFolderExists ? 2 : 0
+                border.color: colors.error
                 TextInput { id: nfInput; anchors.fill: parent; anchors.leftMargin: 16; anchors.rightMargin: 16; verticalAlignment: Text.AlignVCenter; font.family: _t.bodyMedium.family; font.pixelSize: _t.bodyMedium.size; color: colors.onSurface; selectionColor: colors.primaryContainer; selectedTextColor: colors.onPrimaryContainer; selectByMouse: true
-                    onAccepted: if (text.trim()) { _createFolder(text.trim()); text = ""; newFolderPopup.close() }
+                    onAccepted: if (text.trim() && !root._newFolderExists) { folderModel.createFolder(text.trim()); text = ""; newFolderPopup.close() }
                     Text { visible: !nfInput.text; text: "Folder name"; font: nfInput.font; color: colors.onSurfaceVariant }
                 }
             }
+            Row { visible: nfInput.text.trim() !== "" && root._newFolderExists; spacing: 6; width: parent.width
+                Icon { source: "error"; size: 16; color: colors.error; anchors.verticalCenter: parent.verticalCenter }
+                Text { text: "Folder already exists"; font.family: _t.bodySmall.family; font.pixelSize: _t.bodySmall.size; color: colors.error; anchors.verticalCenter: parent.verticalCenter }
+            }
             Row { anchors.right: parent.right; spacing: 8
                 Buttons.Button { text: "Cancel"; variant: "outlined"; onClicked: newFolderPopup.close() }
-                Buttons.Button { text: "Create"; variant: "filled"; enabled: nfInput.text.trim() !== ""; onClicked: if (nfInput.text.trim()) { _createFolder(nfInput.text.trim()); nfInput.text = ""; newFolderPopup.close() } }
+                Buttons.Button { text: "Create"; variant: "filled"; enabled: nfInput.text.trim() !== "" && !root._newFolderExists; onClicked: if (nfInput.text.trim() && !root._newFolderExists) { folderModel.createFolder(nfInput.text.trim()); nfInput.text = ""; newFolderPopup.close() } }
             }
         }
-        onOpened: nfInput.forceActiveFocus()
     }
 
-
-    Popup {
-        id: overwritePopup; anchors.centerIn: parent; width: 360; modal: true; padding: 24
+    Popup { id: overwritePopup; anchors.centerIn: parent; width: 360; modal: true; padding: 24
         background: Rectangle { color: colors.surfaceContainerHigh; radius: 16 }
         contentItem: Column { spacing: 16
             Text { text: "File Already Exists"; font.family: _t.titleMedium.family; font.pixelSize: _t.titleMedium.size; font.weight: Font.Medium; color: colors.onSurface }
-            Text {
-                width: parent.width; wrapMode: Text.WordWrap
-                text: "A file named \"" + root.fileName + "\" already exists in this folder. Replace it?"
-                font.family: _t.bodyMedium.family; font.pixelSize: _t.bodyMedium.size; color: colors.onSurfaceVariant
-            }
+            Text { width: parent.width; wrapMode: Text.WordWrap; text: "\"" + root.fileName + "\" already exists. Replace it?"; font.family: _t.bodyMedium.family; font.pixelSize: _t.bodyMedium.size; color: colors.onSurfaceVariant }
             Row { anchors.right: parent.right; spacing: 8
                 Buttons.Button { text: "Cancel"; variant: "outlined"; onClicked: overwritePopup.close() }
                 Buttons.Button { text: "Replace"; variant: "filled"; onClicked: { overwritePopup.close(); _forceAccept() } }
@@ -765,45 +514,28 @@ Window {
         }
     }
 
-    // ── FUNCTIONS ───────────────────────────────────────────────
-
-    function _jumpToFile(ch) {
-        var lower = ch.toLowerCase()
-        for (var i = 0; i < folderModel.count; i++) {
-            var name = folderModel.get(i, "fileName")
-            if (name && ("" + name).toLowerCase().charAt(0) === lower) {
-                selectedFile = folderModel.get(i, "fileUrl")
-                if (viewLoader.item && viewLoader.item.positionViewAtIndex)
-                    viewLoader.item.positionViewAtIndex(i, ListView.Contain)
-                break
-            }
-        }
-    }
+    // ── Functions ───────────────────────────────────────────
 
     function _getDisplayPath(url) { return url.toString().replace("file://", "") || "/" }
 
     function _navigateTo(url) {
         if (_historyIndex < _navigationHistory.length - 1) _navigationHistory = _navigationHistory.slice(0, _historyIndex + 1)
         _navigationHistory.push(url); _historyIndex = _navigationHistory.length - 1
-        currentFolder = url; selectedFile = ""; selectedFiles = []; _selectedSet = ({})
+        currentFolder = url; selectedFile = ""; selectedFiles = []; _selectedSet = ({}); _typeAheadBuffer = ""
+        Qt.callLater(function() { windowSurface.forceActiveFocus() })
     }
 
-    function _goBack() { if (_historyIndex > 0) { _historyIndex--; currentFolder = _navigationHistory[_historyIndex] } }
-    function _goForward() { if (_historyIndex < _navigationHistory.length - 1) { _historyIndex++; currentFolder = _navigationHistory[_historyIndex] } }
+    function _goBack() { if (_historyIndex > 0) { _historyIndex--; currentFolder = _navigationHistory[_historyIndex]; Qt.callLater(function() { windowSurface.forceActiveFocus() }) } }
+    function _goForward() { if (_historyIndex < _navigationHistory.length - 1) { _historyIndex++; currentFolder = _navigationHistory[_historyIndex]; Qt.callLater(function() { windowSurface.forceActiveFocus() }) } }
     function _goUp() { var p = currentFolder.toString(), l = p.lastIndexOf("/"); _navigateTo(l > 7 ? p.substring(0, l) : "file:///") }
 
     function _handleClick(url, isDir, name) {
         selectedFile = url
         if (mode === "openMultiple" && !isDir) {
-            var s = Object.assign({}, _selectedSet)
-            var key = url.toString()
-            if (s[key]) delete s[key]
-            else s[key] = true
-            _selectedSet = s
-            selectedFiles = Object.keys(s)
-        } else if (mode === "save" && !isDir) {
-            fileName = name
-        }
+            var s = Object.assign({}, _selectedSet); var key = url.toString()
+            if (s[key]) delete s[key]; else s[key] = true
+            _selectedSet = s; selectedFiles = Object.keys(s)
+        } else if (mode === "save" && !isDir) { fileName = name }
     }
 
     function _handleDoubleClick(url, isDir) {
@@ -823,10 +555,7 @@ Window {
     function _selectAll() {
         var s = {}; var arr = []
         for (var i = 0; i < folderModel.count; i++) {
-            if (!folderModel.get(i, "fileIsDir")) {
-                var u = folderModel.get(i, "fileUrl").toString()
-                s[u] = true; arr.push(u)
-            }
+            if (!folderModel.get(i, "fileIsDir")) { var u = folderModel.get(i, "fileUrl").toString(); s[u] = true; arr.push(u) }
         }
         _selectedSet = s; selectedFiles = arr
     }
@@ -840,8 +569,7 @@ Window {
 
     function _accept() {
         if (mode === "save") {
-            var p = currentFolder.toString()
-            var target = (p.endsWith("/") ? p : p + "/") + fileName
+            var p = currentFolder.toString(); var target = (p.endsWith("/") ? p : p + "/") + fileName
             if (folderModel.fileExists(target)) { overwritePopup.open(); return }
             selectedFile = target
         }
@@ -855,43 +583,25 @@ Window {
         accepted(); close()
     }
 
-    function _createFolder(name) {
-        var path = currentFolder.toString().replace("file://", "") + "/" + name
-        folderModel.createFolder(name)
-    }
-
     function _copyToClipboard(text) { clipHelper.text = text; clipHelper.selectAll(); clipHelper.copy() }
 
-    function _showCtxAt(url, name, isDir, mouse, area) {
+    function _showCtxAt(url, name, isDir, mx, my, area) {
         ctxState.file = url; ctxState.name = name; ctxState.isDir = isDir
-        // Map from MouseArea coords to windowSurface coords for correct menu placement
-        var p = area.mapToItem(windowSurface, mouse.x, mouse.y)
-        fileCtxMenu.menuX = p.x
-        fileCtxMenu.menuY = p.y
+        var p = area.mapToItem(windowSurface, mx, my)
+        fileCtxMenu.menuX = p.x; fileCtxMenu.menuY = p.y
         Menus.MenuManager.closeAllExcept(fileCtxMenu)
-        if (fileCtxMenu.open) {
-            fileCtxMenu.open = false
-            Qt.callLater(function() { fileCtxMenu.open = true })
-        } else {
-            fileCtxMenu.open = true
-        }
+        if (fileCtxMenu.open) { fileCtxMenu.open = false; Qt.callLater(function() { fileCtxMenu.open = true }) }
+        else fileCtxMenu.open = true
     }
 
-    function _formatSize(b) { if (b < 1024) return b + " B"; if (b < 1048576) return (b/1024).toFixed(1) + " KB"; if (b < 1073741824) return (b/1048576).toFixed(1) + " MB"; return (b/1073741824).toFixed(1) + " GB" }
-
-    function open() { visible = true; raise(); requestActivate(); windowSurface.forceActiveFocus() }
+    function open() { visible = true; raise(); requestActivate(); Qt.callLater(function() { windowSurface.forceActiveFocus() }) }
 
     onVisibleChanged: {
         if (!visible) {
-            _searchQuery = ""
-            _selectedSet = ({})
-            selectedFiles = []
-            selectedFile = ""
-            fileName = ""
-            _navigationHistory = [currentFolder]
-            _historyIndex = 0
+            _searchQuery = ""; _selectedSet = ({}); selectedFiles = []; selectedFile = ""; fileName = ""
+            _navigationHistory = [currentFolder]; _historyIndex = 0; _typeAheadBuffer = ""
         }
     }
 
-    Component.onCompleted: { _navigationHistory = [currentFolder]; _historyIndex = 0; windowSurface.forceActiveFocus() }
+    Component.onCompleted: { _navigationHistory = [currentFolder]; _historyIndex = 0 }
 }

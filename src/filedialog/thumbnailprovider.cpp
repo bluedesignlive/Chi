@@ -27,6 +27,8 @@ QQuickImageResponse *ThumbnailProvider::requestImageResponse(
     return new ThumbnailResponse(id, requestedSize, &m_pool);
 }
 
+// ── Runnable ────────────────────────────────────────────────
+
 class ThumbRunnable : public QRunnable
 {
 public:
@@ -40,6 +42,7 @@ public:
         const QString cFile = cDir + u'/'
             + ThumbnailResponse::cacheKey(m_path, m_size) + u".jpg";
 
+        // ── Disk cache hit — instant, zero CPU ─────────────
         if (QFile::exists(cFile)) {
             m_resp->m_image = QImage(cFile);
             if (!m_resp->m_image.isNull()) {
@@ -48,6 +51,7 @@ public:
             }
         }
 
+        // ── Detect MIME ────────────────────────────────────
         QMimeDatabase db;
         QMimeType mime = db.mimeTypeForFile(m_path);
         const QString mimeName = mime.name();
@@ -61,7 +65,9 @@ public:
         else if (mimeName.startsWith(u"audio/"_s)) {
             m_resp->m_image = extractMediaThumb(m_path, m_size, false);
         }
+        // else: no thumbnail, emit finished() below, QML shows icon
 
+        // ── Atomic disk cache write ────────────────────────
         if (!m_resp->m_image.isNull()) {
             const QString tmp = cFile + u'.'
                 + QString::number(QCoreApplication::applicationPid())
@@ -125,6 +131,8 @@ private:
     QSize   m_size;
 };
 
+// ── Response / Provider ─────────────────────────────────────
+
 ThumbnailResponse::ThumbnailResponse(const QString &filePath,
                                      const QSize &requestedSize,
                                      QThreadPool *pool)
@@ -158,7 +166,11 @@ QString ThumbnailResponse::cacheKey(const QString &path, const QSize &size)
 
 QImage ThumbnailResponse::generate(const QString &path, const QSize &size)
 {
-    // Approach 1: QImageReader with scale-during-decode (memory efficient)
+    // QImageReader uses Qt's platform image plugins:
+    //   png, jpg, gif, webp, avif, heic/heif, svg, bmp, ico, tiff, pbm, pgm, ppm, xbm, xpm
+    // These are ALL the formats Qt was built with — no manual mapping.
+
+    // Path 1: Scale-during-decode (memory efficient for large images)
     QImageReader reader(path);
     reader.setAutoTransform(true);
 
@@ -169,24 +181,14 @@ QImage ThumbnailResponse::generate(const QString &path, const QSize &size)
     }
 
     QImage img = reader.read();
+    if (!img.isNull()) return img;
 
-    // Approach 2: Full decode then scale
-    if (img.isNull()) {
-        QImageReader reader2(path);
-        reader2.setAutoTransform(true);
-        img = reader2.read();
-        if (!img.isNull())
-            img = img.scaled(size, Qt::KeepAspectRatio,
-                             Qt::SmoothTransformation);
-    }
+    // Path 2: Full decode then scale (some plugins don't support scaled read)
+    QImageReader reader2(path);
+    reader2.setAutoTransform(true);
+    img = reader2.read();
+    if (!img.isNull())
+        return img.scaled(size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 
-    // Approach 3: QImage direct load (different plugin code path)
-    if (img.isNull()) {
-        img = QImage(path);
-        if (!img.isNull())
-            img = img.scaled(size, Qt::KeepAspectRatio,
-                             Qt::SmoothTransformation);
-    }
-
-    return img;
+    return {};
 }
