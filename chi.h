@@ -14,6 +14,9 @@
 #include <QQmlExtensionPlugin>
 #include <QQuickWindow>
 #include <QVariantList>
+#include <QClipboard>
+#include <QGuiApplication>
+#include <QUrl>
 
 #ifdef Q_OS_LINUX
 #include <QDBusConnection>
@@ -167,6 +170,27 @@ private:
     friend class ChiDBusMenuBridge;
 };
 #endif
+
+// ═══════════════════════════════════════════════════════════════════
+//  ClipboardHelper — exposes QClipboard to QML
+// ═══════════════════════════════════════════════════════════════════
+
+class ClipboardHelper : public QObject
+{
+    Q_OBJECT
+public:
+    explicit ClipboardHelper(QObject *parent = nullptr) : QObject(parent) {}
+
+    Q_INVOKABLE void copyImage(const QUrl &imageUrl) {
+        QImage img(imageUrl.toLocalFile());
+        if (!img.isNull())
+            QGuiApplication::clipboard()->setImage(img);
+    }
+
+    Q_INVOKABLE QString picturesDir() const {
+        return QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
+    }
+};
 
 // ═══════════════════════════════════════════════════════════════════
 //  ChiPlugin

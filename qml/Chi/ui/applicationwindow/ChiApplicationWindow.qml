@@ -10,6 +10,7 @@
 import QtQuick
 import QtQuick.Window
 import QtQuick.Controls.Basic
+import QtQuick.Layouts
 import QtQuick.Effects
 import "../../theme" as Theme
 import "../common"
@@ -41,7 +42,7 @@ Window {
     // ═══════════════════════════════════════════════════════════════
 
     property string leadingIcon: ""
-    property string leadingTooltip: "Back"
+    property string leadingTooltip: qsTr("Back")
     property bool showTitle: true
     property bool centerTitle: true
     property bool autoHideTitle: true
@@ -198,7 +199,15 @@ Window {
 
     readonly property bool isMaximized:  visibility === Window.Maximized
     readonly property bool isFullScreen: visibility === Window.FullScreen
-    readonly property real windowRadius: (isMaximized || isFullScreen) ? 0 : 24
+    readonly property bool _isSnapped: {
+        var s = Screen
+        var m = 1
+        return root.x <= m
+            || root.y <= m
+            || root.x + root.width >= s.desktopAvailableWidth - m
+            || root.y + root.height >= s.desktopAvailableHeight - m
+    }
+    readonly property real windowRadius: (isMaximized || isFullScreen || _isSnapped) ? 0 : 24
 
     readonly property string _resolvedMenuStyle: {
         if (!showMenu || globalMenuActive) return "none"
@@ -214,9 +223,12 @@ Window {
     signal openOverflowMenuRequested()
     property bool _toolbarAutoHidden: false
     property bool _anyMenuOpen: false
+    property bool _focusMode: false
+    property bool _qpOpen: false
 
     readonly property bool _showToolbar: {
         if (isFullScreen) return false
+        if (_focusMode) return false
         if (!toolbarVisible) return false
         if (toolbarBehavior === "autoHide")
             return !_toolbarAutoHidden || _hoverTrigger.containsMouse
@@ -229,47 +241,48 @@ Window {
 
     readonly property var _defaultMenus: showMenu ? [
         {
-            id: "file", title: "File",
+            id: "file", title: qsTr("File"),
             items: [
-                { id: "new",    text: "New",       shortcut: "Ctrl+N",       icon: "add" },
-                { id: "open",   text: "Open",      shortcut: "Ctrl+O",       icon: "folder_open" },
+                { id: "new",    text: qsTr("New"),       shortcut: "Ctrl+N",       icon: "add" },
+                { id: "open",   text: qsTr("Open"),      shortcut: "Ctrl+O",       icon: "folder_open" },
                 { type: "divider" },
-                { id: "save",   text: "Save",      shortcut: "Ctrl+S",       icon: "save" },
-                { id: "saveAs", text: "Save As…",  shortcut: "Ctrl+Shift+S" },
+                { id: "save",   text: qsTr("Save"),      shortcut: "Ctrl+S",       icon: "save" },
+                { id: "saveAs", text: qsTr("Save As…"),  shortcut: "Ctrl+Shift+S" },
                 { type: "divider" },
-                { id: "exit",   text: "Exit",      shortcut: "Alt+F4",       icon: "logout" }
+                { id: "exit",   text: qsTr("Exit"),      shortcut: "Alt+F4",       icon: "logout" }
             ]
         },
         {
-            id: "edit", title: "Edit",
+            id: "edit", title: qsTr("Edit"),
             items: [
-                { id: "undo",  text: "Undo",  shortcut: "Ctrl+Z", icon: "undo" },
-                { id: "redo",  text: "Redo",  shortcut: "Ctrl+Y", icon: "redo" },
+                { id: "undo",  text: qsTr("Undo"),  shortcut: "Ctrl+Z", icon: "undo" },
+                { id: "redo",  text: qsTr("Redo"),  shortcut: "Ctrl+Y", icon: "redo" },
                 { type: "divider" },
-                { id: "cut",   text: "Cut",   shortcut: "Ctrl+X", icon: "content_cut" },
-                { id: "copy",  text: "Copy",  shortcut: "Ctrl+C", icon: "content_copy" },
-                { id: "paste", text: "Paste", shortcut: "Ctrl+V", icon: "content_paste" }
+                { id: "cut",   text: qsTr("Cut"),   shortcut: "Ctrl+X", icon: "content_cut" },
+                { id: "copy",  text: qsTr("Copy"),  shortcut: "Ctrl+C", icon: "content_copy" },
+                { id: "paste", text: qsTr("Paste"), shortcut: "Ctrl+V", icon: "content_paste" }
             ]
         },
         {
-            id: "view", title: "View",
+            id: "view", title: qsTr("View"),
             items: [
-                { id: "sidebar",          text: "Toggle Sidebar",      shortcut: "Ctrl+B",       icon: "view_sidebar" },
+                { id: "sidebar",          text: qsTr("Toggle Sidebar"),      shortcut: "Ctrl+B",       icon: "view_sidebar" },
                 { type: "divider" },
-                { id: "toolbar_autohide", text: "Auto-Hide Headerbar", shortcut: "Ctrl+Shift+H", icon: "vertical_align_top" },
+                { id: "toolbar_autohide", text: qsTr("Auto-Hide Headerbar"), shortcut: "Ctrl+Shift+H", icon: "vertical_align_top" },
+                { id: "focus",            text: qsTr("Focus Mode"),          shortcut: "Ctrl+Shift+F", icon: "center_focus_strong" },
                 { type: "divider" },
-                { id: "menu_overflow",    text: "Overflow Menu",       icon: "more_horiz" },
-                { id: "menu_traditional", text: "Traditional Menu",    icon: "menu_open" },
-                { id: "menu_auto",        text: "Auto Menu",           icon: "tune" }
+                { id: "menu_overflow",    text: qsTr("Overflow Menu"),       icon: "more_horiz" },
+                { id: "menu_traditional", text: qsTr("Traditional Menu"),    icon: "menu_open" },
+                { id: "menu_auto",        text: qsTr("Auto Menu"),           icon: "tune" }
             ]
         },
         {
-            id: "help", title: "Help",
+            id: "help", title: qsTr("Help"),
             items: [
-                { id: "docs",      text: "Documentation",      icon: "menu_book" },
-                { id: "shortcuts", text: "Keyboard Shortcuts",  icon: "keyboard" },
+                { id: "docs",      text: qsTr("Documentation"),      icon: "menu_book" },
+                { id: "shortcuts", text: qsTr("Keyboard Shortcuts"),  icon: "keyboard" },
                 { type: "divider" },
-                { id: "about",     text: "About",              icon: "info" }
+                { id: "about",     text: qsTr("About"),              icon: "info" }
             ]
         }
     ] : []
@@ -312,6 +325,21 @@ Window {
         sequence: "Ctrl+Shift+H"
         enabled: root.showMenu
         onActivated: root._toggleToolbarAutoHide()
+    }
+    Shortcut {
+        sequence: "Ctrl+Shift+F"
+        onActivated: root._focusMode = !root._focusMode
+    }
+    Shortcut {
+        sequence: "Ctrl+Shift+P"
+        context: Qt.ApplicationShortcut
+        enabled: root.showMenu
+        onActivated: root._qpOpen = !root._qpOpen
+    }
+    Shortcut {
+        sequence: "Escape"
+        context: Qt.ApplicationShortcut
+        onActivated: { if (root._qpOpen) root._qpOpen = false }
     }
     Shortcut {
         sequence: "F10"
@@ -378,7 +406,7 @@ Window {
             color: colors.surfaceContainer
 
             Accessible.role: Accessible.ToolBar
-            Accessible.name: "Application toolbar"
+            Accessible.name: qsTr("Application toolbar")
 
             readonly property bool _shouldShow: root._showToolbar
             property real _toolbarOpacity: 0.0
@@ -431,35 +459,148 @@ Window {
                 onOpenChanged: root._anyMenuOpen = open
 
                 Menus.MenuItem {
-                    text: "Restore"
+                    text: qsTr("Restore")
                     enabled: root.isMaximized || root.isFullScreen
                     onClicked: root.showNormal()
                 }
                 Menus.MenuDivider {}
                 Menus.MenuItem {
-                    text: "Move"
+                    text: qsTr("Move")
                     onClicked: root.startSystemMove()
                 }
                 Menus.MenuItem {
-                    text: "Size"
+                    text: qsTr("Size")
                     enabled: !root.isMaximized && !root.isFullScreen
                     onClicked: root.startSystemResize(Qt.BottomEdge | Qt.RightEdge)
                 }
                 Menus.MenuDivider {}
                 Menus.MenuItem {
-                    text: "Minimize"
+                    text: qsTr("Minimize")
                     onClicked: root.showMinimized()
                 }
                 Menus.MenuItem {
-                    text: "Maximize"
+                    text: qsTr("Maximize")
                     enabled: !root.isMaximized && !root.isFullScreen
                     onClicked: root.showMaximized()
                 }
                 Menus.MenuDivider {}
                 Menus.MenuItem {
-                    text: "Close"
-                    trailingText: "Alt+F4"
+                    text: qsTr("Close")
+                    trailingText: qsTr("Alt+F4")
                     onClicked: root.close()
+                }
+                Menus.MenuDivider {}
+                Menus.MenuItem {
+                    text: qsTr("Arrange")
+                    enabled: false
+                }
+                Menus.MenuItem {
+                    text: qsTr("Left half")
+                    onClicked: {
+                        var s = Screen
+                        root.x = 0
+                        root.y = 0
+                        root.width = Math.round(s.desktopAvailableWidth / 2)
+                        root.height = s.desktopAvailableHeight
+                    }
+                }
+                Menus.MenuItem {
+                    text: qsTr("Right half")
+                    onClicked: {
+                        var s = Screen
+                        root.x = Math.round(s.desktopAvailableWidth / 2)
+                        root.y = 0
+                        root.width = Math.round(s.desktopAvailableWidth / 2)
+                        root.height = s.desktopAvailableHeight
+                    }
+                }
+                Menus.MenuItem {
+                    text: qsTr("Top-left")
+                    onClicked: {
+                        var s = Screen
+                        var hw = Math.round(s.desktopAvailableWidth / 2)
+                        var hh = Math.round(s.desktopAvailableHeight / 2)
+                        root.x = 0; root.y = 0
+                        root.width = hw; root.height = hh
+                    }
+                }
+                Menus.MenuItem {
+                    text: qsTr("Top-right")
+                    onClicked: {
+                        var s = Screen
+                        var hw = Math.round(s.desktopAvailableWidth / 2)
+                        var hh = Math.round(s.desktopAvailableHeight / 2)
+                        root.x = hw; root.y = 0
+                        root.width = hw; root.height = hh
+                    }
+                }
+                Menus.MenuItem {
+                    text: qsTr("Bottom-left")
+                    onClicked: {
+                        var s = Screen
+                        var hw = Math.round(s.desktopAvailableWidth / 2)
+                        var hh = Math.round(s.desktopAvailableHeight / 2)
+                        root.x = 0; root.y = hh
+                        root.width = hw; root.height = hh
+                    }
+                }
+                Menus.MenuItem {
+                    text: qsTr("Bottom-right")
+                    onClicked: {
+                        var s = Screen
+                        var hw = Math.round(s.desktopAvailableWidth / 2)
+                        var hh = Math.round(s.desktopAvailableHeight / 2)
+                        root.x = hw; root.y = hh
+                        root.width = hw; root.height = hh
+                    }
+                }
+                Menus.MenuItem {
+                    text: qsTr("Center")
+                    onClicked: {
+                        var s = Screen
+                        var w = Math.round(s.desktopAvailableWidth * 0.6)
+                        var h = Math.round(s.desktopAvailableHeight * 0.8)
+                        root.x = Math.round((s.desktopAvailableWidth - w) / 2)
+                        root.y = Math.round((s.desktopAvailableHeight - h) / 2)
+                        root.width = w; root.height = h
+                    }
+                }
+                Menus.MenuDivider {}
+                Menus.MenuItem {
+                    text: qsTr("Take Screenshot")
+                    onClicked: {
+                        var dir = _clipboard.picturesDir()
+                        var ts = Date.now()
+                        var path = dir + "/Chi-screenshot-" + ts + ".png"
+                        _surface.grabToImage(function(r) {
+                            r.saveToFile(path)
+                            _clipboard.copyImage("file://" + path)
+                        })
+                    }
+                }
+                Menus.MenuItem {
+                    text: qsTr("Opacity")
+                    enabled: false
+                }
+                Menus.MenuItem {
+                    text: "100%"
+                    checked: Math.abs(root.opacity - 1.0) < 0.01
+                    onClicked: root.opacity = 1.0
+                }
+                Menus.MenuItem {
+                    text: "80%"
+                    checked: Math.abs(root.opacity - 0.8) < 0.01
+                    onClicked: root.opacity = 0.8
+                }
+                Menus.MenuItem {
+                    text: "60%"
+                    checked: Math.abs(root.opacity - 0.6) < 0.01
+                    onClicked: root.opacity = 0.6
+                }
+                Menus.MenuItem {
+                    text: "40%"
+                    checked: Math.abs(root.opacity - 0.4) < 0.01
+                    onClicked: root.opacity = 0.4
                 }
             }
 
@@ -501,11 +642,11 @@ Window {
                     ToolbarIconButton {
                         visible: root._resolvedMenuStyle === "overflow"
                         iconName: "more_horiz"
-                        tooltipText: "Application menu (F10)"
+                        tooltipText: qsTr("Application menu (F10)")
                         onClicked: _overflowMenu.open()
 
-                        Accessible.name: "Application menu"
-                        Accessible.description: "Press F10 to open"
+                        Accessible.name: qsTr("Application menu")
+                        Accessible.description: qsTr("Press F10 to open")
 
                         Menus.OverflowMenu {
                             id: _overflowMenu
@@ -527,10 +668,10 @@ Window {
                     ToolbarIconButton {
                         visible: root.showSidebarButton
                         iconName: "view_sidebar"
-                        tooltipText: "Toggle sidebar (Ctrl+B)"
+                        tooltipText: qsTr("Toggle sidebar (Ctrl+B)")
                         checked: root.sidebarOpen
                         onClicked: root.sidebarButtonClicked()
-                        Accessible.name: root.sidebarOpen ? "Close sidebar" : "Open sidebar"
+                        Accessible.name: root.sidebarOpen ? qsTr("Close sidebar") : qsTr("Open sidebar")
                     }
 
                     ToolbarIconButton {
@@ -591,7 +732,7 @@ Window {
                             tooltipText: modelData.tooltip || ""
                             checked: modelData.checked || false
                             enabled: modelData.enabled !== false
-                            Accessible.name: modelData.tooltip || modelData.icon || ("Action " + (index + 1))
+                            Accessible.name: modelData.tooltip || modelData.icon || qsTr("Action %1").arg(index + 1)
 
                             onClicked: {
                                 if (modelData.triggered) modelData.triggered()
@@ -728,6 +869,7 @@ Window {
 
     Rectangle {
         anchors.fill: parent
+        radius: windowRadius
         color: "#000000"
         z: 100000
         opacity: root.active ? 0.0 : 0.08
@@ -753,7 +895,7 @@ Window {
         border.width: 1
         border.color: colors.outlineVariant
         visible: opacity > 0
-        opacity: (!root.isMaximized && !root.isFullScreen) ? 1.0 : 0.0
+        opacity: (!root.isMaximized && !root.isFullScreen && !root._focusMode) ? 1.0 : 0.0
         z: 1000
 
         Behavior on opacity {
@@ -772,8 +914,8 @@ Window {
         id: _resizeHandles
         anchors.fill: parent
         z: 1010
-        visible: !root.isMaximized && !root.isFullScreen
-        enabled: !root.isMaximized && !root.isFullScreen
+        visible: !root.isMaximized && !root.isFullScreen && !root._focusMode
+        enabled: !root.isMaximized && !root.isFullScreen && !root._focusMode
         Accessible.ignored: true
 
         readonly property int edge: 8
@@ -827,6 +969,59 @@ Window {
             hoverEnabled: true; cursorShape: Qt.SizeFDiagCursor
             onPressed: root.startSystemResize(Qt.BottomEdge | Qt.RightEdge)
         }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  FOCUS MODE EXIT PILL
+    // ═══════════════════════════════════════════════════════════════
+
+    Rectangle {
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: focusPillShown ? parent.height - 56 : parent.height
+        width: focusPillLabel.implicitWidth + 40
+        height: 36
+        radius: 18
+        color: colors.inverseSurface
+        z: 100001
+        visible: root._focusMode
+
+        property bool focusPillShown: _hoverTrigger.containsMouse || _focusPillMouse.containsMouse
+
+        Behavior on y {
+            NumberAnimation {
+                duration: root.motion.durationMedium
+                easing.type: root.motion.easeStandard
+            }
+        }
+
+        Text {
+            id: focusPillLabel
+            anchors.centerIn: parent
+            text: qsTr("Exit focus mode")
+            font.pixelSize: 12
+            font.weight: Font.Medium
+            color: colors.inverseOnSurface
+        }
+
+        MouseArea {
+            id: _focusPillMouse
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: root._focusMode = false
+        }
+
+        Accessible.role: Accessible.Button
+        Accessible.name: qsTr("Exit focus mode")
+        Accessible.onPressAction: root._focusMode = false
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  QUICK PALETTE
+    // ═══════════════════════════════════════════════════════════════
+
+    QuickPalette {
+        id: _quickPalette
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -1209,6 +1404,203 @@ Window {
         }
     }
 
+    // ── Quick Palette ──
+
+    component QuickPalette: Item {
+        id: _qp
+        anchors.fill: parent
+        z: 100002
+
+        readonly property var _qpAllItems: {
+            var r = []
+            for (var mi = 0; mi < root._allMenus.length; mi++) {
+                var menu = root._allMenus[mi]
+                if (!menu.items) continue
+                for (var ii = 0; ii < menu.items.length; ii++) {
+                    var item = menu.items[ii]
+                    if (item.type === "divider") continue
+                    r.push({
+                        menuId: menu.id,
+                        itemId: item.id,
+                        text: item.text || "",
+                        shortcut: item.shortcut || "",
+                        icon: item.icon || ""
+                    })
+                }
+            }
+            return r
+        }
+
+        property string _qpFilter: ""
+
+        readonly property var _qpFiltered: {
+            var f = _qpFilter.toLowerCase().trim()
+            if (!f) return _qpAllItems
+            var r = []
+            for (var i = 0; i < _qpAllItems.length; i++) {
+                var it = _qpAllItems[i]
+                if ((it.text || "").toLowerCase().indexOf(f) >= 0
+                    || (it.shortcut || "").toLowerCase().indexOf(f) >= 0)
+                    r.push(it)
+            }
+            return r
+        }
+
+        property int _qpNavOffset: 0
+
+        readonly property int _qpSelected: _qpFiltered.length > 0
+            ? Math.min(_qpNavOffset, _qpFiltered.length - 1) : -1
+
+        visible: root._qpOpen
+
+        // Backdrop
+        Rectangle {
+            anchors.fill: parent
+            color: "#000000"
+            opacity: root._qpOpen ? 0.3 : 0.0
+            Behavior on opacity { NumberAnimation { duration: 150 } }
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: root._qpOpen = false
+            }
+        }
+
+        // Panel
+        Rectangle {
+            anchors.centerIn: parent
+            width: Math.min(500, root.width * 0.8)
+            height: Math.min(400, root.height * 0.55)
+            radius: 12
+            color: root.colors.surfaceContainerHigh
+
+            layer.enabled: true
+            layer.effect: MultiEffect {
+                shadowEnabled: true
+                shadowColor: Qt.rgba(0, 0, 0, 0.25)
+                shadowBlur: 0.4
+                shadowVerticalOffset: 4
+            }
+
+            ColumnLayout {
+                anchors.fill: parent
+                spacing: 0
+
+                // Search
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 48
+                    Layout.leftMargin: 12
+                    Layout.rightMargin: 12
+                    Layout.topMargin: 12
+                    radius: 8
+                    color: root.colors.surfaceContainerLow
+
+                    TextInput {
+                        id: _qpSearch
+                        anchors { left: parent.left; leftMargin: 12; right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
+                        font.pixelSize: 14
+                        font.family: root.fontFamily
+                        color: root.colors.onSurface
+                        clip: true
+
+                        focus: true
+                        onTextChanged: {
+                            _qp._qpFilter = text
+                            _qp._qpNavOffset = 0
+                        }
+
+                        Text {
+                            anchors { left: parent.left; verticalCenter: parent.verticalCenter }
+                            text: qsTr("Search commands…")
+                            font: parent.font
+                            color: root.colors.onSurfaceVariant
+                            visible: _qpSearch.text.length === 0
+                        }
+                    }
+
+                    Accessible.role: Accessible.EditableText
+                    Accessible.name: qsTr("Search commands")
+                }
+
+                // Results
+                ListView {
+                    id: _qpList
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.margins: 8
+                    spacing: 2
+                    clip: true
+
+                    model: _qp._qpFiltered
+                    currentIndex: _qp._qpSelected
+
+                    delegate: Rectangle {
+                        required property var modelData
+                        required property int index
+
+                        width: _qpList.width
+                        height: 36
+                        radius: 8
+                        color: index === _qp._qpSelected
+                               ? root.colors.primaryContainer
+                               : (_qpMouse.containsMouse ? Qt.rgba(root.colors.onSurface.r, root.colors.onSurface.g, root.colors.onSurface.b, 0.06) : "transparent")
+
+                        RowLayout {
+                            anchors { left: parent.left; leftMargin: 12; right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
+                            spacing: 8
+
+                            Text {
+                                text: modelData.text || ""
+                                font.pixelSize: root.typography.bodyMedium.size
+                                font.weight: root.typography.bodyMedium.weight
+                                font.family: root.fontFamily
+                                color: root.colors.onSurface
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                            }
+
+                            Text {
+                                text: modelData.shortcut || ""
+                                font.pixelSize: 11
+                                font.family: root.fontFamily
+                                color: root.colors.onSurfaceVariant
+                                visible: modelData.shortcut !== ""
+                            }
+                        }
+
+                        MouseArea {
+                            id: _qpMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                root._qpOpen = false
+                                root._handleMenuAction(modelData.menuId, modelData.itemId)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Keyboard nav
+            Keys.onUpPressed: {
+                if (_qp._qpNavOffset > 0) _qp._qpNavOffset--
+            }
+            Keys.onDownPressed: {
+                if (_qp._qpNavOffset < _qp._qpFiltered.length - 1) _qp._qpNavOffset++
+            }
+            Keys.onReturnPressed: {
+                var s = _qp._qpSelected
+                if (s >= 0 && s < _qp._qpFiltered.length) {
+                    var it = _qp._qpFiltered[s]
+                    root._qpOpen = false
+                    root._handleMenuAction(it.menuId, it.itemId)
+                }
+            }
+        }
+    }
+
     // ═══════════════════════════════════════════════════════════════
     //  PUBLIC API
     // ═══════════════════════════════════════════════════════════════
@@ -1264,6 +1656,9 @@ Window {
             break
         case "view.toolbar_autohide":
             _toggleToolbarAutoHide()
+            break
+        case "view.focus":
+            _focusMode = !_focusMode
             break
         case "view.menu_overflow":
             menuStyle = "overflow"

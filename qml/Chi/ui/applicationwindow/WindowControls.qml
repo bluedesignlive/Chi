@@ -79,7 +79,7 @@ Item {
                 visible: root.showClose
                 baseColor: "#FF5F57"
                 iconType: "close"
-                tooltipText: "Close  Alt+F4"
+                tooltipText: qsTr("Close  Alt+F4")
                 groupHovered: macGroupHover.hovered
                 onClicked: root.targetWindow?.close()
             }
@@ -88,7 +88,7 @@ Item {
                 visible: root.showMinimize
                 baseColor: "#FEBC2E"
                 iconType: "minimize"
-                tooltipText: "Minimize"
+                tooltipText: qsTr("Minimize")
                 groupHovered: macGroupHover.hovered
                 onClicked: root.targetWindow?.showMinimized()
             }
@@ -99,7 +99,7 @@ Item {
                 iconType: root.targetWindow?.visibility === Window.Maximized
                           ? "restore" : "maximize"
                 tooltipText: root.targetWindow?.visibility === Window.Maximized
-                             ? "Restore" : "Maximize"
+                             ? qsTr("Restore") : qsTr("Maximize")
                 groupHovered: macGroupHover.hovered
                 onClicked: {
                     if (root.targetWindow) {
@@ -151,7 +151,7 @@ Item {
             iconName: root.targetWindow?.visibility === Window.Maximized
                       ? root.restoreIcon : root.maximizeIcon
             tooltipText: root.targetWindow?.visibility === Window.Maximized
-                         ? "Restore" : "Maximize"
+                         ? qsTr("Restore") : qsTr("Maximize")
             accentColor: root.colors.secondary
             onClicked: {
                 if (root.targetWindow) {
@@ -166,7 +166,7 @@ Item {
         WindowsButton {
             visible: root.showClose
             iconName: root.closeIcon
-            tooltipText: "Close window  Alt+F4"
+            tooltipText: qsTr("Close window  Alt+F4")
             accentColor: root.colors.error
             onClicked: root.targetWindow?.close()
         }
@@ -194,6 +194,10 @@ Item {
 
         width: 12
         height: 12
+
+        Accessible.role: Accessible.Button
+        Accessible.name: tooltipText
+        Accessible.onPressAction: clicked
 
         onIconTypeChanged: iconCanvas.requestPaint()
 
@@ -404,6 +408,10 @@ Item {
 
         width: 32
         height: 32
+
+        Accessible.role: Accessible.Button
+        Accessible.name: tooltipText
+        Accessible.onPressAction: clicked
 
         Rectangle {
             anchors.fill: parent

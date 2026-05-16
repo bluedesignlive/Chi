@@ -309,10 +309,18 @@ void ChiPlugin::registerTypes(const char *uri) {
             return s_instance;
         });
     qmlRegisterType<ChiDBusMenuBridge>(uri, 1, 0, "ChiDBusMenuBridge");
+    qmlRegisterSingletonType<ClipboardHelper>(uri, 1, 0, "ClipboardHelper",
+        [](QQmlEngine *, QJSEngine *) -> QObject * {
+            return new ClipboardHelper();
+        });
 }
+
+static ClipboardHelper *s_clipboard = nullptr;
 
 void ChiPlugin::initializeEngine(QQmlEngine *engine, const char *uri) {
     Q_UNUSED(uri)
     if (!s_instance) s_instance = new ThemeBackend();
     engine->rootContext()->setContextProperty("_chiBackend", s_instance);
+    if (!s_clipboard) s_clipboard = new ClipboardHelper();
+    engine->rootContext()->setContextProperty("_clipboard", s_clipboard);
 }
