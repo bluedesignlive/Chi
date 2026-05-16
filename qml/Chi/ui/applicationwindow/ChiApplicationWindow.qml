@@ -15,6 +15,7 @@ import QtQuick.Effects
 import "../../theme" as Theme
 import "../common"
 import "../menus" as Menus
+import "../dialogs" as Dialogs
 
 Window {
     id: root
@@ -137,13 +138,14 @@ Window {
         readonly property bool globalMenuAvailable: {
             if (isMacOS) return true
             if (isLinux) {
-                var desktop = (Qt.runtime.environmentVariable("XDG_CURRENT_DESKTOP") || "").toLowerCase()
-                var session = (Qt.runtime.environmentVariable("DESKTOP_SESSION") || "").toLowerCase()
+                function getEnv(name) { try { return Qt.runtime.environmentVariable(name) } catch(e) {} return "" }
+                var desktop = getEnv("XDG_CURRENT_DESKTOP").toLowerCase()
+                var session = getEnv("DESKTOP_SESSION").toLowerCase()
                 return desktop.indexOf("kde") >= 0
                     || desktop.indexOf("plasma") >= 0
                     || desktop.indexOf("unity") >= 0
                     || desktop.indexOf("budgie") >= 0
-                    || Qt.runtime.environmentVariable("UBUNTU_MENUPROXY") !== ""
+                    || getEnv("UBUNTU_MENUPROXY") !== ""
             }
             return false
         }
@@ -199,15 +201,7 @@ Window {
 
     readonly property bool isMaximized:  visibility === Window.Maximized
     readonly property bool isFullScreen: visibility === Window.FullScreen
-    readonly property bool _isSnapped: {
-        var s = Screen
-        var m = 1
-        return root.x <= m
-            || root.y <= m
-            || root.x + root.width >= s.desktopAvailableWidth - m
-            || root.y + root.height >= s.desktopAvailableHeight - m
-    }
-    readonly property real windowRadius: (isMaximized || isFullScreen || _isSnapped) ? 0 : 24
+    readonly property real windowRadius: (isMaximized || isFullScreen) ? 0 : 24
 
     readonly property string _resolvedMenuStyle: {
         if (!showMenu || globalMenuActive) return "none"
@@ -337,9 +331,37 @@ Window {
         onActivated: root._qpOpen = !root._qpOpen
     }
     Shortcut {
+        sequence: "Ctrl+Print"
+        context: Qt.ApplicationShortcut
+        onActivated: _screenshotDialog.openDialog()
+    }
+    Shortcut {
+        sequence: "F11"
+        context: Qt.ApplicationShortcut
+        onActivated: root.visibility = root.visibility === Window.FullScreen ? Window.Windowed : Window.FullScreen
+    }
+    Shortcut {
         sequence: "Escape"
         context: Qt.ApplicationShortcut
-        onActivated: { if (root._qpOpen) root._qpOpen = false }
+        onActivated: {
+            if (root._qpOpen)
+                root._qpOpen = false
+            else if (root._focusMode)
+                root._focusMode = false
+            else if (root.visibility === Window.FullScreen)
+                root.visibility = Window.Windowed
+        }
+    }
+    // Mouse click to exit fullscreen
+    MouseArea {
+        anchors.fill: parent
+        z: -99
+        acceptedButtons: Qt.LeftButton
+        onPressed: {
+            if (root.visibility === Window.FullScreen && !root._focusMode) {
+                // pass — let the content handle it
+            }
+        }
     }
     Shortcut {
         sequence: "F10"
@@ -568,40 +590,10 @@ Window {
                 Menus.MenuDivider {}
                 Menus.MenuItem {
                     text: qsTr("Take Screenshot")
-                    onClicked: {
-                        var dir = _clipboard.picturesDir()
-                        var ts = Date.now()
-                        var path = dir + "/Chi-screenshot-" + ts + ".png"
-                        _surface.grabToImage(function(r) {
-                            r.saveToFile(path)
-                            _clipboard.copyImage("file://" + path)
-                        })
-                    }
+                    trailingText: qsTr("Ctrl+Print")
+                    onClicked: _screenshotDialog.openDialog()
                 }
-                Menus.MenuItem {
-                    text: qsTr("Opacity")
-                    enabled: false
-                }
-                Menus.MenuItem {
-                    text: "100%"
-                    selected: Math.abs(root.opacity - 1.0) < 0.01
-                    onClicked: root.opacity = 1.0
-                }
-                Menus.MenuItem {
-                    text: "80%"
-                    selected: Math.abs(root.opacity - 0.8) < 0.01
-                    onClicked: root.opacity = 0.8
-                }
-                Menus.MenuItem {
-                    text: "60%"
-                    selected: Math.abs(root.opacity - 0.6) < 0.01
-                    onClicked: root.opacity = 0.6
-                }
-                Menus.MenuItem {
-                    text: "40%"
-                    selected: Math.abs(root.opacity - 0.4) < 0.01
-                    onClicked: root.opacity = 0.4
-                }
+
             }
 
             // ═══ LEFT SECTION ═══
@@ -1025,6 +1017,30 @@ Window {
     }
 
     // ═══════════════════════════════════════════════════════════════
+    //  SCREENSHOT DIALOG
+    // ═══════════════════════════════════════════════════════════════
+
+    Dialogs.FileDialog {
+        id: _screenshotDialog
+        mode: "save"
+        title: qsTr("Save Screenshot")
+        nameFilters: [qsTr("PNG images (*.png)")]
+        fileName: "Chi-screenshot.png"
+
+        function openDialog() {
+            fileName = "Chi-screenshot-" + Date.now() + ".png"
+            open()
+        }
+
+        onAccepted: {
+            _surface.grabToImage(function(r) {
+                r.saveToFile(_screenshotDialog.selectedFile)
+                _clipboard.copyImage(_screenshotDialog.selectedFile)
+            })
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
     //  INLINE COMPONENTS
     // ═══════════════════════════════════════════════════════════════
 
@@ -1428,6 +1444,13 @@ Window {
                     })
                 }
             }
+            // Window actions
+            r.push(
+                { menuId: "_window", itemId: "screenshot", text: qsTr("Take Screenshot"), shortcut: "Ctrl+Print", icon: "camera" },
+                { menuId: "_window", itemId: "focus", text: qsTr("Toggle Focus Mode"), shortcut: "Ctrl+Shift+F", icon: "center_focus_strong" },
+                { menuId: "_window", itemId: "fullscreen", text: qsTr("Toggle Fullscreen"), shortcut: "F11", icon: "fullscreen" },
+                { menuId: "_window", itemId: "sidebar", text: qsTr("Toggle Sidebar"), shortcut: "Ctrl+B", icon: "view_sidebar" }
+            )
             return r
         }
 
@@ -1671,6 +1694,18 @@ Window {
             break
         case "file.exit":
             root.close()
+            break
+        case "_window.screenshot":
+            _screenshotDialog.openDialog()
+            break
+        case "_window.focus":
+            _focusMode = !_focusMode
+            break
+        case "_window.fullscreen":
+            root.visibility = root.visibility === Window.FullScreen ? Window.Windowed : Window.FullScreen
+            break
+        case "_window.sidebar":
+            sidebarButtonClicked()
             break
         }
     }
