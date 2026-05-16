@@ -375,3 +375,25 @@ void FileListModel::sortEntries()
         return reversed ? (cmp > 0) : (cmp < 0);
     });
 }
+
+// ═══ Phase 2: File operations ═══
+
+bool FileListModel::createFolder(const QString &name)
+{
+    const QString basePath = m_folder.toLocalFile();
+    if (basePath.isEmpty() || name.isEmpty()) return false;
+
+    QDir dir(basePath);
+    if (!dir.exists()) return false;
+
+    bool ok = dir.mkdir(name);
+    if (ok) refresh();
+    return ok;
+}
+
+bool FileListModel::fileExists(const QString &path) const
+{
+    QString p = path;
+    if (p.startsWith(u"file://"_s)) p = QUrl(p).toLocalFile();
+    return QFile::exists(p);
+}

@@ -56,6 +56,9 @@ public:
     Q_INVOKABLE QVariant get(int index, const QString &roleName) const;
     Q_INVOKABLE void refresh();
 
+    Q_INVOKABLE bool createFolder(const QString &name);
+    Q_INVOKABLE bool fileExists(const QString &path) const;
+
     QUrl        folder()        const;
     QStringList nameFilters()   const;
     QString     searchQuery()   const;

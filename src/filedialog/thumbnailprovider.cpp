@@ -3,6 +3,7 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QImageReader>
 #include <QCryptographicHash>
 #include <QCoreApplication>
@@ -39,7 +40,6 @@ public:
         const QString cFile = cDir + u'/'
             + ThumbnailResponse::cacheKey(m_path, m_size) + u".jpg";
 
-        // ── Disk cache hit ──────────────────────────────────
         if (QFile::exists(cFile)) {
             m_resp->m_image = QImage(cFile);
             if (!m_resp->m_image.isNull()) {
@@ -48,7 +48,6 @@ public:
             }
         }
 
-        // ── MIME check: only process image/video/audio ──────
         QMimeDatabase db;
         QMimeType mime = db.mimeTypeForFile(m_path);
         const QString mimeName = mime.name();
@@ -62,14 +61,12 @@ public:
         else if (mimeName.startsWith(u"audio/"_s)) {
             m_resp->m_image = extractMediaThumb(m_path, m_size, false);
         }
-        // Everything else: no thumbnail, return immediately
 
-        // ── Write to disk cache ─────────────────────────────
         if (!m_resp->m_image.isNull()) {
             const QString tmp = cFile + u'.'
                 + QString::number(QCoreApplication::applicationPid())
                 + u".tmp";
-            if (m_resp->m_image.save(tmp, "JPEG", 85))
+            if (m_resp->m_image.save(tmp, "JPEG", 90))
                 QFile::rename(tmp, cFile);
             else
                 QFile::remove(tmp);
@@ -102,7 +99,6 @@ private:
                                 + u":force_original_aspect_ratio=decrease"_s)
                  << u"-y"_s << tmpPath;
         } else {
-            // Audio: extract embedded album art
             args << u"-i"_s << path
                  << u"-an"_s << u"-vframes"_s << u"1"_s
                  << u"-vf"_s << (u"scale="_s + QString::number(size.width())
@@ -162,9 +158,8 @@ QString ThumbnailResponse::cacheKey(const QString &path, const QSize &size)
 
 QImage ThumbnailResponse::generate(const QString &path, const QSize &size)
 {
+    // Approach 1: QImageReader with scale-during-decode (memory efficient)
     QImageReader reader(path);
-    if (!reader.canRead()) return {};
-
     reader.setAutoTransform(true);
 
     const QSize original = reader.size();
@@ -174,14 +169,24 @@ QImage ThumbnailResponse::generate(const QString &path, const QSize &size)
     }
 
     QImage img = reader.read();
+
+    // Approach 2: Full decode then scale
     if (img.isNull()) {
-        reader.setScaledSize(QSize());
-        if (!reader.canRead()) return {};
-        reader.setAutoTransform(true);
-        img = reader.read();
+        QImageReader reader2(path);
+        reader2.setAutoTransform(true);
+        img = reader2.read();
         if (!img.isNull())
             img = img.scaled(size, Qt::KeepAspectRatio,
                              Qt::SmoothTransformation);
     }
+
+    // Approach 3: QImage direct load (different plugin code path)
+    if (img.isNull()) {
+        img = QImage(path);
+        if (!img.isNull())
+            img = img.scaled(size, Qt::KeepAspectRatio,
+                             Qt::SmoothTransformation);
+    }
+
     return img;
 }

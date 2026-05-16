@@ -138,6 +138,7 @@ Window {
             }
             else if (event.key === Qt.Key_A && (event.modifiers & Qt.ControlModifier)) _selectAll()
             else if (event.key === Qt.Key_H && (event.modifiers & Qt.ControlModifier)) root.showHidden = !root.showHidden
+            else if (event.text.length === 1 && /[a-zA-Z0-9]/.test(event.text)) _jumpToFile(event.text)
         }
 
         // ── HEADER ──────────────────────────────────────────────
@@ -746,7 +747,38 @@ Window {
         onOpened: nfInput.forceActiveFocus()
     }
 
+
+    Popup {
+        id: overwritePopup; anchors.centerIn: parent; width: 360; modal: true; padding: 24
+        background: Rectangle { color: colors.surfaceContainerHigh; radius: 16 }
+        contentItem: Column { spacing: 16
+            Text { text: "File Already Exists"; font.family: _t.titleMedium.family; font.pixelSize: _t.titleMedium.size; font.weight: Font.Medium; color: colors.onSurface }
+            Text {
+                width: parent.width; wrapMode: Text.WordWrap
+                text: "A file named \"" + root.fileName + "\" already exists in this folder. Replace it?"
+                font.family: _t.bodyMedium.family; font.pixelSize: _t.bodyMedium.size; color: colors.onSurfaceVariant
+            }
+            Row { anchors.right: parent.right; spacing: 8
+                Buttons.Button { text: "Cancel"; variant: "outlined"; onClicked: overwritePopup.close() }
+                Buttons.Button { text: "Replace"; variant: "filled"; onClicked: { overwritePopup.close(); _forceAccept() } }
+            }
+        }
+    }
+
     // ── FUNCTIONS ───────────────────────────────────────────────
+
+    function _jumpToFile(ch) {
+        var lower = ch.toLowerCase()
+        for (var i = 0; i < folderModel.count; i++) {
+            var name = folderModel.get(i, "fileName")
+            if (name && ("" + name).toLowerCase().charAt(0) === lower) {
+                selectedFile = folderModel.get(i, "fileUrl")
+                if (viewLoader.item && viewLoader.item.positionViewAtIndex)
+                    viewLoader.item.positionViewAtIndex(i, ListView.Contain)
+                break
+            }
+        }
+    }
 
     function _getDisplayPath(url) { return url.toString().replace("file://", "") || "/" }
 
@@ -807,6 +839,17 @@ Window {
     }
 
     function _accept() {
+        if (mode === "save") {
+            var p = currentFolder.toString()
+            var target = (p.endsWith("/") ? p : p + "/") + fileName
+            if (folderModel.fileExists(target)) { overwritePopup.open(); return }
+            selectedFile = target
+        }
+        if (mode === "folder" && selectedFile.toString() === "") selectedFile = currentFolder
+        accepted(); close()
+    }
+
+    function _forceAccept() {
         if (mode === "save") { var p = currentFolder.toString(); selectedFile = (p.endsWith("/") ? p : p + "/") + fileName }
         if (mode === "folder" && selectedFile.toString() === "") selectedFile = currentFolder
         accepted(); close()
@@ -814,8 +857,7 @@ Window {
 
     function _createFolder(name) {
         var path = currentFolder.toString().replace("file://", "") + "/" + name
-        console.log("Create folder:", path)
-        folderModel.refresh()
+        folderModel.createFolder(name)
     }
 
     function _copyToClipboard(text) { clipHelper.text = text; clipHelper.selectAll(); clipHelper.copy() }
