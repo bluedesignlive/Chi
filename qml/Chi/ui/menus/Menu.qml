@@ -1,5 +1,6 @@
 // qml/smartui/ui/menus/Menu.qml
 // M3 menu — desktop-density default, in-place submenu navigation
+// Also supports cascade mode (flyout panel to the right, desktop style)
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects
@@ -22,6 +23,7 @@ Item {
     property string variant: "expressive"
     property string colorStyle: "standard"
     property string density: "compact"
+    property string submenuStyle: "navigate" // "navigate" | "cascade"
 
     default property alias items: menuColumn.data
 
@@ -78,6 +80,7 @@ Item {
     readonly property real _subH: _subColumn.implicitHeight + _pad * 2
     readonly property real _targetH: _inSubmenu ? _subH : _mainH
 
+    // In cascade mode, width stays at max of main width
     implicitWidth: Math.max(minWidth, Math.min(
         Math.max(menuColumn.implicitWidth + 24 + _pad * 2,
                  _subColumn.implicitWidth + 24 + _pad * 2),
@@ -139,7 +142,10 @@ Item {
         visible: root.open || _opacityAnim.running || _scaleAnim.running
         parent: root.appWindow || root.parent
         x: root.menuX; y: root.menuY
-        width: root.implicitWidth
+        // In cascade mode, width is the same for the surface
+        width: root.submenuStyle === "cascade" && root._inSubmenu
+            ? root.implicitWidth + _cascadePanel.width
+            : root.implicitWidth
         height: root.implicitHeight
         z: 10000
 
@@ -159,7 +165,7 @@ Item {
         // Menu surface
         Rectangle {
             id: container
-            width: popupContainer.width
+            width: root.implicitWidth
             height: popupContainer.height
             radius: root._cornerRadius
             color: root._containerColor
@@ -197,7 +203,6 @@ Item {
 
             // ═══════════════════════════════════════════════════════
             // MAIN VIEW — declarative children
-            // Pure crossfade — no position movement
             // ═══════════════════════════════════════════════════════
 
             Flickable {
@@ -209,8 +214,8 @@ Item {
                 contentHeight: menuColumn.implicitHeight
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
-                opacity: 1 - root._t
-                visible: opacity > 0.01
+                opacity: root.submenuStyle === "cascade" ? 1 : (1 - root._t)
+                visible: root.submenuStyle === "cascade" ? true : (opacity > 0.01)
 
                 Column {
                     id: menuColumn
@@ -226,7 +231,8 @@ Item {
 
             // ═══════════════════════════════════════════════════════
             // SUBMENU VIEW — data-driven, uses actual MenuItem
-            // Pure crossfade — same position, no sliding
+            // Only in navigate mode: pure crossfade within same surface
+            // In cascade mode: the _cascadePanel handles display
             // ═══════════════════════════════════════════════════════
 
             Flickable {
@@ -238,7 +244,7 @@ Item {
                 contentHeight: _subColumn.implicitHeight
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
-                opacity: root._t
+                opacity: root.submenuStyle === "cascade" ? 0 : root._t
                 visible: opacity > 0.01
 
                 Column {
@@ -246,7 +252,7 @@ Item {
                     width: parent.width
                     spacing: 0
 
-                    // Back header — styled as MenuItem for consistency
+                    // Back header — in navigate mode only (in cascade, it's in panel)
                     Menus.MenuItem {
                         width: parent.width
                         text: root._subTitle
@@ -286,6 +292,128 @@ Item {
 
                             Menus.MenuItem {
                                 id: _item
+                                visible: !_isDivider
+                                width: parent.width
+                                text: modelData.text || ""
+                                leadingIcon: modelData.icon || ""
+                                trailingText: modelData.shortcut || ""
+                                submenu: modelData.submenu || null
+                                menuDensity: root.density
+                                menuVariant: root.variant
+                                menuColorStyle: root.colorStyle
+
+                                onClicked: {
+                                    root.submenuItemClicked(modelData.id || "")
+                                    root.close()
+                                }
+                                onSubmenuRequested: function(title, items) {
+                                    root._pushSubmenu(title, items)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // CASCADE PANEL (submenuStyle === "cascade" only)
+        // Slides out to the right of the main surface
+        // ═══════════════════════════════════════════════════════
+
+        Rectangle {
+            id: _cascadePanel
+            visible: root.submenuStyle === "cascade" && root._inSubmenu
+            x: container.width + 4
+            y: 0
+            width: root.submenuStyle === "cascade" ? Math.max(minWidth, Math.min(
+                _cascadeSubCol.implicitWidth + root._pad * 2, maxWidth)) : 0
+            height: root.submenuStyle === "cascade" ? Math.min(
+                _cascadeSubCol.implicitHeight + root._pad * 2,
+                root.maxHeight) : 0
+            radius: root._cornerRadius
+            color: root._containerColor
+            clip: true
+            border.width: 1
+            border.color: colors.outlineVariant
+
+            // Cascade panel reveal animation
+            OpacityAnimator on opacity {
+                id: _cascadeOpacityAnim
+                running: root.submenuStyle === "cascade" && root._inSubmenu
+                from: 0; to: 1
+                duration: 180
+                easing.type: Easing.OutCubic
+            }
+            XAnimator on x {
+                id: _cascadeXAnim
+                running: root.submenuStyle === "cascade" && root._inSubmenu
+                from: container.width; to: container.width + 4
+                duration: 200
+                easing.type: Easing.OutCubic
+            }
+
+            layer.enabled: true
+            layer.effect: MultiEffect {
+                shadowEnabled: true
+                shadowColor: Qt.rgba(0, 0, 0, 0.18)
+                shadowVerticalOffset: 6
+                shadowBlur: 0.4
+            }
+
+            Flickable {
+                id: _cascadeSubFlick
+                x: root._pad
+                y: root._pad
+                width: _cascadePanel.width - root._pad * 2
+                height: _cascadePanel.height - root._pad * 2
+                contentHeight: cascadeSubCol.implicitHeight
+                clip: true
+                boundsBehavior: Flickable.StopAtBounds
+
+                Column {
+                    id: _cascadeSubCol
+                    width: parent.width
+                    spacing: 0
+
+                    // Back header with arrow indicator
+                    Menus.MenuItem {
+                        width: parent.width
+                        text: root._subTitle
+                        leadingIcon: "arrow_back"
+                        visible: root._inSubmenu
+                        menuDensity: root.density
+                        menuVariant: root.variant
+                        menuColorStyle: root.colorStyle
+                        onClicked: root._popSubmenu()
+                    }
+
+                    Menus.MenuDivider {
+                        width: parent.width
+                        visible: root._inSubmenu
+                    }
+
+                    Repeater {
+                        model: root._subItems
+
+                        delegate: Item {
+                            required property var modelData
+                            required property int index
+
+                            width: _cascadeSubCol.width
+                            height: _isDivider ? _cascadeDiv.implicitHeight : _cascadeItem.implicitHeight
+                            implicitHeight: height
+
+                            readonly property bool _isDivider: (modelData.type || "") === "divider"
+
+                            Menus.MenuDivider {
+                                id: _cascadeDiv
+                                visible: _isDivider
+                                width: parent.width
+                            }
+
+                            Menus.MenuItem {
+                                id: _cascadeItem
                                 visible: !_isDivider
                                 width: parent.width
                                 text: modelData.text || ""
@@ -364,8 +492,13 @@ Item {
     // ═══════════════════════════════════════════════════════════════════
 
     Keys.onEscapePressed: {
-        if (_inSubmenu) _popSubmenu()
-        else close()
+        if (root.submenuStyle === "cascade" && _inSubmenu) {
+            _popSubmenu()
+        } else if (_inSubmenu) {
+            _popSubmenu()
+        } else {
+            close()
+        }
     }
     onOpenChanged: if (open) forceActiveFocus()
 }

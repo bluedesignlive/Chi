@@ -140,7 +140,6 @@ Item {
 
         WindowsButton {
             visible: root.showMinimize
-            iconName: root.minimizeIcon
             tooltipText: "Minimize"
             accentColor: root.colors.tertiary
             onClicked: root.targetWindow?.showMinimized()
@@ -148,8 +147,6 @@ Item {
 
         WindowsButton {
             visible: root.showMaximize
-            iconName: root.targetWindow?.visibility === Window.Maximized
-                      ? root.restoreIcon : root.maximizeIcon
             tooltipText: root.targetWindow?.visibility === Window.Maximized
                          ? qsTr("Restore") : qsTr("Maximize")
             accentColor: root.colors.secondary
@@ -165,7 +162,6 @@ Item {
 
         WindowsButton {
             visible: root.showClose
-            iconName: root.closeIcon
             tooltipText: qsTr("Close window  Alt+F4")
             accentColor: root.colors.error
             onClicked: root.targetWindow?.close()
@@ -333,7 +329,7 @@ Item {
 
             Timer {
                 id: tlTooltipDelay
-                interval: 1000
+                interval: 700
                 onTriggered: tlTooltip.tlTooltipReady = true
             }
 
@@ -393,14 +389,13 @@ Item {
     // ═══════════════════════════════════════════════════════════════
     // WINDOWS BUTTON
     //
-    // 32px rounded-rect with Material Icons via Icon component.
-    // At 16px, Material Icons render within their designed range.
+    // 32px rounded-rect with colored hover/press state.
+    // No text icon — the colored fill + hover animation is the visual cue.
     // ═══════════════════════════════════════════════════════════════
 
     component WindowsButton: Item {
         id: winBtn
 
-        property string iconName: ""
         property string tooltipText: ""
         property color accentColor: root.colors.primary
 
@@ -429,16 +424,6 @@ Item {
             }
 
             Behavior on color { ColorAnimation { duration: 100 } }
-        }
-
-        Icon {
-            anchors.centerIn: parent
-            source: winBtn.iconName
-            size: 16
-            color: winBtnMouse.containsMouse
-                   ? winBtn.accentColor : root.colors.onSurfaceVariant
-
-            Behavior on color { ColorAnimation { duration: 150 } }
         }
 
         MouseArea {
@@ -474,7 +459,7 @@ Item {
 
             Timer {
                 id: winTooltipDelay
-                interval: 1000
+                interval: 700
                 onTriggered: winTooltip.winTooltipReady = true
             }
 

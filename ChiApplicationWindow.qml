@@ -591,7 +591,13 @@ Window {
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            onClicked: dropdownMenu.open()
+            onClicked: {
+                if (dropdownMenu.open) {
+                    dropdownMenu.close()
+                } else {
+                    dropdownMenu.open()
+                }
+            }
         }
 
         Menus.DropdownMenu {

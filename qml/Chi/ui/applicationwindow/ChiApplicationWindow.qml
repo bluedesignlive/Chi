@@ -490,11 +490,6 @@ Window {
                     text: qsTr("Move")
                     onClicked: root.startSystemMove()
                 }
-                Menus.MenuItem {
-                    text: qsTr("Size")
-                    enabled: !root.isMaximized && !root.isFullScreen
-                    onClicked: root.startSystemResize(Qt.BottomEdge | Qt.RightEdge)
-                }
                 Menus.MenuDivider {}
                 Menus.MenuItem {
                     text: qsTr("Minimize")
@@ -1146,7 +1141,7 @@ Window {
 
             Timer {
                 id: _tooltipDelay
-                interval: 1000
+                interval: 700
                 onTriggered: _tooltipPopup._tooltipReady = true
             }
 
@@ -1301,7 +1296,11 @@ Window {
             onClicked: {
                 root._keyboardFocusActive = false
                 _mbtn.forceActiveFocus()
-                _ddMenu.open()
+                if (_ddMenu.open) {
+                    _ddMenu.close()
+                } else {
+                    _ddMenu.open()
+                }
             }
         }
 
@@ -1341,7 +1340,7 @@ Window {
 
             Timer {
                 id: _mbtnTooltipDelay
-                interval: 1000
+                interval: 700
                 onTriggered: _mbtnTooltip._mbtnTooltipReady = true
             }
 

@@ -222,6 +222,32 @@ Item {
         }
     }
 
+    // Keyboard focus must be on the root item, not a child
+    activeFocusOnTab: true
+
+    Keys.onReturnPressed: {
+        if (root.hasSubmenu)
+            root.submenuRequested(root.text, root.submenu)
+        else
+            root.clicked()
+    }
+    Keys.onEnterPressed: {
+        if (root.hasSubmenu)
+            root.submenuRequested(root.text, root.submenu)
+        else
+            root.clicked()
+    }
+    Keys.onSpacePressed: {
+        if (root.hasSubmenu)
+            root.submenuRequested(root.text, root.submenu)
+        else
+            root.clicked()
+    }
+    Keys.onRightPressed: {
+        if (root.hasSubmenu)
+            root.submenuRequested(root.text, root.submenu)
+    }
+
     // ═══════════════════════════════════════════════════════════════════
     // ACCESSIBILITY
     // ═══════════════════════════════════════════════════════════════════
