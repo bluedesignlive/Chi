@@ -406,17 +406,58 @@ Window {
                 }
             }
 
-            // Drag / maximize
+            // Drag / maximize / window menu
             MouseArea {
                 anchors.fill: parent
                 z: -1
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
                 onPressed: function(mouse) {
                     root._keyboardFocusActive = false
-                    root.startSystemMove()
+                    if (mouse.button === Qt.RightButton)
+                        _windowMenu.popup(mouse.x, mouse.y)
+                    else
+                        root.startSystemMove()
                 }
                 onDoubleClicked: {
                     if (root.isMaximized) root.showNormal()
                     else root.showMaximized()
+                }
+            }
+
+            // Window menu on right-click title bar
+            Menus.ContextMenu {
+                id: _windowMenu
+                onOpenChanged: root._anyMenuOpen = open
+
+                Menus.MenuItem {
+                    text: "Restore"
+                    enabled: root.isMaximized || root.isFullScreen
+                    onClicked: root.showNormal()
+                }
+                Menus.MenuDivider {}
+                Menus.MenuItem {
+                    text: "Move"
+                    onClicked: root.startSystemMove()
+                }
+                Menus.MenuItem {
+                    text: "Size"
+                    enabled: !root.isMaximized && !root.isFullScreen
+                    onClicked: root.startSystemResize(Qt.BottomEdge | Qt.RightEdge)
+                }
+                Menus.MenuDivider {}
+                Menus.MenuItem {
+                    text: "Minimize"
+                    onClicked: root.showMinimized()
+                }
+                Menus.MenuItem {
+                    text: "Maximize"
+                    enabled: !root.isMaximized && !root.isFullScreen
+                    onClicked: root.showMaximized()
+                }
+                Menus.MenuDivider {}
+                Menus.MenuItem {
+                    text: "Close"
+                    onClicked: root.close()
                 }
             }
 
