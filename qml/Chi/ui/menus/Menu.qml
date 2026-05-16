@@ -367,7 +367,7 @@ Item {
                 y: root._pad
                 width: _cascadePanel.width - root._pad * 2
                 height: _cascadePanel.height - root._pad * 2
-                contentHeight: cascadeSubCol.implicitHeight
+                contentHeight: _cascadeSubCol.implicitHeight
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
 

@@ -19,8 +19,6 @@ Popup {
     padding: 4
     focus: true
 
-    Keys.onEscapePressed: root.close()
-
     background: Rectangle {
         color: root.colors.surfaceContainerHigh
         radius: 12
