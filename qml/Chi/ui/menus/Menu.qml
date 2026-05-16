@@ -142,12 +142,13 @@ Item {
         visible: root.open || _opacityAnim.running || _scaleAnim.running
         parent: root.appWindow || root.parent
         x: root.menuX; y: root.menuY
-        // In cascade mode, width is the same for the surface
         width: root.submenuStyle === "cascade" && root._inSubmenu
-            ? root.implicitWidth + _cascadePanel.width
-            : root.implicitWidth
+            ? _baseWidth + _cascadePanel.width + 4
+            : _baseWidth
         height: root.implicitHeight
         z: 10000
+
+        readonly property real _baseWidth: root.implicitWidth
 
         Behavior on height {
             NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
@@ -165,7 +166,7 @@ Item {
         // Menu surface
         Rectangle {
             id: container
-            width: root.implicitWidth
+            width: popupContainer._baseWidth
             height: popupContainer.height
             radius: root._cornerRadius
             color: root._containerColor
