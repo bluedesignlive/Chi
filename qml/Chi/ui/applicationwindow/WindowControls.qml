@@ -360,16 +360,11 @@ Item {
         width: 32
         height: 32
 
-        readonly property bool _windowActive: root.targetWindow
-                                              ? root.targetWindow.active : true
-
         Rectangle {
             anchors.fill: parent
             radius: 8
 
             color: {
-                if (!winBtn._windowActive && !winBtnMouse.containsMouse)
-                    return "transparent"
                 if (winBtnMouse.pressed)
                     return Qt.rgba(winBtn.accentColor.r, winBtn.accentColor.g,
                                    winBtn.accentColor.b, 0.25)
@@ -387,11 +382,8 @@ Item {
             anchors.centerIn: parent
             source: winBtn.iconName
             size: 16
-            color: winBtn._windowActive && winBtnMouse.containsMouse
-                   ? winBtn.accentColor : Qt.rgba(root.colors.onSurfaceVariant.r,
-                                                  root.colors.onSurfaceVariant.g,
-                                                  root.colors.onSurfaceVariant.b,
-                                                  winBtn._windowActive ? 1.0 : 0.45)
+            color: winBtnMouse.containsMouse
+                   ? winBtn.accentColor : root.colors.onSurfaceVariant
 
             Behavior on color { ColorAnimation { duration: 150 } }
         }

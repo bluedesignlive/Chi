@@ -211,9 +211,9 @@ Window {
     readonly property real _rightSectionWidth:
         (toolbarActions.length * 40) + (controlsOnLeft ? 0 : 120)
 
+    signal openOverflowMenuRequested()
     property bool _toolbarAutoHidden: false
     property bool _anyMenuOpen: false
-    property bool _triggerOverflowMenu: false
 
     readonly property bool _showToolbar: {
         if (isFullScreen) return false
@@ -319,7 +319,7 @@ Window {
         enabled: root.showMenu && root._resolvedMenuStyle === "overflow"
         onActivated: {
             root._keyboardFocusActive = true
-            root._triggerOverflowMenu = true
+            root.openOverflowMenuRequested()
         }
     }
 
@@ -375,23 +375,12 @@ Window {
             height: root.toolbarHeight
             anchors { top: parent.top; left: parent.left; right: parent.right }
             z: 100
-            color: root.active ? colors.surfaceContainer : Qt.rgba(colors.surfaceContainer.r, colors.surfaceContainer.g, colors.surfaceContainer.b, 0.85)
+            color: colors.surfaceContainer
 
             Accessible.role: Accessible.ToolBar
             Accessible.name: "Application toolbar"
 
             readonly property bool _shouldShow: root._showToolbar
-            readonly property var _windowMenuModel: [
-                { id: "restore",  text: "Restore",   enabled: root.isMaximized || root.isFullScreen },
-                { type: "divider" },
-                { id: "move",     text: "Move",      enabled: true },
-                { id: "resize",   text: "Resize",    enabled: !root.isMaximized && !root.isFullScreen },
-                { type: "divider" },
-                { id: "minimize", text: "Minimize",  enabled: true },
-                { id: "maximize", text: "Maximize",  enabled: !root.isMaximized && !root.isFullScreen },
-                { type: "divider" },
-                { id: "close",    text: "Close",     enabled: true }
-            ]
             property real _toolbarOpacity: 0.0
             visible: _toolbarOpacity > 0.001
             opacity: _toolbarOpacity
@@ -417,112 +406,17 @@ Window {
                 }
             }
 
-            // Drag / maximize / window menu
+            // Drag / maximize
             MouseArea {
                 anchors.fill: parent
                 z: -1
-                acceptedButtons: Qt.LeftButton | Qt.RightButton
                 onPressed: function(mouse) {
                     root._keyboardFocusActive = false
-                    if (mouse.button === Qt.RightButton) {
-                        _windowMenu.open()
-                        _windowMenu.x = mouse.x
-                        _windowMenu.y = mouse.y
-                    } else {
-                        root.startSystemMove()
-                    }
+                    root.startSystemMove()
                 }
                 onDoubleClicked: {
                     if (root.isMaximized) root.showNormal()
                     else root.showMaximized()
-                }
-            }
-
-            // Window menu on right-click title bar
-            Popup {
-                id: _windowMenu
-                width: 200
-                padding: 4
-
-                background: Rectangle {
-                    color: root.colors.surfaceContainerHigh
-                    radius: 12
-                    border.width: 1
-                    border.color: root.colors.outlineVariant
-                    layer.enabled: true
-                    layer.effect: MultiEffect {
-                        shadowEnabled: true
-                        shadowColor: Qt.rgba(0, 0, 0, 0.12)
-                        shadowVerticalOffset: 4
-                        shadowBlur: 0.35
-                    }
-                }
-
-                contentItem: Column {
-                    spacing: 0
-
-                    Repeater {
-                        model: _toolbar._windowMenuModel
-
-                        delegate: Item {
-                            required property var modelData
-                            required property int index
-
-                            width: _windowMenu.width - 8
-                            x: 4
-                            height: modelData.type === "divider" ? 9 : 32
-
-                            readonly property bool _isDivider: modelData.type === "divider"
-
-                            Rectangle {
-                                visible: _isDivider
-                                anchors.centerIn: parent
-                                width: parent.width - 16; height: 1
-                                color: root.colors.outlineVariant
-                            }
-
-                            Rectangle {
-                                visible: !_isDivider
-                                anchors.fill: parent
-                                anchors.margins: 1
-                                radius: 8
-                                color: _wmMouse.containsMouse ? Qt.alpha(root.colors.onSurface, 0.08) : "transparent"
-
-                                Accessible.role: Accessible.MenuItem
-                                Accessible.name: modelData.text || ""
-
-                                Text {
-                                    anchors.left: parent.left
-                                    anchors.leftMargin: 12
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: modelData.text || ""
-                                    font.family: root.fontFamily
-                                    font.pixelSize: root.typography.bodyMedium.size
-                                    font.weight: root.typography.bodyMedium.weight
-                                    color: modelData.enabled !== false ? root.colors.onSurface : Qt.rgba(root.colors.onSurface.r, root.colors.onSurface.g, root.colors.onSurface.b, 0.38)
-                                }
-
-                                MouseArea {
-                                    id: _wmMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    enabled: modelData.enabled !== false
-                                    cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                    onClicked: {
-                                        _windowMenu.close()
-                                        switch (modelData.id) {
-                                        case "restore":  root.showNormal(); break
-                                        case "move":     root.startSystemMove(); break
-                                        case "resize":   root.startSystemResize(Qt.BottomEdge | Qt.RightEdge); break
-                                        case "minimize": root.showMinimized(); break
-                                        case "maximize": root.isMaximized ? root.showNormal() : root.showMaximized(); break
-                                        case "close":    root.close(); break
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
                 }
             }
 
@@ -581,11 +475,8 @@ Window {
                         }
                         Connections {
                             target: root
-                            function on_TriggerOverflowMenuChanged() {
-                                if (root._triggerOverflowMenu) {
-                                    _overflowMenu.open()
-                                    root._triggerOverflowMenu = false
-                                }
+                            function onOpenOverflowMenuRequested() {
+                                _overflowMenu.open()
                             }
                         }
                     }
@@ -735,7 +626,7 @@ Window {
                     font.weight: root.typography.titleSmall.weight
                     font.pixelSize: root.typography.titleSmall.size
                     font.letterSpacing: root.typography.titleSmall.spacing
-                    color: root.active ? colors.onSurface : Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.6)
+                    color: colors.onSurface
                     elide: Text.ElideMiddle
                     maximumLineCount: 1
                     verticalAlignment: Text.AlignVCenter
@@ -786,6 +677,26 @@ Window {
                 }
             }
         }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  INACTIVE OVERLAY
+    // ═══════════════════════════════════════════════════════════════
+
+    Rectangle {
+        anchors.fill: parent
+        color: "#000000"
+        z: 999
+        opacity: root.active ? 0.0 : 0.08
+        visible: opacity > 0
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: root.motion.durationFast
+                easing.type: Easing.OutCubic
+            }
+        }
+        Accessible.ignored: true
     }
 
     // ═══════════════════════════════════════════════════════════════
