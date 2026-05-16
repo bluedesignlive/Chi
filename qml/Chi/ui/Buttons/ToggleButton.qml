@@ -102,8 +102,8 @@ Item {
 
         // State Layer
         Common.StateLayer {
-            color: toggleButton._interactColor
-            radius: parent.radius
+            layerColor: toggleButton._interactColor
+            containerRadius: parent.radius
             pressed: mouseArea.pressed
             hovered: mouseArea.containsMouse
             focused: toggleButton.activeFocus

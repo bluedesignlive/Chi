@@ -11,6 +11,9 @@ qt_add_qml_module(chi-settings
     VERSION 1.0
     QML_FILES
         qml/Main.qml
+        qml/AppearancePage.qml
+        qml/SoundPage.qml
+        qml/AboutPage.qml
 )
 
 target_link_libraries(chi-settings PRIVATE Qt6::Quick)

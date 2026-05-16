@@ -71,8 +71,8 @@ Item {
 
         // State Layer
         Common.StateLayer {
-            color: fab._contentColor
-            radius: parent.radius
+            layerColor: fab._contentColor
+            containerRadius: parent.radius
             pressed: mouseArea.pressed
             hovered: mouseArea.containsMouse
             focused: fab.activeFocus

@@ -68,8 +68,8 @@ Item {
 
         // State Layer
         Common.StateLayer {
-            color: menuItem._contentColor
-            radius: parent.radius
+            layerColor: menuItem._contentColor
+            containerRadius: parent.radius
             pressed: mouseArea.pressed
             hovered: mouseArea.containsMouse
             focused: menuItem.activeFocus

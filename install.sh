@@ -17,6 +17,19 @@ ok()    { echo -e "${GREEN}[Chi]${NC} $1"; }
 warn()  { echo -e "${YELLOW}[Chi]${NC} $1"; }
 fail()  { echo -e "${RED}[Chi]${NC} $1"; exit 1; }
 
+# ── Portable CPU count ────────────────────────────────────────
+detect_nproc() {
+    if command -v nproc >/dev/null 2>&1; then
+        nproc
+    elif command -v sysctl >/dev/null 2>&1; then
+        sysctl -n hw.ncpu 2>/dev/null || echo 1
+    elif [ -f /proc/cpuinfo ]; then
+        grep -c ^processor /proc/cpuinfo 2>/dev/null || echo 1
+    else
+        echo 1
+    fi
+}
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR" || fail "Cannot cd to project root"
 
@@ -65,17 +78,21 @@ command -v make  >/dev/null 2>&1 && HAS_MAKE=1
 if [ "$HAS_CMAKE" -eq 0 ]; then
     fail "cmake is required but not found.
 
-  On Fedora:   sudo dnf install cmake
-  On Ubuntu:   sudo apt install cmake
-  On Arch:     sudo pacman -S cmake"
+  On Fedora:     sudo dnf install cmake
+  On Ubuntu:     sudo apt install cmake
+  On Arch:       sudo pacman -S cmake
+  On macOS:      brew install cmake
+  On FreeBSD:    pkg install cmake"
 fi
 
 if [ "$HAS_NINJA" -eq 0 ] && [ "$HAS_MAKE" -eq 0 ]; then
     fail "Need either ninja or make as a build backend.
 
-  On Fedora:   sudo dnf install ninja-build   (or make)
-  On Ubuntu:   sudo apt install ninja-build    (or make)
-  On Arch:     sudo pacman -S ninja            (or make)"
+  On Fedora:     sudo dnf install ninja-build   (or make)
+  On Ubuntu:     sudo apt install ninja-build    (or make)
+  On Arch:       sudo pacman -S ninja            (or make)
+  On macOS:      brew install ninja              (or use make)
+  On FreeBSD:    pkg install ninja               (or use make)"
 fi
 
 # Pick the best available generator
@@ -84,11 +101,13 @@ if [ "$HAS_NINJA" -eq 1 ]; then
     BUILD_CMD="ninja"
 else
     GENERATOR="Unix Makefiles"
-    BUILD_CMD="make -j$(nproc)"
+    BUILD_CMD="make -j$(detect_nproc)"
 fi
 
 # Check for Qt6
 QMAKE_BIN=""
+
+# First try PATH
 for TRY in qmake6 qmake; do
     if command -v "$TRY" >/dev/null 2>&1; then
         QMAKE_BIN="$TRY"
@@ -96,24 +115,73 @@ for TRY in qmake6 qmake; do
     fi
 done
 
+# If not in PATH, search common installation directories
+if [ -z "$QMAKE_BIN" ]; then
+    for SEARCH in \
+        "/usr/lib/qt6/bin/qmake6" \
+        "/usr/lib/qt6/bin/qmake" \
+        "/usr/local/lib/qt6/bin/qmake6" \
+        "/usr/local/lib/qt6/bin/qmake" \
+        "/opt/homebrew/bin/qmake6" \
+        "/opt/homebrew/bin/qmake" \
+        "/usr/lib/qt5/bin/qmake" \
+        "/usr/lib/x86_64-linux-gnu/qt6/bin/qmake" \
+        "/usr/lib/aarch64-linux-gnu/qt6/bin/qmake"; do
+        if [ -x "$SEARCH" ]; then
+            QMAKE_BIN="$SEARCH"
+            break
+        fi
+    done
+fi
+
+# Last resort: try to find any qmake on the system
+if [ -z "$QMAKE_BIN" ]; then
+    QMAKE_FALLBACK=$(find /usr /opt /usr/local -name 'qmake*' -type f -executable 2>/dev/null | head -1)
+    if [ -n "$QMAKE_FALLBACK" ]; then
+        QMAKE_BIN="$QMAKE_FALLBACK"
+    fi
+fi
+
 if [ -z "$QMAKE_BIN" ]; then
     fail "Qt6 qmake not found.
 
-  On Fedora:   sudo dnf install qt6-qtbase-devel qt6-qtdeclarative-devel
-  On Ubuntu:   sudo apt install qt6-base-dev qt6-declarative-dev
-  On Arch:     sudo pacman -S qt6-base qt6-declarative"
+  On Fedora:     sudo dnf install qt6-qtbase-devel qt6-qtdeclarative-devel
+  On Ubuntu:     sudo apt install qt6-base-dev qt6-declarative-dev
+  On Arch:       sudo pacman -S qt6-base qt6-declarative
+  On macOS:      brew install qt@6
+  On FreeBSD:    pkg install qt6-base qt6-declarative"
 fi
 
 # Verify Qt6Qml is available to cmake
+# Use qmake to find the install prefix, then search for Qt6QmlConfig.cmake
 if ! pkg-config --exists Qt6Qml 2>/dev/null; then
-    if [ ! -f /usr/lib64/cmake/Qt6Qml/Qt6QmlConfig.cmake ] && \
-       [ ! -f /usr/lib/cmake/Qt6Qml/Qt6QmlConfig.cmake ] && \
-       [ ! -f /usr/lib/x86_64-linux-gnu/cmake/Qt6Qml/Qt6QmlConfig.cmake ]; then
+    _qt_libdir="$($QMAKE_BIN -query QT_INSTALL_LIBS 2>/dev/null)"
+    _qt_prefix="$($QMAKE_BIN -query QT_INSTALL_PREFIX 2>/dev/null)"
+    QML_CMAKE_FOUND=0
+    for SEARCH_DIR in \
+        "${_qt_libdir}/cmake/Qt6Qml" \
+        "${_qt_prefix}/lib/cmake/Qt6Qml" \
+        "${_qt_prefix}/lib64/cmake/Qt6Qml" \
+        "/usr/lib/cmake/Qt6Qml" \
+        "/usr/lib64/cmake/Qt6Qml" \
+        "/usr/local/lib/cmake/Qt6Qml" \
+        "/usr/local/lib64/cmake/Qt6Qml" \
+        "/opt/homebrew/lib/cmake/Qt6Qml" \
+        "/opt/homebrew/lib64/cmake/Qt6Qml"; do
+        if [ -f "$SEARCH_DIR/Qt6QmlConfig.cmake" ]; then
+            QML_CMAKE_FOUND=1
+            break
+        fi
+    done
+
+    if [ "$QML_CMAKE_FOUND" -eq 0 ]; then
         fail "Qt6 QML development package not found.
 
-  On Fedora:   sudo dnf install qt6-qtdeclarative-devel
-  On Ubuntu:   sudo apt install qt6-declarative-dev
-  On Arch:     sudo pacman -S qt6-declarative"
+  On Fedora:     sudo dnf install qt6-qtdeclarative-devel
+  On Ubuntu:     sudo apt install qt6-declarative-dev
+  On Arch:       sudo pacman -S qt6-declarative
+  On macOS:      brew install qt@6
+  On FreeBSD:    pkg install qt6-declarative"
     fi
 fi
 
@@ -136,9 +204,10 @@ if [ ! -w "$QML_DIR" ]; then
 fi
 
 # ── 4. Confirm ────────────────────────────────────────────────
-read -rp "$(echo -e "${CYAN}[Chi]${NC} Proceed with install? [Y/n] ")" REPLY
+printf "${CYAN}[Chi]${NC} Proceed with install? [Y/n] "
+read -r REPLY
 REPLY=${REPLY:-Y}
-if [[ ! "$REPLY" =~ ^[Yy]$ ]]; then
+if ! echo "$REPLY" | grep -qiE '^[Yy]$|^$'; then
     info "Aborted."
     exit 0
 fi
@@ -188,7 +257,7 @@ cmake "$SCRIPT_DIR" \
 
 # ── 7. Build ──────────────────────────────────────────────────
 info "Building..."
-cmake --build . --parallel "$(nproc)" \
+cmake --build . --parallel "$(detect_nproc)" \
     || fail "Build failed."
 
 ok "Build successful."
@@ -236,7 +305,7 @@ echo -e "  ${BOLD}Usage in QML:${NC}"
 echo "    import Chi 1.0"
 echo ""
 echo -e "  ${BOLD}Change theme from terminal:${NC}"
-echo "    echo '{\"darkMode\": false, \"primary\": \"#6750a4\"}' > ~/.config/chi/theme.json"
+echo '    echo {"darkMode": false, "primary": "#6750a4"} > ~/.config/chi/theme.json'
 echo ""
 echo -e "  ${BOLD}Uninstall:${NC}"
 echo "    ./uninstall.sh"

@@ -1,8 +1,15 @@
-// ChiApplicationWindow.qml
+// ChiApplicationWindow.qml — Material 3 Frameless Application Window
+//
+// Title:    ElideMiddle truncation, smooth fade, auto-hide at minimum
+// Menu:     Overflow (⋯) default with more_horiz, traditional optional
+// Toolbar:  Auto-hide with floating window controls bubble
+// Global:   menuModel for ChiDBusMenuBridge (Canonical/KDE AppMenu)
+// Resize:   Persistent handles, hoverEnabled, wide hit zones
+// A11y:     Keyboard-initiated focus rings, tab nav, shortcuts
+
 import QtQuick
 import QtQuick.Window
 import QtQuick.Controls.Basic
-import QtQuick.Layouts
 import QtQuick.Effects
 import "../../theme" as Theme
 import "../common"
@@ -19,16 +26,18 @@ Window {
     minimumHeight: 540
 
     // ═══════════════════════════════════════════════════════════════
-    // CORE PROPERTIES
+    //  CORE
     // ═══════════════════════════════════════════════════════════════
 
     property string title: "Application"
     property bool showControls: true
     property var colors: Theme.ChiTheme.colors
     readonly property string fontFamily: Theme.ChiTheme.fontFamily
+    readonly property var typography: Theme.ChiTheme.typography
+    readonly property var motion: Theme.ChiTheme.motion
 
     // ═══════════════════════════════════════════════════════════════
-    // TOOLBAR CONFIGURATION
+    //  TOOLBAR
     // ═══════════════════════════════════════════════════════════════
 
     property string leadingIcon: ""
@@ -37,49 +46,55 @@ Window {
     property bool autoHideTitle: true
     property int toolbarHeight: 48
     property bool toolbarVisible: true
-    property string toolbarBehavior: "visible"
+    property string toolbarBehavior: "visible"      // "visible" | "autoHide"
     property list<QtObject> toolbarActions: []
+    property int titleMinChars: 4
 
     // ═══════════════════════════════════════════════════════════════
-    // MENU SYSTEM
+    //  MENU SYSTEM
     //
-    // showMenu: false → entire menu system is disabled.
-    //   No menu button, no traditional bar, no overflow, no
-    //   default menus loaded. Clean toolbar for simple apps.
-    //
-    // showMenu: true  → menus active, controlled by menuStyle,
-    //   showDefaultMenus, customMenus, etc.
+    //  showMenu: false  → clean toolbar, no menus
+    //  showMenu: true   →
+    //    "overflow"      — ⋯ button (more_horiz) with dropdown (DEFAULT)
+    //    "traditional"   — text labels in toolbar
+    //    "auto"          — traditional when space allows, else overflow
     // ═══════════════════════════════════════════════════════════════
 
-    property bool showMenu: true
-    property string menuStyle: "auto"
-    property string collapsedMenuIcon: "menu"
-    property var customMenus: []
-    property bool showDefaultMenus: true
-    property bool showMenuButton: true
+    property bool   showMenu: true
+    property string menuStyle: "overflow"
+    property var    customMenus: []
+    property bool   showDefaultMenus: true
 
     // ═══════════════════════════════════════════════════════════════
-    // SIDEBAR BUTTON
+    //  GLOBAL MENU  (DBus / Platform)
+    // ═══════════════════════════════════════════════════════════════
+
+    property bool globalMenuActive: false
+    readonly property var menuModel: _allMenus
+    signal globalMenuItemActivated(string menuId, string itemId)
+
+    // ═══════════════════════════════════════════════════════════════
+    //  SIDEBAR
     // ═══════════════════════════════════════════════════════════════
 
     property bool showSidebarButton: false
     property bool sidebarOpen: false
 
     // ═══════════════════════════════════════════════════════════════
-    // WINDOW CONTROLS STYLE
+    //  WINDOW CONTROLS
     // ═══════════════════════════════════════════════════════════════
 
     property string controlsStyle: "macOS"
     readonly property bool controlsOnLeft: controlsStyle === "macOS"
 
     // ═══════════════════════════════════════════════════════════════
-    // CONTENT
+    //  CONTENT
     // ═══════════════════════════════════════════════════════════════
 
-    default property alias content: contentContainer.data
+    default property alias content: _contentContainer.data
 
     // ═══════════════════════════════════════════════════════════════
-    // SIGNALS
+    //  SIGNALS
     // ═══════════════════════════════════════════════════════════════
 
     signal leadingActionTriggered()
@@ -89,16 +104,17 @@ Window {
     signal breakpointChanged(string breakpoint)
 
     // ═══════════════════════════════════════════════════════════════
-    // CONTEXT — breakpoint debounced to avoid per-pixel cascade
+    //  CONTEXT
     // ═══════════════════════════════════════════════════════════════
 
     readonly property QtObject context: QtObject {
-        id: ctx
+        id: _ctx
 
         readonly property bool isMacOS:   Qt.platform.os === "osx"
         readonly property bool isWindows: Qt.platform.os === "windows"
         readonly property bool isLinux:   Qt.platform.os === "linux"
-        readonly property bool isMobile:  Qt.platform.os === "android" || Qt.platform.os === "ios"
+        readonly property bool isMobile:  Qt.platform.os === "android"
+                                          || Qt.platform.os === "ios"
         readonly property bool isWeb:     Qt.platform.os === "wasm"
         readonly property bool isDesktop: !isMobile && !isWeb
 
@@ -116,140 +132,218 @@ Window {
         readonly property bool showWindowControls: isDesktop && !isWeb
         readonly property bool useOverlaySidebar:  isCompact || isMedium
 
+        readonly property bool globalMenuAvailable: {
+            if (isMacOS) return true
+            if (isLinux) {
+                var desktop = (Qt.getenv("XDG_CURRENT_DESKTOP") || "").toLowerCase()
+                var session = (Qt.getenv("DESKTOP_SESSION") || "").toLowerCase()
+                return desktop.indexOf("kde") >= 0
+                    || desktop.indexOf("plasma") >= 0
+                    || desktop.indexOf("unity") >= 0
+                    || desktop.indexOf("budgie") >= 0
+                    || Qt.getenv("UBUNTU_MENUPROXY") !== ""
+            }
+            return false
+        }
+
         onBreakpointChanged: root.breakpointChanged(breakpoint)
 
-        function _recalcBreakpoint() {
-            var w = root.width
+        function _recalc() {
+            var w  = root.width
             var bp = w < 600  ? "compact"
                    : w < 840  ? "medium"
                    : w < 1200 ? "expanded"
                    : w < 1600 ? "large"
-                   : "xlarge"
-            if (breakpoint !== bp)
-                breakpoint = bp
+                   :            "xlarge"
+            if (breakpoint !== bp) breakpoint = bp
         }
     }
 
-    Timer {
-        id: breakpointTimer
-        interval: 80
-        onTriggered: ctx._recalcBreakpoint()
-    }
-
-    onWidthChanged: breakpointTimer.restart()
-    Component.onCompleted: ctx._recalcBreakpoint()
+    Timer { id: _bpDebounce; interval: 80; onTriggered: _ctx._recalc() }
+    onWidthChanged: _bpDebounce.restart()
+    Component.onCompleted: _ctx._recalc()
 
     // ═══════════════════════════════════════════════════════════════
-    // INTERNAL STATE
+    //  KEYBOARD-INITIATED FOCUS TRACKING
+    //
+    //  Focus rings only appear after the user presses Tab, arrow keys,
+    //  or F10. They disappear on any mouse click. This matches GNOME,
+    //  KDE, macOS, and Windows native behavior.
+    // ═══════════════════════════════════════════════════════════════
+
+    property bool _keyboardFocusActive: false
+
+    Shortcut {
+        sequence: "Tab"
+        context: Qt.ApplicationShortcut
+        onActivated: { root._keyboardFocusActive = true }
+    }
+
+    // Detect mouse clicks anywhere to exit keyboard focus mode
+    MouseArea {
+        anchors.fill: parent
+        z: -100
+        acceptedButtons: Qt.AllButtons
+        hoverEnabled: false
+        onPressed: function(mouse) {
+            root._keyboardFocusActive = false
+            mouse.accepted = false  // pass through
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  INTERNAL STATE
     // ═══════════════════════════════════════════════════════════════
 
     readonly property bool isMaximized:  visibility === Window.Maximized
     readonly property real windowRadius: isMaximized ? 0 : 24
 
-    readonly property string _effectiveMenuStyle: {
-        if (!showMenu) return "none"
-        if (menuStyle === "collapsed") return "collapsed"
+    readonly property string _resolvedMenuStyle: {
+        if (!showMenu || globalMenuActive) return "none"
+        if (menuStyle === "overflow" || menuStyle === "collapsed") return "overflow"
         if (menuStyle === "traditional") return "traditional"
-        let minSpaceForMenu = _estimatedMenuWidth + _estimatedRightWidth + 60
-        if (root.width < minSpaceForMenu) return "collapsed"
-        return "traditional"
+        var needed = _allMenus.length * 70 + _rightSectionWidth + 100
+        return root.width < needed ? "overflow" : "traditional"
     }
 
-    readonly property real _estimatedMenuWidth:  showMenu ? _allMenus.length * 60 : 0
-    readonly property real _estimatedRightWidth: (toolbarActions.length * 40) + (controlsOnLeft ? 0 : 110)
+    readonly property real _rightSectionWidth:
+        (toolbarActions.length * 40) + (controlsOnLeft ? 0 : 120)
 
     property bool _toolbarAutoHidden: false
+
     readonly property bool _showToolbar: {
         if (!toolbarVisible) return false
-        if (toolbarBehavior === "autoHide") return !_toolbarAutoHidden || toolbarHoverArea.containsMouse
+        if (toolbarBehavior === "autoHide")
+            return !_toolbarAutoHidden || _hoverTrigger.containsMouse
         return true
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // DEFAULT MENUS — only constructed when showMenu is true
+    //  DEFAULT MENUS
     // ═══════════════════════════════════════════════════════════════
 
     readonly property var _defaultMenus: showMenu ? [
         {
             id: "file", title: "File",
             items: [
-                { id: "new", text: "New", shortcut: "Ctrl+N", icon: "add" },
-                { id: "open", text: "Open", shortcut: "Ctrl+O", icon: "folder_open" },
+                { id: "new",    text: "New",       shortcut: "Ctrl+N",       icon: "add" },
+                { id: "open",   text: "Open",      shortcut: "Ctrl+O",       icon: "folder_open" },
                 { type: "divider" },
-                { id: "save", text: "Save", shortcut: "Ctrl+S", icon: "save" },
-                { id: "saveAs", text: "Save As...", shortcut: "Ctrl+Shift+S" },
+                { id: "save",   text: "Save",      shortcut: "Ctrl+S",       icon: "save" },
+                { id: "saveAs", text: "Save As…",  shortcut: "Ctrl+Shift+S" },
                 { type: "divider" },
-                { id: "exit", text: "Exit", shortcut: "Alt+F4", icon: "logout" }
+                { id: "exit",   text: "Exit",      shortcut: "Alt+F4",       icon: "logout" }
             ]
         },
         {
             id: "edit", title: "Edit",
             items: [
-                { id: "undo", text: "Undo", shortcut: "Ctrl+Z", icon: "undo" },
-                { id: "redo", text: "Redo", shortcut: "Ctrl+Y", icon: "redo" },
+                { id: "undo",  text: "Undo",  shortcut: "Ctrl+Z", icon: "undo" },
+                { id: "redo",  text: "Redo",  shortcut: "Ctrl+Y", icon: "redo" },
                 { type: "divider" },
-                { id: "cut", text: "Cut", shortcut: "Ctrl+X", icon: "content_cut" },
-                { id: "copy", text: "Copy", shortcut: "Ctrl+C", icon: "content_copy" },
+                { id: "cut",   text: "Cut",   shortcut: "Ctrl+X", icon: "content_cut" },
+                { id: "copy",  text: "Copy",  shortcut: "Ctrl+C", icon: "content_copy" },
                 { id: "paste", text: "Paste", shortcut: "Ctrl+V", icon: "content_paste" }
             ]
         },
         {
             id: "view", title: "View",
             items: [
-                { id: "sidebar", text: "Toggle Sidebar", shortcut: "Ctrl+B", icon: "view_sidebar" },
+                { id: "sidebar",          text: "Toggle Sidebar",      shortcut: "Ctrl+B",       icon: "view_sidebar" },
                 { type: "divider" },
-                { id: "menu_auto", text: "Auto Menu", icon: "tune" },
-                { id: "menu_traditional", text: "Traditional Menu", icon: "menu_open" },
-                { id: "menu_collapsed", text: "Collapsed Menu", icon: "menu" },
+                { id: "toolbar_autohide", text: "Auto-Hide Headerbar", shortcut: "Ctrl+Shift+H", icon: "vertical_align_top" },
                 { type: "divider" },
-                { id: "icon_hamburger", text: "Hamburger Icon", icon: "menu" },
-                { id: "icon_dots", text: "Dots Icon", icon: "more_horiz" }
+                { id: "menu_overflow",    text: "Overflow Menu",       icon: "more_horiz" },
+                { id: "menu_traditional", text: "Traditional Menu",    icon: "menu_open" },
+                { id: "menu_auto",        text: "Auto Menu",           icon: "tune" }
             ]
         },
         {
             id: "help", title: "Help",
             items: [
-                { id: "docs", text: "Documentation", icon: "menu_book" },
-                { id: "shortcuts", text: "Keyboard Shortcuts", icon: "keyboard" },
+                { id: "docs",      text: "Documentation",      icon: "menu_book" },
+                { id: "shortcuts", text: "Keyboard Shortcuts",  icon: "keyboard" },
                 { type: "divider" },
-                { id: "about", text: "About", icon: "info" }
+                { id: "about",     text: "About",              icon: "info" }
             ]
         }
     ] : []
 
     readonly property var _allMenus: {
         if (!showMenu) return []
-        return showDefaultMenus
-            ? _defaultMenus.concat(customMenus)
-            : customMenus
+        return showDefaultMenus ? _defaultMenus.concat(customMenus) : customMenus
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // CORNER MASK
+    //  KEYBOARD SHORTCUTS
+    // ═══════════════════════════════════════════════════════════════
+
+    Shortcut {
+        sequence: "Ctrl+N"
+        enabled: root.showMenu && root.showDefaultMenus
+        onActivated: root._handleMenuAction("file", "new")
+    }
+    Shortcut {
+        sequence: "Ctrl+O"
+        enabled: root.showMenu && root.showDefaultMenus
+        onActivated: root._handleMenuAction("file", "open")
+    }
+    Shortcut {
+        sequence: "Ctrl+S"
+        enabled: root.showMenu && root.showDefaultMenus
+        onActivated: root._handleMenuAction("file", "save")
+    }
+    Shortcut {
+        sequence: "Ctrl+Shift+S"
+        enabled: root.showMenu && root.showDefaultMenus
+        onActivated: root._handleMenuAction("file", "saveAs")
+    }
+    Shortcut {
+        sequence: "Ctrl+B"
+        enabled: root.showSidebarButton
+        onActivated: root.sidebarButtonClicked()
+    }
+    Shortcut {
+        sequence: "Ctrl+Shift+H"
+        enabled: root.showMenu
+        onActivated: root._toggleToolbarAutoHide()
+    }
+    Shortcut {
+        sequence: "F10"
+        enabled: root.showMenu && root._resolvedMenuStyle === "overflow"
+        onActivated: {
+            root._keyboardFocusActive = true
+            _overflowMenu.open()
+        }
+    }
+    Shortcut {
+        sequence: "Escape"
+        enabled: _overflowMenu.visible
+        onActivated: _overflowMenu.close()
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  VISUAL TREE
     // ═══════════════════════════════════════════════════════════════
 
     Rectangle {
-        id: cornerMask
+        id: _cornerMask
         anchors.fill: parent
         radius: windowRadius
-        color: "#FFFFFF"
+        color: "#FFF"
         visible: false
         layer.enabled: windowRadius > 0
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // MAIN WINDOW SURFACE
-    // ═══════════════════════════════════════════════════════════════
-
     Item {
-        id: windowSurface
+        id: _surface
         anchors.fill: parent
 
         layer.enabled: windowRadius > 0
         layer.smooth: true
         layer.effect: MultiEffect {
             maskEnabled: true
-            maskSource: cornerMask
+            maskSource: _cornerMask
             maskThresholdMin: 0.5
             maskSpreadAtMin: 0.5
         }
@@ -259,42 +353,49 @@ Window {
             color: colors.background
         }
 
+        // Auto-hide hover trigger
         MouseArea {
-            id: toolbarHoverArea
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            height: root.toolbarBehavior === "autoHide" && root._toolbarAutoHidden ? 12 : 0
-            hoverEnabled: root.toolbarBehavior === "autoHide"
-            enabled:      root.toolbarBehavior === "autoHide"
-            visible:      root.toolbarBehavior === "autoHide"
+            id: _hoverTrigger
+            anchors { top: parent.top; left: parent.left; right: parent.right }
+            height: toolbarBehavior === "autoHide" && _toolbarAutoHidden ? 16 : 0
+            hoverEnabled: toolbarBehavior === "autoHide"
+            enabled:      toolbarBehavior === "autoHide"
+            visible:      toolbarBehavior === "autoHide"
             z: 101
+            Accessible.ignored: true
         }
 
         // ═════════════════════════════════════════════════════════
-        // TOOLBAR
+        //  TOOLBAR
         // ═════════════════════════════════════════════════════════
 
         Rectangle {
-            id: toolbar
+            id: _toolbar
             height: root._showToolbar ? root.toolbarHeight : 0
             visible: height > 0
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
+            anchors { top: parent.top; left: parent.left; right: parent.right }
             z: 100
             clip: true
-
             color: colors.surfaceContainer
 
+            Accessible.role: Accessible.ToolBar
+            Accessible.name: "Application toolbar"
+
             Behavior on height {
-                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                NumberAnimation {
+                    duration: motion.durationMedium
+                    easing.type: motion.easeStandard
+                }
             }
 
+            // Drag / maximize
             MouseArea {
                 anchors.fill: parent
                 z: -1
-                onPressed: root.startSystemMove()
+                onPressed: function(mouse) {
+                    root._keyboardFocusActive = false
+                    root.startSystemMove()
+                }
                 onDoubleClicked: {
                     if (root.isMaximized) root.showNormal()
                     else root.showMaximized()
@@ -302,68 +403,78 @@ Window {
             }
 
             // ═══ LEFT SECTION ═══
+
             Item {
-                id: leftSection
-                anchors.left: parent.left
-                anchors.leftMargin: 16
-                anchors.verticalCenter: parent.verticalCenter
-                width: leftRow.implicitWidth
+                id: _leftSection
+                anchors {
+                    left: parent.left
+                    leftMargin: 16
+                    verticalCenter: parent.verticalCenter
+                }
+                width: _leftRow.implicitWidth
                 height: parent.height
 
                 Row {
-                    id: leftRow
+                    id: _leftRow
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 4
 
                     WindowControls {
-                        visible: root.showControls && root.controlsOnLeft && root.context.showWindowControls
+                        visible: root.showControls
+                                 && root.controlsOnLeft
+                                 && _ctx.showWindowControls
                         targetWindow: root
                         variant: root.controlsStyle
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
                     Item {
-                        width: 8
-                        height: 1
-                        visible: root.controlsOnLeft && root.showControls && root.context.showWindowControls
+                        width: 8; height: 1
+                        visible: root.controlsOnLeft
+                                 && root.showControls
+                                 && _ctx.showWindowControls
                     }
 
-                    // ═══ COLLAPSED MENU BUTTON ═══
-                    // Only when showMenu is true AND style resolves to collapsed
+                    // Overflow menu button (⋯)
                     ToolbarIconButton {
-                        visible: root.showMenu
-                                 && root.showMenuButton
-                                 && root._effectiveMenuStyle === "collapsed"
-                        iconName: root.collapsedMenuIcon
-                        onClicked: overflowMenu.open()
+                        visible: root._resolvedMenuStyle === "overflow"
+                        iconName: "more_horiz"
+                        tooltipText: "Application menu (F10)"
+                        onClicked: _overflowMenu.open()
+
+                        Accessible.name: "Application menu"
+                        Accessible.description: "Press F10 to open"
 
                         Menus.OverflowMenu {
-                            id: overflowMenu
+                            id: _overflowMenu
                             menus: root._allMenus
                             maxHeight: root.height - 100
-                            onItemTriggered: (menuId, itemId) => root._handleMenuAction(menuId, itemId)
+                            onItemTriggered: function(menuId, itemId) {
+                                root._handleMenuAction(menuId, itemId)
+                            }
                         }
                     }
 
                     ToolbarIconButton {
                         visible: root.showSidebarButton
                         iconName: "view_sidebar"
+                        tooltipText: "Toggle sidebar (Ctrl+B)"
                         checked: root.sidebarOpen
                         onClicked: root.sidebarButtonClicked()
+                        Accessible.name: root.sidebarOpen ? "Close sidebar" : "Open sidebar"
                     }
 
                     ToolbarIconButton {
                         visible: root.leadingIcon !== ""
                         iconName: root.leadingIcon
+                        tooltipText: "Back"
                         onClicked: root.leadingActionTriggered()
+                        Accessible.name: "Back"
                     }
 
-                    // ═══ TRADITIONAL MENU BAR ═══
-                    // Only when showMenu is true AND style resolves to traditional
+                    // Traditional menu bar
                     Row {
-                        id: traditionalMenuRow
-                        visible: root.showMenu
-                                 && root._effectiveMenuStyle === "traditional"
+                        visible: root._resolvedMenuStyle === "traditional"
                         spacing: 0
                         anchors.verticalCenter: parent.verticalCenter
 
@@ -371,8 +482,11 @@ Window {
                             model: root._allMenus
 
                             MenuBarButton {
+                                required property var modelData
                                 menuData: modelData
-                                onItemTriggered: (itemId) => root._handleMenuAction(modelData.id, itemId)
+                                onItemTriggered: function(itemId) {
+                                    root._handleMenuAction(modelData.id, itemId)
+                                }
                             }
                         }
                     }
@@ -380,16 +494,19 @@ Window {
             }
 
             // ═══ RIGHT SECTION ═══
+
             Item {
-                id: rightSection
-                anchors.right: parent.right
-                anchors.rightMargin: 16
-                anchors.verticalCenter: parent.verticalCenter
-                width: rightRow.implicitWidth
+                id: _rightSection
+                anchors {
+                    right: parent.right
+                    rightMargin: 16
+                    verticalCenter: parent.verticalCenter
+                }
+                width: _rightRow.implicitWidth
                 height: parent.height
 
                 Row {
-                    id: rightRow
+                    id: _rightRow
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 4
 
@@ -397,9 +514,13 @@ Window {
                         model: root.toolbarActions
 
                         ToolbarIconButton {
+                            required property var modelData
+                            required property int index
                             iconName: modelData.icon || ""
+                            tooltipText: modelData.tooltip || ""
                             checked: modelData.checked || false
                             enabled: modelData.enabled !== false
+                            Accessible.name: modelData.tooltip || modelData.icon || ("Action " + (index + 1))
 
                             onClicked: {
                                 if (modelData.triggered) modelData.triggered()
@@ -409,13 +530,16 @@ Window {
                     }
 
                     Item {
-                        width: 8
-                        height: 1
-                        visible: !root.controlsOnLeft && root.showControls && root.context.showWindowControls
+                        width: 8; height: 1
+                        visible: !root.controlsOnLeft
+                                 && root.showControls
+                                 && _ctx.showWindowControls
                     }
 
                     WindowControls {
-                        visible: root.showControls && !root.controlsOnLeft && root.context.showWindowControls
+                        visible: root.showControls
+                                 && !root.controlsOnLeft
+                                 && _ctx.showWindowControls
                         targetWindow: root
                         variant: root.controlsStyle
                         anchors.verticalCenter: parent.verticalCenter
@@ -423,58 +547,169 @@ Window {
                 }
             }
 
-            // ═══ CENTER TITLE ═══
-            Text {
-                id: titleText
-                visible: root.showTitle && !_titleTooCloseToMenu
+            // ═══ TITLE ═══
+            //
+            // Fixed font size from theme (titleSmall). No font scaling.
+            //
+            // Chain:
+            //   1. Full text at theme size
+            //   2. Width constrained → ElideMiddle → "Very Lo…Name"
+            //   3. Smooth opacity fade as space approaches minimum
+            //   4. Hidden when titleMinChars can't fit (if autoHideTitle)
 
-                x: root.centerTitle ? Math.max(leftEdge, (parent.width - implicitWidth) / 2) : leftEdge
-                anchors.verticalCenter: parent.verticalCenter
-
-                text: root.title
-                font.family: fontFamily
-                font.weight: Font.Medium
-                font.pixelSize: 14
-                color: colors.onSurface
-                elide: Text.ElideRight
-
-                readonly property real leftEdge: leftSection.x + leftSection.width + 16
-                readonly property real rightEdge: rightSection.x - 16
-                readonly property real availableSpace: Math.max(0, rightEdge - leftEdge)
-
-                readonly property bool _titleTooCloseToMenu: {
-                    if (!root.autoHideTitle) return false
-                    if (availableSpace < 80) return true
-                    if (root.centerTitle) {
-                        let centeredX = (toolbar.width - implicitWidth) / 2
-                        if (centeredX < leftEdge + 20) return true
-                        if (centeredX + implicitWidth > rightEdge - 20) return true
-                    }
-                    return false
+            Item {
+                id: _titleContainer
+                anchors {
+                    left: _leftSection.right
+                    leftMargin: 20
+                    right: _rightSection.left
+                    rightMargin: 20
+                    verticalCenter: parent.verticalCenter
                 }
+                height: parent.height
+                visible: root.showTitle
 
-                width: Math.min(implicitWidth, availableSpace)
+                readonly property real _fontSize: root.typography.titleSmall.size
+                readonly property real _minWidth:
+                    Math.max(40, root.titleMinChars * _fontSize * 0.65 + 20)
+                readonly property real _availableWidth: Math.max(0, width)
+                readonly property bool _tooNarrow: _availableWidth < _minWidth
+
+                Accessible.role: Accessible.StaticText
+                Accessible.name: root.title
+
+                Text {
+                    id: _titleText
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    x: {
+                        if (!root.centerTitle) return 0
+                        var windowCenterLocal = (_toolbar.width / 2) - _titleContainer.x
+                        var idealX = windowCenterLocal - (paintedWidth / 2)
+                        var maxX = _titleContainer._availableWidth - paintedWidth
+                        return Math.max(0, Math.min(idealX, Math.max(0, maxX)))
+                    }
+
+                    width: _titleContainer._availableWidth
+
+                    text: root.title
+                    font.family: root.fontFamily
+                    font.weight: root.typography.titleSmall.weight
+                    font.pixelSize: root.typography.titleSmall.size
+                    font.letterSpacing: root.typography.titleSmall.spacing
+                    color: colors.onSurface
+                    elide: Text.ElideMiddle
+                    maximumLineCount: 1
+                    verticalAlignment: Text.AlignVCenter
+
+                    opacity: {
+                        if (!root.autoHideTitle) return 1.0
+                        if (_titleContainer._tooNarrow) return 0
+                        var fadeStart = _titleContainer._minWidth * 2.0
+                        if (_titleContainer._availableWidth >= fadeStart) return 1.0
+                        var range = fadeStart - _titleContainer._minWidth
+                        if (range <= 0) return 1.0
+                        return (_titleContainer._availableWidth - _titleContainer._minWidth) / range
+                    }
+
+                    visible: !root.autoHideTitle || !_titleContainer._tooNarrow
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: root.motion.durationMedium
+                            easing.type: Easing.InOutCubic
+                        }
+                    }
+                }
             }
         }
 
         // ═════════════════════════════════════════════════════════
-        // CONTENT AREA
+        //  CONTENT AREA
         // ═════════════════════════════════════════════════════════
 
         Item {
-            id: contentContainer
-            anchors.top: toolbar.bottom
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
+            id: _contentContainer
+            anchors {
+                top: _toolbar.bottom
+                left: parent.left
+                right: parent.right
+                bottom: parent.bottom
+            }
             clip: true
         }
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // WINDOW BORDER
-    // Uses outlineVariant for proper contrast in both light/dark modes
-    // This ensures overlapping windows have visible edge separation
+    //  FLOATING WINDOW CONTROLS BUBBLE
+    //
+    //  Visible when toolbar is hidden (auto-hide or explicit).
+    //  Crossfades with toolbar height. Draggable.
+    // ═══════════════════════════════════════════════════════════════
+
+    Rectangle {
+        id: _floatingControls
+        z: 200
+
+        anchors {
+            top: parent.top
+            topMargin: 8
+        }
+        x: root.controlsOnLeft ? 8 : (root.width - width - 8)
+
+        width: _floatingRow.implicitWidth + 16
+        height: _floatingRow.implicitHeight + 10
+        radius: 16
+
+        color: Qt.rgba(colors.surfaceContainerHigh.r,
+                       colors.surfaceContainerHigh.g,
+                       colors.surfaceContainerHigh.b, 0.92)
+        border.width: 1
+        border.color: colors.outlineVariant
+
+        opacity: {
+            if (!root.showControls || !_ctx.showWindowControls) return 0
+            if (root.toolbarHeight <= 0) return 0
+            return Math.max(0, 1.0 - (_toolbar.height / root.toolbarHeight))
+        }
+        visible: opacity > 0
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: root.motion.durationMedium
+                easing.type: root.motion.easeStandard
+            }
+        }
+
+        Accessible.role: Accessible.ToolBar
+        Accessible.name: "Window controls"
+
+        MouseArea {
+            anchors.fill: parent
+            z: -1
+            hoverEnabled: false
+            onPressed: root.startSystemMove()
+            onDoubleClicked: {
+                if (root.isMaximized) root.showNormal()
+                else root.showMaximized()
+            }
+        }
+
+        Row {
+            id: _floatingRow
+            anchors.centerIn: parent
+            spacing: 4
+
+            WindowControls {
+                targetWindow: root
+                variant: root.controlsStyle
+                anchors.verticalCenter: parent.verticalCenter
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  WINDOW BORDER
     // ═══════════════════════════════════════════════════════════════
 
     Rectangle {
@@ -488,143 +723,406 @@ Window {
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // RESIZE HANDLES
+    //  RESIZE HANDLES
     // ═══════════════════════════════════════════════════════════════
 
-    Loader {
-        active: !root.isMaximized
+    Item {
+        id: _resizeHandles
         anchors.fill: parent
         z: 1010
+        visible: !root.isMaximized
+        enabled: !root.isMaximized
+        Accessible.ignored: true
 
-        sourceComponent: Item {
-            id: resizeItem
-            property int edge:   6
-            property int corner: 20
+        readonly property int edge: 8
+        readonly property int corner: 24
 
-            MouseArea { anchors { top: parent.top; left: parent.left; right: parent.right } height: resizeItem.edge; cursorShape: Qt.SizeVerCursor; onPressed: root.startSystemResize(Qt.TopEdge) }
-            MouseArea { anchors { bottom: parent.bottom; left: parent.left; right: parent.right } height: resizeItem.edge; cursorShape: Qt.SizeVerCursor; onPressed: root.startSystemResize(Qt.BottomEdge) }
-            MouseArea { anchors { left: parent.left; top: parent.top; bottom: parent.bottom } width: resizeItem.edge; cursorShape: Qt.SizeHorCursor; onPressed: root.startSystemResize(Qt.LeftEdge) }
-            MouseArea { anchors { right: parent.right; top: parent.top; bottom: parent.bottom } width: resizeItem.edge; cursorShape: Qt.SizeHorCursor; onPressed: root.startSystemResize(Qt.RightEdge) }
-            MouseArea { anchors { top: parent.top; left: parent.left } width: resizeItem.corner; height: resizeItem.corner; cursorShape: Qt.SizeFDiagCursor; onPressed: root.startSystemResize(Qt.TopEdge | Qt.LeftEdge) }
-            MouseArea { anchors { top: parent.top; right: parent.right } width: resizeItem.corner; height: resizeItem.corner; cursorShape: Qt.SizeBDiagCursor; onPressed: root.startSystemResize(Qt.TopEdge | Qt.RightEdge) }
-            MouseArea { anchors { bottom: parent.bottom; left: parent.left } width: resizeItem.corner; height: resizeItem.corner; cursorShape: Qt.SizeBDiagCursor; onPressed: root.startSystemResize(Qt.BottomEdge | Qt.LeftEdge) }
-            MouseArea { anchors { bottom: parent.bottom; right: parent.right } width: resizeItem.corner; height: resizeItem.corner; cursorShape: Qt.SizeFDiagCursor; onPressed: root.startSystemResize(Qt.BottomEdge | Qt.RightEdge) }
+        MouseArea {
+            anchors { top: parent.top; left: parent.left; right: parent.right }
+            height: _resizeHandles.edge; hoverEnabled: true
+            cursorShape: Qt.SizeVerCursor
+            onPressed: root.startSystemResize(Qt.TopEdge)
+        }
+        MouseArea {
+            anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
+            height: _resizeHandles.edge; hoverEnabled: true
+            cursorShape: Qt.SizeVerCursor
+            onPressed: root.startSystemResize(Qt.BottomEdge)
+        }
+        MouseArea {
+            anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
+            width: _resizeHandles.edge; hoverEnabled: true
+            cursorShape: Qt.SizeHorCursor
+            onPressed: root.startSystemResize(Qt.LeftEdge)
+        }
+        MouseArea {
+            anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
+            width: _resizeHandles.edge; hoverEnabled: true
+            cursorShape: Qt.SizeHorCursor
+            onPressed: root.startSystemResize(Qt.RightEdge)
+        }
+        MouseArea {
+            anchors { top: parent.top; left: parent.left }
+            width: _resizeHandles.corner; height: _resizeHandles.corner
+            hoverEnabled: true; cursorShape: Qt.SizeFDiagCursor
+            onPressed: root.startSystemResize(Qt.TopEdge | Qt.LeftEdge)
+        }
+        MouseArea {
+            anchors { top: parent.top; right: parent.right }
+            width: _resizeHandles.corner; height: _resizeHandles.corner
+            hoverEnabled: true; cursorShape: Qt.SizeBDiagCursor
+            onPressed: root.startSystemResize(Qt.TopEdge | Qt.RightEdge)
+        }
+        MouseArea {
+            anchors { bottom: parent.bottom; left: parent.left }
+            width: _resizeHandles.corner; height: _resizeHandles.corner
+            hoverEnabled: true; cursorShape: Qt.SizeBDiagCursor
+            onPressed: root.startSystemResize(Qt.BottomEdge | Qt.LeftEdge)
+        }
+        MouseArea {
+            anchors { bottom: parent.bottom; right: parent.right }
+            width: _resizeHandles.corner; height: _resizeHandles.corner
+            hoverEnabled: true; cursorShape: Qt.SizeFDiagCursor
+            onPressed: root.startSystemResize(Qt.BottomEdge | Qt.RightEdge)
         }
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // TOOLBAR ICON BUTTON
+    //  INLINE COMPONENTS
     // ═══════════════════════════════════════════════════════════════
 
+    // ── Toolbar Icon Button ──
+
     component ToolbarIconButton: Item {
-        id: toolBtn
+        id: _tbtn
         property string iconName: ""
+        property string tooltipText: ""
         property bool checked: false
-        property alias enabled: toolBtnMouse.enabled
         signal clicked()
 
-        implicitWidth: 36
-        implicitHeight: 36
-        width: 36
-        height: 36
-        opacity: enabled ? 1.0 : 0.38
+        implicitWidth: 36; implicitHeight: 36
+        width: 36; height: 36
+        opacity: _tbtn.enabled ? 1.0 : 0.38
+
+        activeFocusOnTab: true
+
+        Accessible.role: Accessible.Button
+        Accessible.name: _tbtn.tooltipText || _tbtn.iconName.replace(/_/g, " ")
+        Accessible.focusable: true
+        Accessible.onPressAction: _tbtn.clicked()
+
+        Keys.onReturnPressed: _tbtn.clicked()
+        Keys.onEnterPressed: _tbtn.clicked()
+        Keys.onSpacePressed: _tbtn.clicked()
+
+        // Focus ring — only visible when keyboard navigation is active
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: -2
+            radius: 12
+            color: "transparent"
+            border.width: 2
+            border.color: root.colors.primary
+            visible: _tbtn.activeFocus && root._keyboardFocusActive
+            z: 10
+        }
 
         Rectangle {
             anchors.fill: parent
             radius: 10
             color: {
-                if (toolBtn.checked) return colors.secondaryContainer
-                if (toolBtnMouse.pressed) return Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.15)
-                if (toolBtnMouse.containsMouse) return Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.08)
+                if (_tbtn.checked)
+                    return root.colors.secondaryContainer
+                if (_tbtnMouse.pressed)
+                    return Qt.rgba(root.colors.primary.r,
+                                   root.colors.primary.g,
+                                   root.colors.primary.b, 0.15)
+                if (_tbtnMouse.containsMouse)
+                    return Qt.rgba(root.colors.onSurface.r,
+                                   root.colors.onSurface.g,
+                                   root.colors.onSurface.b, 0.08)
                 return "transparent"
+            }
+
+            Behavior on color {
+                ColorAnimation { duration: root.motion.durationFast }
             }
         }
 
         Icon {
             anchors.centerIn: parent
-            source: toolBtn.iconName
+            source: _tbtn.iconName
             size: 20
-            color: toolBtn.checked ? colors.onSecondaryContainer : colors.onSurface
+            color: _tbtn.checked
+                   ? root.colors.onSecondaryContainer
+                   : root.colors.onSurface
         }
 
         MouseArea {
-            id: toolBtnMouse
+            id: _tbtnMouse
             anchors.fill: parent
             hoverEnabled: true
-            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-            onClicked: toolBtn.clicked()
+            cursorShape: _tbtn.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+            onClicked: {
+                root._keyboardFocusActive = false
+                _tbtn.forceActiveFocus()
+                _tbtn.clicked()
+            }
+        }
+
+        // ── Material 3 Expressive Tooltip ──
+        // Pops up from below with scale+opacity+translate, matching
+        // the seek hover popup style from the video player.
+
+        Item {
+            id: _tooltipPopup
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: _shown ? parent.height + 6 : parent.height + 2
+            width: _tooltipLabel.implicitWidth + 20
+            height: 32
+            z: 2000
+
+            property bool _shown: _tbtnMouse.containsMouse
+                                  && _tbtn.tooltipText !== ""
+                                  && _tbtn.enabled
+                                  && !_tooltipDelay.running
+                                  && _tooltipReady
+
+            property bool _tooltipReady: false
+
+            // Delay before showing
+            Timer {
+                id: _tooltipDelay
+                interval: 500
+                onTriggered: _tooltipPopup._tooltipReady = true
+            }
+
+            // Auto-dismiss after timeout
+            Timer {
+                id: _tooltipTimeout
+                interval: 4000
+                running: _tooltipPopup._shown
+                onTriggered: _tooltipPopup._tooltipReady = false
+            }
+
+            Connections {
+                target: _tbtnMouse
+                function onContainsMouseChanged() {
+                    if (_tbtnMouse.containsMouse) {
+                        _tooltipPopup._tooltipReady = false
+                        _tooltipDelay.restart()
+                    } else {
+                        _tooltipDelay.stop()
+                        _tooltipTimeout.stop()
+                        _tooltipPopup._tooltipReady = false
+                    }
+                }
+            }
+
+            scale: _shown ? 1.0 : 0.85
+            opacity: _shown ? 1.0 : 0
+            visible: opacity > 0
+            transformOrigin: Item.Top
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: _tooltipPopup._shown ? 250 : 150
+                    easing.type: _tooltipPopup._shown ? Easing.OutQuart : Easing.InQuart
+                }
+            }
+            Behavior on scale {
+                NumberAnimation {
+                    duration: _tooltipPopup._shown ? 300 : 150
+                    easing.type: _tooltipPopup._shown ? Easing.OutBack : Easing.InQuart
+                    easing.overshoot: 1.3
+                }
+            }
+            Behavior on y {
+                NumberAnimation {
+                    duration: _tooltipPopup._shown ? 250 : 150
+                    easing.type: _tooltipPopup._shown ? Easing.OutQuart : Easing.InQuart
+                }
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                radius: 8
+                color: root.colors.inverseSurface
+
+                // Subtle shadow via layered rectangle
+                layer.enabled: true
+                layer.effect: MultiEffect {
+                    shadowEnabled: true
+                    shadowColor: Qt.rgba(0, 0, 0, 0.2)
+                    shadowBlur: 0.3
+                    shadowVerticalOffset: 2
+                    shadowHorizontalOffset: 0
+                }
+            }
+
+            Text {
+                id: _tooltipLabel
+                anchors.centerIn: parent
+                text: _tbtn.tooltipText
+                font.family: root.fontFamily
+                font.pixelSize: root.typography.bodySmall.size
+                font.weight: root.typography.bodySmall.weight
+                color: root.colors.inverseOnSurface
+            }
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // MENU BAR BUTTON
-    // ═══════════════════════════════════════════════════════════════
+    // ── Menu Bar Button (traditional style) ──
 
     component MenuBarButton: Item {
-        id: menuBtn
+        id: _mbtn
         property var menuData: ({})
         signal itemTriggered(string itemId)
 
-        implicitWidth: menuLabel.implicitWidth + 20
+        implicitWidth: _mbtnLabel.implicitWidth + 24
         implicitHeight: 36
-        width: implicitWidth
-        height: 36
+        width: implicitWidth; height: 36
+
+        activeFocusOnTab: true
+
+        Accessible.role: Accessible.MenuItem
+        Accessible.name: _mbtn.menuData.title || ""
+        Accessible.focusable: true
+        Accessible.onPressAction: _ddMenu.open()
+
+        Keys.onReturnPressed: _ddMenu.open()
+        Keys.onEnterPressed: _ddMenu.open()
+        Keys.onSpacePressed: _ddMenu.open()
+
+        // Focus ring — keyboard only
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: -2
+            radius: 10
+            color: "transparent"
+            border.width: 2
+            border.color: root.colors.primary
+            visible: _mbtn.activeFocus && root._keyboardFocusActive
+            z: 10
+        }
 
         Rectangle {
             anchors.fill: parent
             radius: 8
-            color: menuBtnMouse.containsMouse || dropdownMenu.visible ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.08) : "transparent"
+            color: {
+                if (_mbtnMouse.containsMouse || _ddMenu.visible)
+                    return Qt.rgba(root.colors.onSurface.r,
+                                   root.colors.onSurface.g,
+                                   root.colors.onSurface.b, 0.08)
+                return "transparent"
+            }
+
+            Behavior on color {
+                ColorAnimation { duration: root.motion.durationFast }
+            }
         }
 
         Text {
-            id: menuLabel
+            id: _mbtnLabel
             anchors.centerIn: parent
-            text: menuData.title || ""
-            font.family: fontFamily
-            font.pixelSize: 13
-            font.weight: Font.Medium
-            color: colors.onSurface
+            text: _mbtn.menuData.title || ""
+            font.family: root.fontFamily
+            font.pixelSize: root.typography.labelLarge.size
+            font.weight: root.typography.labelLarge.weight
+            font.letterSpacing: root.typography.labelLarge.spacing
+            color: root.colors.onSurface
         }
 
         MouseArea {
-            id: menuBtnMouse
+            id: _mbtnMouse
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            onClicked: dropdownMenu.open()
+            onClicked: {
+                root._keyboardFocusActive = false
+                _mbtn.forceActiveFocus()
+                _ddMenu.open()
+            }
         }
 
         Menus.DropdownMenu {
-            id: dropdownMenu
+            id: _ddMenu
             y: parent.height + 4
-            items: menuData.items || []
-            onItemClicked: (itemId) => menuBtn.itemTriggered(itemId)
+            items: _mbtn.menuData.items || []
+            onItemClicked: function(itemId) {
+                _mbtn.itemTriggered(itemId)
+            }
         }
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // PUBLIC API
+    //  PUBLIC API
     // ═══════════════════════════════════════════════════════════════
 
-    function showToolbar()  { toolbarVisible = true; _toolbarAutoHidden = false }
-    function hideToolbar()  { if (toolbarBehavior === "autoHide") _toolbarAutoHidden = true; else toolbarVisible = false }
-    function toggleToolbar() { if (toolbarBehavior === "autoHide") _toolbarAutoHidden = !_toolbarAutoHidden; else toolbarVisible = !toolbarVisible }
-    function setMenuStyle(style) { if (showMenu) menuStyle = style }
+    function showToolbar() {
+        toolbarVisible = true
+        _toolbarAutoHidden = false
+    }
+
+    function hideToolbar() {
+        if (toolbarBehavior === "autoHide")
+            _toolbarAutoHidden = true
+        else
+            toolbarVisible = false
+    }
+
+    function toggleToolbar() {
+        if (toolbarBehavior === "autoHide")
+            _toolbarAutoHidden = !_toolbarAutoHidden
+        else
+            toolbarVisible = !toolbarVisible
+    }
+
+    function setMenuStyle(style) {
+        if (showMenu) menuStyle = style
+    }
+
+    function _toggleToolbarAutoHide() {
+        if (toolbarBehavior === "autoHide") {
+            toolbarBehavior = "visible"
+            _toolbarAutoHidden = false
+        } else {
+            toolbarBehavior = "autoHide"
+            _toolbarAutoHidden = true
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  MENU ACTION DISPATCHER
+    // ═══════════════════════════════════════════════════════════════
 
     function _handleMenuAction(menuId, itemId) {
         if (!showMenu) return
 
         menuItemTriggered(menuId, itemId)
 
-        if (menuId === "view") {
-            if (itemId === "sidebar") sidebarButtonClicked()
-            else if (itemId === "menu_auto") menuStyle = "auto"
-            else if (itemId === "menu_traditional") menuStyle = "traditional"
-            else if (itemId === "menu_collapsed") menuStyle = "collapsed"
-            else if (itemId === "icon_hamburger") collapsedMenuIcon = "menu"
-            else if (itemId === "icon_dots") collapsedMenuIcon = "more_horiz"
-        } else if (menuId === "file" && itemId === "exit") {
+        if (globalMenuActive)
+            globalMenuItemActivated(menuId, itemId)
+
+        switch (menuId + "." + itemId) {
+        case "view.sidebar":
+            sidebarButtonClicked()
+            break
+        case "view.toolbar_autohide":
+            _toggleToolbarAutoHide()
+            break
+        case "view.menu_overflow":
+            menuStyle = "overflow"
+            break
+        case "view.menu_traditional":
+            menuStyle = "traditional"
+            break
+        case "view.menu_auto":
+            menuStyle = "auto"
+            break
+        case "file.exit":
             root.close()
+            break
         }
     }
 }

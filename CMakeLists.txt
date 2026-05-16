@@ -13,6 +13,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 6.10 REQUIRED COMPONENTS Quick Qml)
 
+# ── DBus (Linux only, for global menu support) ───────────────
+set(CHI_HAS_DBUS FALSE)
+if(UNIX AND NOT APPLE)
+    find_package(Qt6 COMPONENTS DBus QUIET)
+    if(Qt6DBus_FOUND)
+        set(CHI_HAS_DBUS TRUE)
+        message(STATUS "Chi: Qt6::DBus found — global menu support enabled")
+    else()
+        message(STATUS "Chi: Qt6::DBus not found — global menu support disabled")
+    endif()
+endif()
+
 # ── Qt QML install path ──────────────────────────────────────
 get_target_property(QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)
 execute_process(
@@ -32,6 +44,10 @@ add_library(ChiPlugin SHARED
 
 target_link_libraries(ChiPlugin PRIVATE Qt6::Quick Qt6::Qml)
 target_include_directories(ChiPlugin PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+if(CHI_HAS_DBUS)
+    target_link_libraries(ChiPlugin PRIVATE Qt6::DBus)
+endif()
 
 # ── QML files (IDE visibility only) ──────────────────────────
 file(GLOB_RECURSE CHI_QML_FILES CONFIGURE_DEPENDS

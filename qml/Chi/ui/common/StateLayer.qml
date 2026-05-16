@@ -8,8 +8,8 @@ Rectangle {
     id: root
 
     // ─── Public API ───────────────────────────────────────────
-    property color color: "white"           // State layer tint color
-    property real radius: 0                  // Container radius
+    property color layerColor: "white"           // State layer tint color
+    property real containerRadius: 0                  // Container radius
     property bool pressed: false             // Pressed state
     property bool hovered: false             // Hovered state
     property bool focused: false             // Focused state
@@ -27,8 +27,8 @@ Rectangle {
 
     // ─── Implementation ───────────────────────────────────────
     anchors.fill: parent
-    radius: root.radius
-    color: root.color
+    radius: root.containerRadius
+    color: root.layerColor
     opacity: _opacity
     clip: true
 
