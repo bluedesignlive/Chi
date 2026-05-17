@@ -347,12 +347,20 @@ Window {
     Shortcut {
         sequence: "Ctrl+Shift+R"
         context: Qt.ApplicationShortcut
-        onActivated: root._recording ? root._stopRecording() : _recDialog.show()
+        onActivated: {
+            console.log("Shortcut: Ctrl+Shift+R, recording=" + root._recording)
+            if (root._recording) root._stopRecording()
+            else _recDialog.show()
+        }
     }
     Shortcut {
         sequence: "Ctrl+Alt+R"
         context: Qt.ApplicationShortcut
-        onActivated: root._recording ? root._stopRecording() : root._quickRecord()
+        onActivated: {
+            console.log("Shortcut: Ctrl+Alt+R, recording=" + root._recording)
+            if (root._recording) root._stopRecording()
+            else root._quickRecord()
+        }
     }
     Shortcut {
         sequence: "F11"
@@ -1099,6 +1107,7 @@ Window {
 
         onAccepted: {
             root._recordingOutput = _saveRecDialog.selectedFile
+            console.log("Recording: save dialog accepted, output=" + root._recordingOutput)
             _startRecording()
         }
     }
@@ -1113,18 +1122,22 @@ Window {
             outputLocation: root._recordingOutput
 
             onRecorderStateChanged: function(state) {
+                console.log("Recording: MediaRecorder state=" + state)
                 if (state === MediaRecorder.StoppedState && !root._recording) {
                     var name = root._recordingOutput.toString().split("/").pop()
+                    console.log("Recording: finalized, saved as " + name)
                     _snackbar.duration = 4000
                     _snackbar.multiLine = false
                     _snackbar.show(qsTr("Recording saved: %1").arg(name))
                 }
             }
             onErrorOccurred: function(error, errorString) {
+                console.log("Recording ERROR: code=" + error + " message=" + errorString)
                 root._recording = false
                 root._recTimer.stop()
                 _screenCapture.active = false
                 _snackbar.duration = 4000
+                _snackbar.multiLine = false
                 _snackbar.show(qsTr("Recording failed: %1").arg(errorString))
             }
         }
@@ -1231,6 +1244,7 @@ Window {
         ]
 
         onAccepted: {
+            console.log("Recording: dialog accepted")
             _saveRecDialog.openDialog()
         }
     }
@@ -1317,21 +1331,33 @@ Window {
     }
 
     function _startRecording() {
+        console.log("Recording: _startRecording called, output=" + root._recordingOutput)
         var qualityMap = [
             MediaRecorder.VeryLowQuality,
             MediaRecorder.LowQuality,
             MediaRecorder.HighQuality,
             MediaRecorder.VeryHighQuality
         ]
-        _mediaRecorder.quality = qualityMap[root._lastRecSettings.quality]
-        _audioInput.active = root._lastRecSettings.mic === 1
+        var qIdx = root._lastRecSettings.quality
+        _mediaRecorder.quality = qualityMap[qIdx]
+        console.log("Recording: quality=" + qIdx + " area=" + root._lastRecSettings.area + " mic=" + root._lastRecSettings.mic)
+
+        if (root._lastRecSettings.mic === 1) {
+            _captureSession.audioInput = _audioInput
+            console.log("Recording: microphone enabled")
+        } else {
+            _captureSession.audioInput = null
+            console.log("Recording: microphone disabled")
+        }
 
         if (root._lastRecSettings.area === 0) {
             _screenCapture.window = null
             _screenCapture.screen = Screen
+            console.log("Recording: capturing full screen")
         } else {
             _screenCapture.screen = null
             _screenCapture.window = root
+            console.log("Recording: capturing current window")
         }
 
         _screenCapture.active = true
@@ -1339,6 +1365,7 @@ Window {
         _recording = true
         _recTimer.start()
         _mediaRecorder.record()
+        console.log("Recording: started successfully")
 
         _snackbar.duration = 0
         _snackbar.multiLine = false
@@ -1346,17 +1373,23 @@ Window {
     }
 
     function _stopRecording() {
-        if (!_recording) return
+        if (!_recording) {
+            console.log("Recording: _stopRecording called but not recording, ignored")
+            return
+        }
+        console.log("Recording: stopping...")
         _recording = false
         _recTimer.stop()
         _mediaRecorder.stop()
         _screenCapture.active = false
         _snackbar.duration = 0
         _snackbar.hide()
+        console.log("Recording: stop requested, waiting for finalization")
     }
 
     function _quickRecord() {
         root._recordingOutput = _defaultRecordingPath()
+        console.log("Recording: quick record, path=" + root._recordingOutput)
         _startRecording()
     }
 
