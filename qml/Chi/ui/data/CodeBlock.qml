@@ -14,7 +14,7 @@ Rectangle {
     property string fontFamily: "JetBrains Mono, Fira Code, Consolas, monospace"
     property int fontSize: 13
 
-    signal copied()
+    signal copied
 
     readonly property var lines: code.split("\n")
 
@@ -30,7 +30,9 @@ Rectangle {
     border.color: colors.outlineVariant
 
     Behavior on color {
-        ColorAnimation { duration: 200 }
+        ColorAnimation {
+            duration: 200
+        }
     }
 
     clip: true
@@ -94,7 +96,7 @@ Rectangle {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
                         // Copy to clipboard would need platform integration
-                        copied()
+                        copied();
                     }
                 }
             }
@@ -163,7 +165,9 @@ Rectangle {
                         height: fontSize + 6
 
                         Behavior on color {
-                            ColorAnimation { duration: 200 }
+                            ColorAnimation {
+                                duration: 200
+                            }
                         }
                     }
                 }

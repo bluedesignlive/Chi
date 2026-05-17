@@ -87,10 +87,10 @@ Window {
     // SIGNALS
     // ═══════════════════════════════════════════════════════════════
 
-    signal leadingActionTriggered()
+    signal leadingActionTriggered
     signal toolbarActionTriggered(int index)
     signal menuItemTriggered(string menuId, string itemId)
-    signal sidebarButtonClicked()
+    signal sidebarButtonClicked
     signal breakpointChanged(string breakpoint)
 
     // ═══════════════════════════════════════════════════════════════
@@ -104,38 +104,34 @@ Window {
     readonly property QtObject context: QtObject {
         id: ctx
 
-        readonly property bool isMacOS:   Qt.platform.os === "osx"
+        readonly property bool isMacOS: Qt.platform.os === "osx"
         readonly property bool isWindows: Qt.platform.os === "windows"
-        readonly property bool isLinux:   Qt.platform.os === "linux"
-        readonly property bool isMobile:  Qt.platform.os === "android" || Qt.platform.os === "ios"
-        readonly property bool isWeb:     Qt.platform.os === "wasm"
+        readonly property bool isLinux: Qt.platform.os === "linux"
+        readonly property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
+        readonly property bool isWeb: Qt.platform.os === "wasm"
         readonly property bool isDesktop: !isMobile && !isWeb
 
-        readonly property int windowWidth:  root.width
+        readonly property int windowWidth: root.width
         readonly property int windowHeight: root.height
 
         property string breakpoint: "expanded"
 
         // ── Compat booleans (kept as functions to avoid 5 idle bindings) ──
-        readonly property bool isCompact:  breakpoint === "compact"
-        readonly property bool isMedium:   breakpoint === "medium"
+        readonly property bool isCompact: breakpoint === "compact"
+        readonly property bool isMedium: breakpoint === "medium"
         readonly property bool isExpanded: breakpoint === "expanded"
-        readonly property bool isLarge:    breakpoint === "large"
-        readonly property bool isXLarge:   breakpoint === "xlarge"
+        readonly property bool isLarge: breakpoint === "large"
+        readonly property bool isXLarge: breakpoint === "xlarge"
 
         readonly property bool showWindowControls: isDesktop && !isWeb
-        readonly property bool useOverlaySidebar:  breakpoint === "compact" || breakpoint === "medium"
+        readonly property bool useOverlaySidebar: breakpoint === "compact" || breakpoint === "medium"
 
         function _recalcBreakpoint() {
-            var w = root.width
-            var bp = w < 600  ? "compact"
-                   : w < 840  ? "medium"
-                   : w < 1200 ? "expanded"
-                   : w < 1600 ? "large"
-                   : "xlarge"
+            var w = root.width;
+            var bp = w < 600 ? "compact" : w < 840 ? "medium" : w < 1200 ? "expanded" : w < 1600 ? "large" : "xlarge";
             if (breakpoint !== bp) {
-                breakpoint = bp
-                root.breakpointChanged(bp)
+                breakpoint = bp;
+                root.breakpointChanged(bp);
             }
         }
     }
@@ -157,25 +153,25 @@ Window {
     // snapping behaves correctly.
     // ═══════════════════════════════════════════════════════════════
 
-    readonly property bool isMaximized:  visibility === Window.Maximized
+    readonly property bool isMaximized: visibility === Window.Maximized
     readonly property real windowRadius: isMaximized ? 0 : 24
 
     readonly property string _effectiveMenuStyle: {
-        if (menuStyle !== "auto") return menuStyle
-        return root.width < (_allMenus.length * 60 + _rightSectionWidth + 60)
-            ? "collapsed" : "traditional"
+        if (menuStyle !== "auto")
+            return menuStyle;
+        return root.width < (_allMenus.length * 60 + _rightSectionWidth + 60) ? "collapsed" : "traditional";
     }
 
-    readonly property real _rightSectionWidth:
-        (toolbarActions.length * 40) + (controlsOnLeft ? 0 : 110)
+    readonly property real _rightSectionWidth: (toolbarActions.length * 40) + (controlsOnLeft ? 0 : 110)
 
     property bool _toolbarAutoHidden: false
 
     readonly property bool _showToolbar: {
-        if (!toolbarVisible) return false
+        if (!toolbarVisible)
+            return false;
         if (toolbarBehavior === "autoHide")
-            return !_toolbarAutoHidden || toolbarHoverArea.containsMouse
-        return true
+            return !_toolbarAutoHidden || toolbarHoverArea.containsMouse;
+        return true;
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -184,56 +180,156 @@ Window {
 
     readonly property var _defaultMenus: [
         {
-            id: "file", title: "File",
+            id: "file",
+            title: "File",
             items: [
-                { id: "new",    text: "New",         shortcut: "Ctrl+N",       icon: "add" },
-                { id: "open",   text: "Open",        shortcut: "Ctrl+O",       icon: "folder_open" },
-                { type: "divider" },
-                { id: "save",   text: "Save",        shortcut: "Ctrl+S",       icon: "save" },
-                { id: "saveAs", text: "Save As\u2026", shortcut: "Ctrl+Shift+S" },
-                { type: "divider" },
-                { id: "exit",   text: "Exit",        shortcut: "Alt+F4",       icon: "logout" }
+                {
+                    id: "new",
+                    text: "New",
+                    shortcut: "Ctrl+N",
+                    icon: "add"
+                },
+                {
+                    id: "open",
+                    text: "Open",
+                    shortcut: "Ctrl+O",
+                    icon: "folder_open"
+                },
+                {
+                    type: "divider"
+                },
+                {
+                    id: "save",
+                    text: "Save",
+                    shortcut: "Ctrl+S",
+                    icon: "save"
+                },
+                {
+                    id: "saveAs",
+                    text: "Save As\u2026",
+                    shortcut: "Ctrl+Shift+S"
+                },
+                {
+                    type: "divider"
+                },
+                {
+                    id: "exit",
+                    text: "Exit",
+                    shortcut: "Alt+F4",
+                    icon: "logout"
+                }
             ]
         },
         {
-            id: "edit", title: "Edit",
+            id: "edit",
+            title: "Edit",
             items: [
-                { id: "undo",  text: "Undo",  shortcut: "Ctrl+Z", icon: "undo" },
-                { id: "redo",  text: "Redo",  shortcut: "Ctrl+Y", icon: "redo" },
-                { type: "divider" },
-                { id: "cut",   text: "Cut",   shortcut: "Ctrl+X", icon: "content_cut" },
-                { id: "copy",  text: "Copy",  shortcut: "Ctrl+C", icon: "content_copy" },
-                { id: "paste", text: "Paste", shortcut: "Ctrl+V", icon: "content_paste" }
+                {
+                    id: "undo",
+                    text: "Undo",
+                    shortcut: "Ctrl+Z",
+                    icon: "undo"
+                },
+                {
+                    id: "redo",
+                    text: "Redo",
+                    shortcut: "Ctrl+Y",
+                    icon: "redo"
+                },
+                {
+                    type: "divider"
+                },
+                {
+                    id: "cut",
+                    text: "Cut",
+                    shortcut: "Ctrl+X",
+                    icon: "content_cut"
+                },
+                {
+                    id: "copy",
+                    text: "Copy",
+                    shortcut: "Ctrl+C",
+                    icon: "content_copy"
+                },
+                {
+                    id: "paste",
+                    text: "Paste",
+                    shortcut: "Ctrl+V",
+                    icon: "content_paste"
+                }
             ]
         },
         {
-            id: "view", title: "View",
+            id: "view",
+            title: "View",
             items: [
-                { id: "sidebar",          text: "Toggle Sidebar",   shortcut: "Ctrl+B", icon: "view_sidebar" },
-                { type: "divider" },
-                { id: "menu_auto",        text: "Auto Menu",        icon: "tune" },
-                { id: "menu_traditional", text: "Traditional Menu",  icon: "menu_open" },
-                { id: "menu_collapsed",   text: "Collapsed Menu",   icon: "menu" },
-                { type: "divider" },
-                { id: "icon_hamburger",   text: "Hamburger Icon",   icon: "menu" },
-                { id: "icon_dots",        text: "Dots Icon",        icon: "more_horiz" }
+                {
+                    id: "sidebar",
+                    text: "Toggle Sidebar",
+                    shortcut: "Ctrl+B",
+                    icon: "view_sidebar"
+                },
+                {
+                    type: "divider"
+                },
+                {
+                    id: "menu_auto",
+                    text: "Auto Menu",
+                    icon: "tune"
+                },
+                {
+                    id: "menu_traditional",
+                    text: "Traditional Menu",
+                    icon: "menu_open"
+                },
+                {
+                    id: "menu_collapsed",
+                    text: "Collapsed Menu",
+                    icon: "menu"
+                },
+                {
+                    type: "divider"
+                },
+                {
+                    id: "icon_hamburger",
+                    text: "Hamburger Icon",
+                    icon: "menu"
+                },
+                {
+                    id: "icon_dots",
+                    text: "Dots Icon",
+                    icon: "more_horiz"
+                }
             ]
         },
         {
-            id: "help", title: "Help",
+            id: "help",
+            title: "Help",
             items: [
-                { id: "docs",      text: "Documentation",      icon: "menu_book" },
-                { id: "shortcuts", text: "Keyboard Shortcuts",  icon: "keyboard" },
-                { type: "divider" },
-                { id: "about",     text: "About",              icon: "info" }
+                {
+                    id: "docs",
+                    text: "Documentation",
+                    icon: "menu_book"
+                },
+                {
+                    id: "shortcuts",
+                    text: "Keyboard Shortcuts",
+                    icon: "keyboard"
+                },
+                {
+                    type: "divider"
+                },
+                {
+                    id: "about",
+                    text: "About",
+                    icon: "info"
+                }
             ]
         }
     ]
 
     // Single native concat — no per-frame JS loop / array allocation
-    readonly property var _allMenus: showDefaultMenus
-        ? _defaultMenus.concat(customMenus)
-        : customMenus
+    readonly property var _allMenus: showDefaultMenus ? _defaultMenus.concat(customMenus) : customMenus
 
     // ═══════════════════════════════════════════════════════════════
     // CORNER MASK
@@ -296,8 +392,8 @@ Window {
             anchors.right: parent.right
             height: root.toolbarBehavior === "autoHide" && root._toolbarAutoHidden ? 12 : 0
             hoverEnabled: root.toolbarBehavior === "autoHide"
-            enabled:      root.toolbarBehavior === "autoHide"
-            visible:      root.toolbarBehavior === "autoHide"
+            enabled: root.toolbarBehavior === "autoHide"
+            visible: root.toolbarBehavior === "autoHide"
             z: 101
         }
 
@@ -329,8 +425,10 @@ Window {
                 z: -1
                 onPressed: root.startSystemMove()
                 onDoubleClicked: {
-                    if (root.isMaximized) root.showNormal()
-                    else root.showMaximized()
+                    if (root.isMaximized)
+                        root.showNormal();
+                    else
+                        root.showMaximized();
                 }
             }
 
@@ -398,7 +496,7 @@ Window {
 
                             MenuBarButton {
                                 menuData: modelData
-                                onItemTriggered: (itemId) => root._handleMenuAction(modelData.id, itemId)
+                                onItemTriggered: itemId => root._handleMenuAction(modelData.id, itemId)
                             }
                         }
                     }
@@ -427,8 +525,9 @@ Window {
                             checked: modelData.checked || false
                             enabled: modelData.enabled !== false
                             onClicked: {
-                                if (modelData.triggered) modelData.triggered()
-                                root.toolbarActionTriggered(index)
+                                if (modelData.triggered)
+                                    modelData.triggered();
+                                root.toolbarActionTriggered(index);
                             }
                         }
                     }
@@ -456,27 +555,28 @@ Window {
 
                 text: root.title
                 font.family: "Roboto"
-            font.weight: Font.Medium
-            font.pixelSize: 14
+                font.weight: Font.Medium
+                font.pixelSize: 14
                 color: colors.onSurface
                 elide: Text.ElideRight
 
-                readonly property real leftEdge:  leftSection.x + leftSection.width + 16
+                readonly property real leftEdge: leftSection.x + leftSection.width + 16
                 readonly property real rightEdge: rightSection.x - 16
-                readonly property real space:     Math.max(0, rightEdge - leftEdge)
+                readonly property real space: Math.max(0, rightEdge - leftEdge)
 
                 width: Math.min(implicitWidth, space)
 
-                x: root.centerTitle
-                    ? Math.max(leftEdge, (toolbar.width - implicitWidth) / 2)
-                    : leftEdge
+                x: root.centerTitle ? Math.max(leftEdge, (toolbar.width - implicitWidth) / 2) : leftEdge
 
                 readonly property bool _titleCollides: {
-                    if (!root.autoHideTitle) return false
-                    if (space < 80) return true
-                    if (!root.centerTitle) return false
-                    var cx = (toolbar.width - implicitWidth) / 2
-                    return cx < leftEdge + 20 || cx + implicitWidth > rightEdge - 20
+                    if (!root.autoHideTitle)
+                        return false;
+                    if (space < 80)
+                        return true;
+                    if (!root.centerTitle)
+                        return false;
+                    var cx = (toolbar.width - implicitWidth) / 2;
+                    return cx < leftEdge + 20 || cx + implicitWidth > rightEdge - 20;
                 }
             }
         }
@@ -520,7 +620,7 @@ Window {
 
         sourceComponent: Item {
             id: resizeItem
-            property int edge:   6
+            property int edge: 6
             property int corner: 20
 
             // ─── Edges ──────────────────────────────────────
@@ -559,26 +659,34 @@ Window {
 
             // ─── Corners ────────────────────────────────────
             MouseArea {
-                anchors.top: parent.top; anchors.left: parent.left
-                width: resizeItem.corner; height: resizeItem.corner
+                anchors.top: parent.top
+                anchors.left: parent.left
+                width: resizeItem.corner
+                height: resizeItem.corner
                 cursorShape: Qt.SizeFDiagCursor
                 onPressed: root.startSystemResize(Qt.TopEdge | Qt.LeftEdge)
             }
             MouseArea {
-                anchors.top: parent.top; anchors.right: parent.right
-                width: resizeItem.corner; height: resizeItem.corner
+                anchors.top: parent.top
+                anchors.right: parent.right
+                width: resizeItem.corner
+                height: resizeItem.corner
                 cursorShape: Qt.SizeBDiagCursor
                 onPressed: root.startSystemResize(Qt.TopEdge | Qt.RightEdge)
             }
             MouseArea {
-                anchors.bottom: parent.bottom; anchors.left: parent.left
-                width: resizeItem.corner; height: resizeItem.corner
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+                width: resizeItem.corner
+                height: resizeItem.corner
                 cursorShape: Qt.SizeBDiagCursor
                 onPressed: root.startSystemResize(Qt.BottomEdge | Qt.LeftEdge)
             }
             MouseArea {
-                anchors.bottom: parent.bottom; anchors.right: parent.right
-                width: resizeItem.corner; height: resizeItem.corner
+                anchors.bottom: parent.bottom
+                anchors.right: parent.right
+                width: resizeItem.corner
+                height: resizeItem.corner
                 cursorShape: Qt.SizeFDiagCursor
                 onPressed: root.startSystemResize(Qt.BottomEdge | Qt.RightEdge)
             }
@@ -594,10 +702,12 @@ Window {
         property string iconName: ""
         property bool checked: false
         property alias enabled: toolBtnMouse.enabled
-        signal clicked()
+        signal clicked
 
-        implicitWidth: 36; implicitHeight: 36
-        width: 36; height: 36
+        implicitWidth: 36
+        implicitHeight: 36
+        width: 36
+        height: 36
         opacity: enabled ? 1.0 : Theme.SmartTheme.stateLayer.dragged
 
         Rectangle {
@@ -605,14 +715,12 @@ Window {
             radius: Theme.SmartTheme.shape.medium
             color: {
                 if (toolBtn.checked)
-                    return colors.secondaryContainer
+                    return colors.secondaryContainer;
                 if (toolBtnMouse.pressed)
-                    return Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b,
-                                   Theme.SmartTheme.stateLayer.pressed)
+                    return Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, Theme.SmartTheme.stateLayer.pressed);
                 if (toolBtnMouse.containsMouse)
-                    return Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b,
-                                   Theme.SmartTheme.stateLayer.hover)
-                return "transparent"
+                    return Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, Theme.SmartTheme.stateLayer.hover);
+                return "transparent";
             }
         }
 
@@ -643,15 +751,13 @@ Window {
 
         implicitWidth: menuLabel.implicitWidth + 20
         implicitHeight: 36
-        width: implicitWidth; height: 36
+        width: implicitWidth
+        height: 36
 
         Rectangle {
             anchors.fill: parent
             radius: Theme.SmartTheme.shape.small
-            color: menuBtnMouse.containsMouse || dropdownMenu.visible
-                ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b,
-                           Theme.SmartTheme.stateLayer.hover)
-                : "transparent"
+            color: menuBtnMouse.containsMouse || dropdownMenu.visible ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, Theme.SmartTheme.stateLayer.hover) : "transparent"
         }
 
         Text {
@@ -676,7 +782,7 @@ Window {
             id: dropdownMenu
             y: parent.height + 4
             items: menuData.items || []
-            onItemClicked: (itemId) => menuBtn.itemTriggered(itemId)
+            onItemClicked: itemId => menuBtn.itemTriggered(itemId)
         }
     }
 
@@ -685,33 +791,51 @@ Window {
     // ═══════════════════════════════════════════════════════════════
 
     function showToolbar() {
-        toolbarVisible = true
-        _toolbarAutoHidden = false
+        toolbarVisible = true;
+        _toolbarAutoHidden = false;
     }
     function hideToolbar() {
-        if (toolbarBehavior === "autoHide") _toolbarAutoHidden = true
-        else toolbarVisible = false
+        if (toolbarBehavior === "autoHide")
+            _toolbarAutoHidden = true;
+        else
+            toolbarVisible = false;
     }
     function toggleToolbar() {
-        if (toolbarBehavior === "autoHide") _toolbarAutoHidden = !_toolbarAutoHidden
-        else toolbarVisible = !toolbarVisible
+        if (toolbarBehavior === "autoHide")
+            _toolbarAutoHidden = !_toolbarAutoHidden;
+        else
+            toolbarVisible = !toolbarVisible;
     }
-    function setMenuStyle(style) { menuStyle = style }
+    function setMenuStyle(style) {
+        menuStyle = style;
+    }
 
     function _handleMenuAction(menuId, itemId) {
-        menuItemTriggered(menuId, itemId)
+        menuItemTriggered(menuId, itemId);
 
         if (menuId === "view") {
             switch (itemId) {
-                case "sidebar":          sidebarButtonClicked(); break
-                case "menu_auto":        menuStyle = "auto"; break
-                case "menu_traditional": menuStyle = "traditional"; break
-                case "menu_collapsed":   menuStyle = "collapsed"; break
-                case "icon_hamburger":   collapsedMenuIcon = "menu"; break
-                case "icon_dots":        collapsedMenuIcon = "more_horiz"; break
+            case "sidebar":
+                sidebarButtonClicked();
+                break;
+            case "menu_auto":
+                menuStyle = "auto";
+                break;
+            case "menu_traditional":
+                menuStyle = "traditional";
+                break;
+            case "menu_collapsed":
+                menuStyle = "collapsed";
+                break;
+            case "icon_hamburger":
+                collapsedMenuIcon = "menu";
+                break;
+            case "icon_dots":
+                collapsedMenuIcon = "more_horiz";
+                break;
             }
         } else if (menuId === "file" && itemId === "exit") {
-            root.close()
+            root.close();
         }
     }
 }

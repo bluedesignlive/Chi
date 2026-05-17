@@ -32,7 +32,7 @@ Item {
 
     default property alias drawerContent: drawerManualColumn.data
 
-    signal closed()
+    signal closed
 
     // ═════════════════════════════════════════════════════════
     // THEME TOKENS
@@ -51,8 +51,10 @@ Item {
     readonly property bool _isLeft: position === "left"
 
     on_IsNarrowChanged: {
-        if (_isNarrow) close()
-        else show()
+        if (_isNarrow)
+            close();
+        else
+            show();
     }
 
     // ═════════════════════════════════════════════════════════
@@ -71,9 +73,7 @@ Item {
     readonly property bool _isSmall: density === "small"
     readonly property bool _isStandard: density === "standard"
 
-    readonly property real _resolvedWidth: drawerWidth > 0
-        ? drawerWidth
-        : (_isSmall ? 200 : _isStandard ? 360 : 240)
+    readonly property real _resolvedWidth: drawerWidth > 0 ? drawerWidth : (_isSmall ? 200 : _isStandard ? 360 : 240)
 
     readonly property real _topMargin: _isSmall ? 4 : _isStandard ? 0 : 6
     readonly property real _sectionLeftMargin: _isSmall ? 10 : _isStandard ? 16 : 12
@@ -88,41 +88,49 @@ Item {
 
     readonly property bool _hasModel: items.length > 0
 
-    readonly property bool _isSectioned:
-        _hasModel && items[0].items !== undefined
+    readonly property bool _isSectioned: _hasModel && items[0].items !== undefined
 
     readonly property var _normalizedSections: {
-        if (!_hasModel) return []
+        if (!_hasModel)
+            return [];
 
         if (_isSectioned) {
-            var idx = 0
-            var result = []
+            var idx = 0;
+            var result = [];
             for (var s = 0; s < items.length; s++) {
-                var sec = { name: items[s].section || "", items: [] }
-                var sitems = items[s].items
+                var sec = {
+                    name: items[s].section || "",
+                    items: []
+                };
+                var sitems = items[s].items;
                 for (var i = 0; i < sitems.length; i++) {
                     sec.items.push({
                         text: sitems[i].text || "",
                         icon: sitems[i].icon || "",
                         activeIcon: sitems[i].activeIcon || "",
                         pageIndex: idx++
-                    })
+                    });
                 }
-                result.push(sec)
+                result.push(sec);
             }
-            return result
+            return result;
         }
 
-        var flat = []
+        var flat = [];
         for (var f = 0; f < items.length; f++) {
             flat.push({
                 text: items[f].text || "",
                 icon: items[f].icon || "",
                 activeIcon: items[f].activeIcon || "",
                 pageIndex: f
-            })
+            });
         }
-        return [{ name: "", items: flat }]
+        return [
+            {
+                name: "",
+                items: flat
+            }
+        ];
     }
 
     // ═════════════════════════════════════════════════════════
@@ -133,23 +141,27 @@ Item {
     readonly property bool _goingForward: currentIndex >= _prevIndex
 
     onCurrentIndexChanged: {
-        if (pageStack.count === 0) return
-        _pageTransition.restart()
+        if (pageStack.count === 0)
+            return;
+        _pageTransition.restart();
     }
 
     onPagesChanged: _reparentPages()
 
     function _reparentPages() {
         for (var i = 0; i < pages.length; i++) {
-            pages[i].parent = pageStack
-            pages[i].Layout.fillWidth = true
-            pages[i].Layout.fillHeight = true
+            pages[i].parent = pageStack;
+            pages[i].Layout.fillWidth = true;
+            pages[i].Layout.fillHeight = true;
         }
-        pageStack.currentIndex = Qt.binding(function() { return root.currentIndex })
+        pageStack.currentIndex = Qt.binding(function () {
+            return root.currentIndex;
+        });
     }
 
     Component.onCompleted: {
-        if (pages.length > 0) _reparentPages()
+        if (pages.length > 0)
+            _reparentPages();
     }
 
     // ═════════════════════════════════════════════════════════
@@ -189,9 +201,7 @@ Item {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
 
-        x: root._isLeft
-            ? (root.open ? 0 : -width)
-            : (root.open ? parent.width - width : parent.width)
+        x: root._isLeft ? (root.open ? 0 : -width) : (root.open ? parent.width - width : parent.width)
 
         color: _c.surfaceContainerLow
         radius: 16
@@ -230,11 +240,11 @@ Item {
 
             onActiveChanged: {
                 if (!active) {
-                    var threshold = root._resolvedWidth * 0.4
+                    var threshold = root._resolvedWidth * 0.4;
                     if (root._isLeft && translation.x < -threshold)
-                        root.close()
+                        root.close();
                     else if (!root._isLeft && translation.x > threshold)
-                        root.close()
+                        root.close();
                 }
             }
         }
@@ -264,9 +274,7 @@ Item {
             Flickable {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                contentHeight: root._hasModel
-                    ? drawerModelColumn.implicitHeight
-                    : drawerManualColumn.implicitHeight
+                contentHeight: root._hasModel ? drawerModelColumn.implicitHeight : drawerManualColumn.implicitHeight
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
                 interactive: contentHeight > height
@@ -339,8 +347,9 @@ Item {
                                     Layout.fillWidth: true
 
                                     onClicked: {
-                                        root.currentIndex = modelData.pageIndex
-                                        if (root._isModal) root.close()
+                                        root.currentIndex = modelData.pageIndex;
+                                        if (root._isModal)
+                                            root.close();
                                     }
                                 }
                             }
@@ -386,7 +395,9 @@ Item {
             opacity: contentArea._animOpacity
 
             transform: [
-                Translate { y: contentArea._animY },
+                Translate {
+                    y: contentArea._animY
+                },
                 Scale {
                     origin.x: contentArea.width / 2
                     origin.y: contentArea.height / 2
@@ -401,18 +412,22 @@ Item {
 
             ParallelAnimation {
                 NumberAnimation {
-                    target: contentArea; property: "_animOpacity"
-                    to: 0; duration: _m.pageExitDuration
+                    target: contentArea
+                    property: "_animOpacity"
+                    to: 0
+                    duration: _m.pageExitDuration
                     easing.type: _m.pageExitEasing
                 }
                 NumberAnimation {
-                    target: contentArea; property: "_animY"
+                    target: contentArea
+                    property: "_animY"
                     to: root._goingForward ? -_m.pageSlideDistance : _m.pageSlideDistance
                     duration: _m.pageExitDuration
                     easing.type: _m.pageExitEasing
                 }
                 NumberAnimation {
-                    target: contentArea; property: "_animScale"
+                    target: contentArea
+                    property: "_animScale"
                     to: _m.pageScaleOut
                     duration: _m.pageExitDuration
                     easing.type: _m.pageExitEasing
@@ -421,28 +436,33 @@ Item {
 
             ScriptAction {
                 script: {
-                    pageStack.currentIndex = root.currentIndex
-                    contentArea._animY = root._goingForward
-                        ? _m.pageSlideDistance : -_m.pageSlideDistance
-                    contentArea._animScale = _m.pageScaleOut
-                    root._prevIndex = root.currentIndex
+                    pageStack.currentIndex = root.currentIndex;
+                    contentArea._animY = root._goingForward ? _m.pageSlideDistance : -_m.pageSlideDistance;
+                    contentArea._animScale = _m.pageScaleOut;
+                    root._prevIndex = root.currentIndex;
                 }
             }
 
             ParallelAnimation {
                 NumberAnimation {
-                    target: contentArea; property: "_animOpacity"
-                    to: 1; duration: _m.pageEnterDuration
+                    target: contentArea
+                    property: "_animOpacity"
+                    to: 1
+                    duration: _m.pageEnterDuration
                     easing.type: _m.pageEnterEasing
                 }
                 NumberAnimation {
-                    target: contentArea; property: "_animY"
-                    to: 0; duration: _m.pageEnterDuration
+                    target: contentArea
+                    property: "_animY"
+                    to: 0
+                    duration: _m.pageEnterDuration
                     easing.type: _m.pageEnterEasing
                 }
                 NumberAnimation {
-                    target: contentArea; property: "_animScale"
-                    to: 1.0; duration: _m.pageEnterDuration
+                    target: contentArea
+                    property: "_animScale"
+                    to: 1.0
+                    duration: _m.pageEnterDuration
                     easing.type: _m.pageEnterEasing
                 }
             }
@@ -453,20 +473,25 @@ Item {
     // KEYBOARD / METHODS / ACCESSIBILITY
     // ═════════════════════════════════════════════════════════
 
-    Keys.onEscapePressed: (event) => {
-        if (root.open) root.close()
+    Keys.onEscapePressed: event => {
+        if (root.open)
+            root.close();
     }
 
-    function show() { root.open = true }
+    function show() {
+        root.open = true;
+    }
 
     function close() {
-        root.open = false
-        root.closed()
+        root.open = false;
+        root.closed();
     }
 
     function toggle() {
-        if (root.open) close()
-        else show()
+        if (root.open)
+            close();
+        else
+            show();
     }
 
     Accessible.role: Accessible.Pane

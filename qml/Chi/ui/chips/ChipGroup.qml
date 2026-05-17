@@ -11,7 +11,7 @@ Flow {
     property string size: "medium"
     property real chipSpacing: 8
 
-    signal selectionChanged()
+    signal selectionChanged
 
     spacing: chipSpacing
 
@@ -19,49 +19,51 @@ Flow {
 
     onChildrenChanged: {
         for (var i = 0; i < children.length; i++) {
-            var chip = children[i]
+            var chip = children[i];
             if (chip.hasOwnProperty("clicked")) {
-                setupChip(chip, i)
+                setupChip(chip, i);
             }
         }
     }
 
     function setupChip(chip, index) {
-        chip.size = Qt.binding(function() { return root.size })
+        chip.size = Qt.binding(function () {
+            return root.size;
+        });
 
-        chip.clicked.connect(function() {
+        chip.clicked.connect(function () {
             if (singleSelection) {
                 // Deselect all others
                 for (var j = 0; j < children.length; j++) {
                     if (j !== index && children[j].hasOwnProperty("selected")) {
-                        children[j].selected = false
+                        children[j].selected = false;
                     }
                 }
-                selectedIndex = chip.selected ? index : -1
+                selectedIndex = chip.selected ? index : -1;
             }
-            updateSelectedIndices()
-            selectionChanged()
-        })
+            updateSelectedIndices();
+            selectionChanged();
+        });
     }
 
     function updateSelectedIndices() {
-        var indices = []
+        var indices = [];
         for (var i = 0; i < children.length; i++) {
             if (children[i].hasOwnProperty("selected") && children[i].selected) {
-                indices.push(i)
+                indices.push(i);
             }
         }
-        selectedIndices = indices
+        selectedIndices = indices;
     }
 
     function clearSelection() {
         for (var i = 0; i < children.length; i++) {
             if (children[i].hasOwnProperty("selected")) {
-                children[i].selected = false
+                children[i].selected = false;
             }
         }
-        selectedIndex = -1
-        selectedIndices = []
-        selectionChanged()
+        selectedIndex = -1;
+        selectedIndices = [];
+        selectionChanged();
     }
 }

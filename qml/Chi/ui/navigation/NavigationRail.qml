@@ -28,8 +28,8 @@ Item {
     property ListModel items: ListModel {}
 
     signal itemClicked(int index)
-    signal fabClicked()
-    signal menuClicked()
+    signal fabClicked
+    signal menuClicked
 
     // --- Dimensions ---
     readonly property int railWidth: 96
@@ -54,18 +54,19 @@ Item {
     }
 
     function recalculateWidth() {
-        var maxTextW = 0
+        var maxTextW = 0;
         for (var i = 0; i < items.count; i++) {
-            textMeasurer.text = items.get(i).label || ""
-            if (textMeasurer.width > maxTextW) maxTextW = textMeasurer.width
+            textMeasurer.text = items.get(i).label || "";
+            if (textMeasurer.width > maxTextW)
+                maxTextW = textMeasurer.width;
         }
-        var totalItemWidth = 12 + 16 + 24 + 12 + maxTextW + 16 + 12
-        var totalFabWidth = 0
+        var totalItemWidth = 12 + 16 + 24 + 12 + maxTextW + 16 + 12;
+        var totalFabWidth = 0;
         if (showFab && fabText !== "") {
-            fabMeasurer.text = fabText
-            totalFabWidth = 16 + 16 + 24 + 8 + fabMeasurer.width + 16 + 16
+            fabMeasurer.text = fabText;
+            totalFabWidth = 16 + 16 + 24 + 8 + fabMeasurer.width + 16 + 16;
         }
-        calculatedExpandedWidth = Math.max(totalItemWidth, totalFabWidth)
+        calculatedExpandedWidth = Math.max(totalItemWidth, totalFabWidth);
     }
 
     onItemsChanged: recalculateWidth()
@@ -80,14 +81,21 @@ Item {
     Layout.minimumWidth: implicitWidth
 
     Behavior on implicitWidth {
-        NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+        NumberAnimation {
+            duration: 300
+            easing.type: Easing.OutCubic
+        }
     }
 
     // --- Background ---
     Rectangle {
         anchors.fill: parent
         color: colors.surface
-        Behavior on color { ColorAnimation { duration: 200 } }
+        Behavior on color {
+            ColorAnimation {
+                duration: 200
+            }
+        }
     }
 
     // --- Accessibility Focus Scope ---
@@ -167,7 +175,10 @@ Item {
                 width: parent.width
                 spacing: 0
 
-                Item { visible: alignment === "middle" || alignment === "bottom"; Layout.fillHeight: true }
+                Item {
+                    visible: alignment === "middle" || alignment === "bottom"
+                    Layout.fillHeight: true
+                }
 
                 Repeater {
                     model: navigationRail.items
@@ -184,18 +195,21 @@ Item {
                     }
                 }
 
-                Item { visible: alignment === "middle" || alignment === "top"; Layout.fillHeight: true }
+                Item {
+                    visible: alignment === "middle" || alignment === "top"
+                    Layout.fillHeight: true
+                }
             }
         }
     }
 
     // --- ACCESSIBILITY AUTO-SCROLL ---
     function ensureVisible(item) {
-        var p = item.mapToItem(contentScroll.contentItem, 0, 0)
+        var p = item.mapToItem(contentScroll.contentItem, 0, 0);
         if (p.y < contentScroll.contentY)
-            contentScroll.contentY = p.y
+            contentScroll.contentY = p.y;
         else if (p.y + item.height > contentScroll.contentY + contentScroll.height)
-            contentScroll.contentY = (p.y + item.height) - contentScroll.height
+            contentScroll.contentY = (p.y + item.height) - contentScroll.height;
     }
 
     // --- COMPONENT: Collapsed Rail Item ---
@@ -206,35 +220,76 @@ Item {
             property string displayIcon: itemSelected && itemActiveIcon !== "" ? itemActiveIcon : itemIcon
 
             Item {
-                width: railWidth; height: 64
+                width: railWidth
+                height: 64
                 anchors.centerIn: parent
 
                 Column {
                     anchors.centerIn: parent
                     spacing: 4
                     Item {
-                        width: 56; height: 32; anchors.horizontalCenter: parent.horizontalCenter
-                        Rectangle { anchors.centerIn: parent; width: itemSelected ? 56 : 0; height: 32; radius: 16; color: colors.secondaryContainer; Behavior on width { NumberAnimation { duration: 200 } } }
-                        Icon { anchors.centerIn: parent; source: displayIcon; size: 24; color: itemSelected ? colors.onSecondaryContainer : colors.onSurfaceVariant }
+                        width: 56
+                        height: 32
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: itemSelected ? 56 : 0
+                            height: 32
+                            radius: 16
+                            color: colors.secondaryContainer
+                            Behavior on width {
+                                NumberAnimation {
+                                    duration: 200
+                                }
+                            }
+                        }
+                        Icon {
+                            anchors.centerIn: parent
+                            source: displayIcon
+                            size: 24
+                            color: itemSelected ? colors.onSecondaryContainer : colors.onSurfaceVariant
+                        }
                     }
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: itemLabel
-                        font.family: Theme.ChiTheme.fontFamily; font.pixelSize: navigationRail._typo.bodySmall.size
+                        font.family: Theme.ChiTheme.fontFamily
+                        font.pixelSize: navigationRail._typo.bodySmall.size
                         font.weight: itemSelected ? Font.Medium : Font.Normal
                         color: itemSelected ? colors.onSurface : colors.onSurfaceVariant
-                        elide: Text.ElideRight; width: railWidth - 8; horizontalAlignment: Text.AlignHCenter
+                        elide: Text.ElideRight
+                        width: railWidth - 8
+                        horizontalAlignment: Text.AlignHCenter
                     }
                 }
             }
 
-            Rectangle { anchors.fill: parent; anchors.margins: 4; radius: 12; color: "transparent"; border.width: 2; border.color: colors.primary; visible: rItem.activeFocus }
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: 4
+                radius: 12
+                color: "transparent"
+                border.width: 2
+                border.color: colors.primary
+                visible: rItem.activeFocus
+            }
             activeFocusOnTab: true
-            Accessible.role: Accessible.Button; Accessible.name: itemLabel
-            Keys.onEnterPressed: trigger(); Keys.onReturnPressed: trigger()
-            function trigger() { navigationRail.selectedIndex = itemIndex; navigationRail.itemClicked(itemIndex) }
-            MouseArea { anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: parent.trigger() }
-            onActiveFocusChanged: if (activeFocus) navigationRail.ensureVisible(rItem)
+            Accessible.role: Accessible.Button
+            Accessible.name: itemLabel
+            Keys.onEnterPressed: trigger()
+            Keys.onReturnPressed: trigger()
+            function trigger() {
+                navigationRail.selectedIndex = itemIndex;
+                navigationRail.itemClicked(itemIndex);
+            }
+            MouseArea {
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: parent.trigger()
+            }
+            onActiveFocusChanged: if (activeFocus)
+                navigationRail.ensureVisible(rItem)
         }
     }
 
@@ -247,7 +302,8 @@ Item {
 
             Rectangle {
                 id: activePill
-                height: 56; radius: 28
+                height: 56
+                radius: 28
                 anchors.left: parent.left
                 anchors.leftMargin: 12
                 anchors.verticalCenter: parent.verticalCenter
@@ -255,7 +311,8 @@ Item {
                 color: itemSelected ? colors.secondaryContainer : "transparent"
 
                 Rectangle {
-                    anchors.fill: parent; radius: 28
+                    anchors.fill: parent
+                    radius: 28
                     color: itemSelected ? colors.onSecondaryContainer : colors.onSurface
                     opacity: expItemMouse.pressed ? 0.12 : ((expItemMouse.containsMouse || eItem.activeFocus) ? 0.08 : 0)
                 }
@@ -264,10 +321,16 @@ Item {
                     id: contentRow
                     anchors.centerIn: parent
                     spacing: 12
-                    Icon { source: displayIcon; size: 24; anchors.verticalCenter: parent.verticalCenter; color: itemSelected ? colors.onSecondaryContainer : colors.onSurfaceVariant }
+                    Icon {
+                        source: displayIcon
+                        size: 24
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: itemSelected ? colors.onSecondaryContainer : colors.onSurfaceVariant
+                    }
                     Text {
                         text: itemLabel
-                        font.family: Theme.ChiTheme.fontFamily; font.pixelSize: navigationRail._typo.labelLarge.size
+                        font.family: Theme.ChiTheme.fontFamily
+                        font.pixelSize: navigationRail._typo.labelLarge.size
                         font.weight: itemSelected ? Font.Medium : Font.Normal
                         color: itemSelected ? colors.onSecondaryContainer : colors.onSurfaceVariant
                         anchors.verticalCenter: parent.verticalCenter
@@ -275,13 +338,33 @@ Item {
                 }
             }
 
-            Rectangle { anchors.fill: activePill; anchors.margins: -2; radius: 30; color: "transparent"; border.width: 2; border.color: colors.primary; visible: eItem.activeFocus }
+            Rectangle {
+                anchors.fill: activePill
+                anchors.margins: -2
+                radius: 30
+                color: "transparent"
+                border.width: 2
+                border.color: colors.primary
+                visible: eItem.activeFocus
+            }
             activeFocusOnTab: true
-            Accessible.role: Accessible.Button; Accessible.name: itemLabel
-            Keys.onEnterPressed: trigger(); Keys.onReturnPressed: trigger()
-            function trigger() { navigationRail.selectedIndex = itemIndex; navigationRail.itemClicked(itemIndex) }
-            MouseArea { id: expItemMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: parent.trigger() }
-            onActiveFocusChanged: if (activeFocus) navigationRail.ensureVisible(eItem)
+            Accessible.role: Accessible.Button
+            Accessible.name: itemLabel
+            Keys.onEnterPressed: trigger()
+            Keys.onReturnPressed: trigger()
+            function trigger() {
+                navigationRail.selectedIndex = itemIndex;
+                navigationRail.itemClicked(itemIndex);
+            }
+            MouseArea {
+                id: expItemMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: parent.trigger()
+            }
+            onActiveFocusChanged: if (activeFocus)
+                navigationRail.ensureVisible(eItem)
         }
     }
 
@@ -289,21 +372,53 @@ Item {
 
     component RailIconButton: Item {
         property string icon: ""
-        signal clicked()
-        width: 48; height: 48; activeFocusOnTab: true
-        Rectangle { anchors.centerIn: parent; width: 40; height: 40; radius: 20; color: colors.onSurfaceVariant; opacity: btnMouse.pressed ? 0.12 : ((btnMouse.containsMouse || parent.activeFocus) ? 0.08 : 0) }
-        Icon { anchors.centerIn: parent; source: icon; size: 24; color: colors.onSurfaceVariant }
-        Rectangle { anchors.fill: parent; radius: 24; color: "transparent"; border.width: 2; border.color: colors.primary; visible: parent.activeFocus }
-        Keys.onEnterPressed: parent.clicked(); Keys.onReturnPressed: parent.clicked()
-        MouseArea { id: btnMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: parent.clicked() }
+        signal clicked
+        width: 48
+        height: 48
+        activeFocusOnTab: true
+        Rectangle {
+            anchors.centerIn: parent
+            width: 40
+            height: 40
+            radius: 20
+            color: colors.onSurfaceVariant
+            opacity: btnMouse.pressed ? 0.12 : ((btnMouse.containsMouse || parent.activeFocus) ? 0.08 : 0)
+        }
+        Icon {
+            anchors.centerIn: parent
+            source: icon
+            size: 24
+            color: colors.onSurfaceVariant
+        }
+        Rectangle {
+            anchors.fill: parent
+            radius: 24
+            color: "transparent"
+            border.width: 2
+            border.color: colors.primary
+            visible: parent.activeFocus
+        }
+        Keys.onEnterPressed: parent.clicked()
+        Keys.onReturnPressed: parent.clicked()
+        MouseArea {
+            id: btnMouse
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: parent.clicked()
+        }
     }
 
     component RailFAB: Item {
         property string icon: ""
-        signal clicked()
-        width: 56; height: 56; activeFocusOnTab: true
+        signal clicked
+        width: 56
+        height: 56
+        activeFocusOnTab: true
         Rectangle {
-            anchors.fill: parent; radius: 16; color: colors.primaryContainer
+            anchors.fill: parent
+            radius: 16
+            color: colors.primaryContainer
             layer.enabled: true
             layer.effect: MultiEffect {
                 shadowEnabled: true
@@ -311,24 +426,50 @@ Item {
                 shadowVerticalOffset: 2
                 shadowBlur: 0.2
             }
-            Rectangle { anchors.fill: parent; radius: 16; color: colors.onPrimaryContainer; opacity: fabMouse.pressed ? 0.12 : ((fabMouse.containsMouse || parent.parent.activeFocus) ? 0.08 : 0) }
-            Icon { anchors.centerIn: parent; source: icon; size: 24; color: colors.onPrimaryContainer }
+            Rectangle {
+                anchors.fill: parent
+                radius: 16
+                color: colors.onPrimaryContainer
+                opacity: fabMouse.pressed ? 0.12 : ((fabMouse.containsMouse || parent.parent.activeFocus) ? 0.08 : 0)
+            }
+            Icon {
+                anchors.centerIn: parent
+                source: icon
+                size: 24
+                color: colors.onPrimaryContainer
+            }
         }
-        Rectangle { anchors.fill: parent; radius: 16; color: "transparent"; border.width: 2; border.color: colors.primary; visible: parent.activeFocus }
-        Keys.onEnterPressed: parent.clicked(); Keys.onReturnPressed: parent.clicked()
-        MouseArea { id: fabMouse; anchors.fill: parent; hoverEnabled: true; onClicked: parent.clicked(); cursorShape: Qt.PointingHandCursor }
+        Rectangle {
+            anchors.fill: parent
+            radius: 16
+            color: "transparent"
+            border.width: 2
+            border.color: colors.primary
+            visible: parent.activeFocus
+        }
+        Keys.onEnterPressed: parent.clicked()
+        Keys.onReturnPressed: parent.clicked()
+        MouseArea {
+            id: fabMouse
+            anchors.fill: parent
+            hoverEnabled: true
+            onClicked: parent.clicked()
+            cursorShape: Qt.PointingHandCursor
+        }
     }
 
     component ExtendedFAB: Item {
         property string icon: ""
         property string text: ""
-        signal clicked()
+        signal clicked
         implicitWidth: extRow.implicitWidth + 32
         implicitHeight: 56
         activeFocusOnTab: true
 
         Rectangle {
-            anchors.fill: parent; radius: 16; color: colors.primaryContainer
+            anchors.fill: parent
+            radius: 16
+            color: colors.primaryContainer
             layer.enabled: true
             layer.effect: MultiEffect {
                 shadowEnabled: true
@@ -336,21 +477,48 @@ Item {
                 shadowVerticalOffset: 2
                 shadowBlur: 0.2
             }
-            Rectangle { anchors.fill: parent; radius: 16; color: colors.onPrimaryContainer; opacity: extFabMouse.pressed ? 0.12 : ((extFabMouse.containsMouse || parent.parent.activeFocus) ? 0.08 : 0) }
+            Rectangle {
+                anchors.fill: parent
+                radius: 16
+                color: colors.onPrimaryContainer
+                opacity: extFabMouse.pressed ? 0.12 : ((extFabMouse.containsMouse || parent.parent.activeFocus) ? 0.08 : 0)
+            }
             Row {
                 id: extRow
                 anchors.centerIn: parent
                 spacing: 8
-                Icon { source: icon; size: 24; anchors.verticalCenter: parent.verticalCenter; color: colors.onPrimaryContainer }
+                Icon {
+                    source: icon
+                    size: 24
+                    anchors.verticalCenter: parent.verticalCenter
+                    color: colors.onPrimaryContainer
+                }
                 Text {
                     text: parent.parent.parent.text
-                    font.family: Theme.ChiTheme.fontFamily; font.pixelSize: navigationRail._typo.titleMedium.size; font.weight: Font.Medium
-                    color: colors.onPrimaryContainer; anchors.verticalCenter: parent.verticalCenter
+                    font.family: Theme.ChiTheme.fontFamily
+                    font.pixelSize: navigationRail._typo.titleMedium.size
+                    font.weight: Font.Medium
+                    color: colors.onPrimaryContainer
+                    anchors.verticalCenter: parent.verticalCenter
                 }
             }
         }
-        Rectangle { anchors.fill: parent; radius: 16; color: "transparent"; border.width: 2; border.color: colors.primary; visible: parent.activeFocus }
-        Keys.onEnterPressed: parent.clicked(); Keys.onReturnPressed: parent.clicked()
-        MouseArea { id: extFabMouse; anchors.fill: parent; hoverEnabled: true; onClicked: parent.clicked(); cursorShape: Qt.PointingHandCursor }
+        Rectangle {
+            anchors.fill: parent
+            radius: 16
+            color: "transparent"
+            border.width: 2
+            border.color: colors.primary
+            visible: parent.activeFocus
+        }
+        Keys.onEnterPressed: parent.clicked()
+        Keys.onReturnPressed: parent.clicked()
+        MouseArea {
+            id: extFabMouse
+            anchors.fill: parent
+            hoverEnabled: true
+            onClicked: parent.clicked()
+            cursorShape: Qt.PointingHandCursor
+        }
     }
 }

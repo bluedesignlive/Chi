@@ -18,7 +18,7 @@ Rectangle {
 
     property alias actions: actionsRow.data
 
-    signal navigationClicked()
+    signal navigationClicked
 
     readonly property bool _isSmall: variant === "small"
     readonly property bool _isCenter: variant === "center"
@@ -26,11 +26,10 @@ Rectangle {
     readonly property bool _isLarge: variant === "large"
     readonly property bool isExpanded: !_isSmall && !_isCenter
     readonly property real scrollProgress: {
-        var range = expandedHeight - collapsedHeight
-        return range > 0 ? Math.min(1, scrollOffset / range) : 0
+        var range = expandedHeight - collapsedHeight;
+        return range > 0 ? Math.min(1, scrollOffset / range) : 0;
     }
-    readonly property real currentHeight: isExpanded ?
-        expandedHeight - scrollProgress * (expandedHeight - collapsedHeight) : collapsedHeight
+    readonly property real currentHeight: isExpanded ? expandedHeight - scrollProgress * (expandedHeight - collapsedHeight) : collapsedHeight
     readonly property bool _hasShadow: elevated || scrollProgress > 0
 
     implicitWidth: parent ? parent.width : 400
@@ -42,7 +41,11 @@ Rectangle {
 
     color: _hasShadow ? colors.surfaceContainer : colors.surface
 
-    Behavior on color { ColorAnimation { duration: 200 } }
+    Behavior on color {
+        ColorAnimation {
+            duration: 200
+        }
+    }
 
     layer.enabled: _hasShadow
     layer.effect: MultiEffect {
@@ -69,10 +72,16 @@ Rectangle {
 
             Rectangle {
                 anchors.centerIn: parent
-                width: 40; height: 40; radius: 20
+                width: 40
+                height: 40
+                radius: 20
                 color: colors.onSurface
                 opacity: navMouse.containsMouse ? 0.08 : 0
-                Behavior on opacity { NumberAnimation { duration: 100 } }
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 100
+                    }
+                }
             }
 
             Text {
@@ -81,7 +90,11 @@ Rectangle {
                 font.family: root.navigationIcon.length > 2 ? iconFamily : fontFamily
                 font.pixelSize: 24
                 color: colors.onSurface
-                Behavior on color { ColorAnimation { duration: 200 } }
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 200
+                    }
+                }
             }
 
             MouseArea {
@@ -106,11 +119,14 @@ Rectangle {
             font.weight: Font.Normal
             color: colors.onSurface
             elide: Text.ElideRight
-            opacity: (root._isSmall || root._isCenter) ? 1 :
-                Math.max(0, (root.scrollProgress - 0.5) * 2)
+            opacity: (root._isSmall || root._isCenter) ? 1 : Math.max(0, (root.scrollProgress - 0.5) * 2)
             Layout.fillWidth: !root._isCenter
             Layout.alignment: root._isCenter ? Qt.AlignHCenter : Qt.AlignLeft
-            Behavior on color { ColorAnimation { duration: 200 } }
+            Behavior on color {
+                ColorAnimation {
+                    duration: 200
+                }
+            }
         }
 
         Item {
@@ -144,7 +160,11 @@ Rectangle {
             color: colors.onSurface
             elide: Text.ElideRight
             width: parent.width
-            Behavior on color { ColorAnimation { duration: 200 } }
+            Behavior on color {
+                ColorAnimation {
+                    duration: 200
+                }
+            }
         }
 
         Text {
@@ -156,7 +176,11 @@ Rectangle {
             elide: Text.ElideRight
             width: parent.width
             topPadding: 4
-            Behavior on color { ColorAnimation { duration: 200 } }
+            Behavior on color {
+                ColorAnimation {
+                    duration: 200
+                }
+            }
         }
     }
 

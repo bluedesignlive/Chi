@@ -30,16 +30,25 @@ Item {
 
     default property alias actions: theActionsRow.children
 
-    signal opened()
-    signal closed()
-    signal accepted()
-    signal rejected()
+    signal opened
+    signal closed
+    signal accepted
+    signal rejected
 
     readonly property var sizeSpecs: ({
-        small:  { width: 280, maxHeight: 400 },
-        medium: { width: 400, maxHeight: 560 },
-        large:  { width: 560, maxHeight: 720 }
-    })
+            small: {
+                width: 280,
+                maxHeight: 400
+            },
+            medium: {
+                width: 400,
+                maxHeight: 560
+            },
+            large: {
+                width: 560,
+                maxHeight: 720
+            }
+        })
     readonly property var cs: sizeSpecs[size] || sizeSpecs.medium
 
     // Cached type flags
@@ -69,13 +78,15 @@ Item {
     visible: false
 
     property Item appWindow: {
-        var p = root.parent
+        var p = root.parent;
         while (p) {
-            if (p.toString().indexOf("Window") !== -1) return p
-            if (!p.parent) return p
-            p = p.parent
+            if (p.toString().indexOf("Window") !== -1)
+                return p;
+            if (!p.parent)
+                return p;
+            p = p.parent;
         }
-        return null
+        return null;
     }
 
     Row {
@@ -95,12 +106,19 @@ Item {
         visible: root.open
         z: 9998
 
-        Behavior on opacity { NumberAnimation { duration: 200 } }
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 200
+            }
+        }
 
         MouseArea {
             anchors.fill: parent
             enabled: root.modal && root.closeOnOverlayClick && !root._fs
-            onClicked: { root.rejected(); root.close() }
+            onClicked: {
+                root.rejected();
+                root.close();
+            }
         }
     }
 
@@ -124,7 +142,12 @@ Item {
         color: root._bgColor
         clip: true
 
-        Behavior on color { ColorAnimation { duration: 250; easing.type: Easing.OutCubic } }
+        Behavior on color {
+            ColorAnimation {
+                duration: 250
+                easing.type: Easing.OutCubic
+            }
+        }
 
         layer.enabled: root.open && root._basic
         layer.effect: MultiEffect {
@@ -178,7 +201,10 @@ Item {
                 y: 16
             }
 
-            Item { width: parent.width; height: root.hasTitle ? 16 : 0 }
+            Item {
+                width: parent.width
+                height: root.hasTitle ? 16 : 0
+            }
 
             // Supporting Text
             Text {
@@ -193,7 +219,10 @@ Item {
                 topPadding: root.hasTitle ? 0 : 24
             }
 
-            Item { width: parent.width; height: (root.hasTitle || root.hasSupportingText) ? 16 : 0 }
+            Item {
+                width: parent.width
+                height: (root.hasTitle || root.hasSupportingText) ? 16 : 0
+            }
 
             // Content Loader
             Item {
@@ -209,7 +238,10 @@ Item {
                 }
             }
 
-            Item { width: parent.width; height: root.hasContent ? 16 : 0 }
+            Item {
+                width: parent.width
+                height: root.hasContent ? 16 : 0
+            }
 
             // Actions Divider
             Rectangle {
@@ -237,7 +269,12 @@ Item {
         z: 9999
         color: root._bgColor
 
-        Behavior on color { ColorAnimation { duration: 250; easing.type: Easing.OutCubic } }
+        Behavior on color {
+            ColorAnimation {
+                duration: 250
+                easing.type: Easing.OutCubic
+            }
+        }
 
         Column {
             anchors.fill: parent
@@ -248,7 +285,11 @@ Item {
                 width: parent.width
                 height: 56
                 color: root._bgColor
-                Behavior on color { ColorAnimation { duration: 250 } }
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 250
+                    }
+                }
 
                 Row {
                     anchors.fill: parent
@@ -258,7 +299,9 @@ Item {
 
                     Rectangle {
                         visible: root.showCloseButton
-                        width: 48; height: 48; radius: 24
+                        width: 48
+                        height: 48
+                        radius: 24
                         anchors.verticalCenter: parent.verticalCenter
                         color: fsCloseMA.containsMouse ? Qt.alpha(root._onSurface, 0.08) : "transparent"
 
@@ -274,7 +317,10 @@ Item {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: { root.rejected(); root.close() }
+                            onClicked: {
+                                root.rejected();
+                                root.close();
+                            }
                         }
                     }
 
@@ -288,12 +334,17 @@ Item {
                         width: parent.width - 150
                     }
 
-                    Item { width: 1; height: 1; Layout.fillWidth: true }
+                    Item {
+                        width: 1
+                        height: 1
+                        Layout.fillWidth: true
+                    }
 
                     Rectangle {
                         visible: root.confirmText !== ""
                         width: fsConfirmText.implicitWidth + 32
-                        height: 40; radius: 20
+                        height: 40
+                        radius: 20
                         anchors.verticalCenter: parent.verticalCenter
                         color: fsConfirmMA.containsMouse ? Qt.alpha(root._primary, 0.08) : "transparent"
 
@@ -312,7 +363,10 @@ Item {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: { root.accepted(); root.close() }
+                            onClicked: {
+                                root.accepted();
+                                root.close();
+                            }
                         }
                     }
                 }
@@ -320,7 +374,8 @@ Item {
                 Rectangle {
                     visible: root.showHeaderDivider
                     anchors.bottom: parent.bottom
-                    width: parent.width; height: 1
+                    width: parent.width
+                    height: 1
                     color: root._outlineVar
                 }
             }
@@ -334,7 +389,8 @@ Item {
 
                 Loader {
                     id: fsContentLoader
-                    x: 24; y: 24
+                    x: 24
+                    y: 24
                     width: parent.width - 48
                     sourceComponent: root.open && root._fs ? root.content : null
                 }
@@ -356,7 +412,12 @@ Item {
         color: root._bgColor
         clip: true
 
-        Behavior on color { ColorAnimation { duration: 250; easing.type: Easing.OutCubic } }
+        Behavior on color {
+            ColorAnimation {
+                duration: 250
+                easing.type: Easing.OutCubic
+            }
+        }
 
         layer.enabled: root.open && root._assist
         layer.effect: MultiEffect {
@@ -401,10 +462,15 @@ Item {
                         width: parent.width - 100
                     }
 
-                    Item { width: 1; height: 1 }
+                    Item {
+                        width: 1
+                        height: 1
+                    }
 
                     Rectangle {
-                        width: 40; height: 40; radius: 20
+                        width: 40
+                        height: 40
+                        radius: 20
                         anchors.verticalCenter: parent.verticalCenter
                         color: assistCloseMA.containsMouse ? Qt.alpha(root._onSurface, 0.08) : "transparent"
 
@@ -420,14 +486,18 @@ Item {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: { root.rejected(); root.close() }
+                            onClicked: {
+                                root.rejected();
+                                root.close();
+                            }
                         }
                     }
                 }
 
                 Rectangle {
                     anchors.bottom: parent.bottom
-                    width: parent.width; height: 1
+                    width: parent.width
+                    height: 1
                     color: root._outlineVar
                 }
             }
@@ -442,7 +512,8 @@ Item {
 
                 Loader {
                     id: assistContentLoader
-                    x: 24; y: 24
+                    x: 24
+                    y: 24
                     width: parent.width - 48
                     sourceComponent: root.open && root._assist ? root.content : null
                 }
@@ -459,7 +530,12 @@ Item {
                     color: root._footerColor
                     radius: 28
 
-                    Behavior on color { ColorAnimation { duration: 250; easing.type: Easing.OutCubic } }
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 250
+                            easing.type: Easing.OutCubic
+                        }
+                    }
 
                     // Cover top rounded corners
                     Rectangle {
@@ -471,7 +547,8 @@ Item {
                 }
 
                 Rectangle {
-                    width: parent.width; height: 1
+                    width: parent.width
+                    height: 1
                     color: root._outlineVar
                     anchors.top: parent.top
                 }
@@ -484,7 +561,10 @@ Item {
         State {
             name: "basic"
             when: root.open && root._basic
-            ParentChange { target: theActionsRow; parent: basicActionsArea }
+            ParentChange {
+                target: theActionsRow
+                parent: basicActionsArea
+            }
             PropertyChanges {
                 target: theActionsRow
                 visible: true
@@ -497,7 +577,10 @@ Item {
         State {
             name: "assistant"
             when: root.open && root._assist
-            ParentChange { target: theActionsRow; parent: assistActionsArea }
+            ParentChange {
+                target: theActionsRow
+                parent: assistActionsArea
+            }
             PropertyChanges {
                 target: theActionsRow
                 visible: true
@@ -509,18 +592,37 @@ Item {
         State {
             name: "closed"
             when: !root.open
-            PropertyChanges { target: theActionsRow; visible: false }
+            PropertyChanges {
+                target: theActionsRow
+                visible: false
+            }
         }
     ]
 
-    onOpenChanged: if (open) opened(); else closed()
+    onOpenChanged: if (open)
+        opened()
+    else
+        closed()
 
     Keys.onEscapePressed: {
-        if (open && closeOnEscape) { rejected(); close() }
+        if (open && closeOnEscape) {
+            rejected();
+            close();
+        }
     }
 
-    function show() { open = true }
-    function close() { open = false }
-    function accept() { accepted(); close() }
-    function reject() { rejected(); close() }
+    function show() {
+        open = true;
+    }
+    function close() {
+        open = false;
+    }
+    function accept() {
+        accepted();
+        close();
+    }
+    function reject() {
+        rejected();
+        close();
+    }
 }

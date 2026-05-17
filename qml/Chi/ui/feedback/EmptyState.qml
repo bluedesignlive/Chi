@@ -11,13 +11,28 @@ Item {
     property string actionText: ""
     property string size: "medium"           // "small", "medium", "large"
 
-    signal actionClicked()
+    signal actionClicked
 
     readonly property var sizeSpecs: ({
-        small: { iconSize: 48, titleSize: 16, descSize: 13, spacing: 12 },
-        medium: { iconSize: 64, titleSize: 20, descSize: 14, spacing: 16 },
-        large: { iconSize: 96, titleSize: 24, descSize: 16, spacing: 20 }
-    })
+            small: {
+                iconSize: 48,
+                titleSize: 16,
+                descSize: 13,
+                spacing: 12
+            },
+            medium: {
+                iconSize: 64,
+                titleSize: 20,
+                descSize: 14,
+                spacing: 16
+            },
+            large: {
+                iconSize: 96,
+                titleSize: 24,
+                descSize: 16,
+                spacing: 20
+            }
+        })
 
     readonly property var currentSize: sizeSpecs[size] || sizeSpecs.medium
 
@@ -56,7 +71,9 @@ Item {
             Layout.alignment: Qt.AlignHCenter
 
             Behavior on color {
-                ColorAnimation { duration: 200 }
+                ColorAnimation {
+                    duration: 200
+                }
             }
         }
 
@@ -73,7 +90,9 @@ Item {
             Layout.alignment: Qt.AlignHCenter
 
             Behavior on color {
-                ColorAnimation { duration: 200 }
+                ColorAnimation {
+                    duration: 200
+                }
             }
         }
 

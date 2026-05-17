@@ -8,7 +8,7 @@ Item {
 
     property real volume: 0.75
     property bool muted: false
-    property var  colors: ChiTheme.colors
+    property var colors: ChiTheme.colors
 
     // Expand on hover to reveal the slider track
     property bool _expanded: hoverSensor.containsMouse || dragArea.pressed
@@ -17,7 +17,12 @@ Item {
     width: _expanded ? 148 : 44
     height: 36
 
-    Behavior on width { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+    Behavior on width {
+        NumberAnimation {
+            duration: 180
+            easing.type: Easing.OutCubic
+        }
+    }
 
     // ── Track container (pill shape) ────────────────────────
     Rectangle {
@@ -31,8 +36,10 @@ Item {
         Rectangle {
             visible: root._expanded
             anchors.verticalCenter: parent.verticalCenter
-            x: 36; width: parent.width - 44
-            height: 2; radius: 1
+            x: 36
+            width: parent.width - 44
+            height: 2
+            radius: 1
             color: colors.outlineVariant
             opacity: 0.5
         }
@@ -48,8 +55,17 @@ Item {
             color: colors.primary
             opacity: 0.75
 
-            Behavior on width { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
-            Behavior on opacity { NumberAnimation { duration: 120 } }
+            Behavior on width {
+                NumberAnimation {
+                    duration: 120
+                    easing.type: Easing.OutCubic
+                }
+            }
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 120
+                }
+            }
         }
 
         // Icon + percentage label
@@ -60,9 +76,7 @@ Item {
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                text: root.muted ? "\uE04F"
-                    : root.volume < 0.01 ? "\uE04E"
-                    : root.volume < 0.5  ? "\uE04D" : "\uE050"
+                text: root.muted ? "\uE04F" : root.volume < 0.01 ? "\uE04E" : root.volume < 0.5 ? "\uE04D" : "\uE050"
                 font.family: "Material Symbols Outlined"
                 font.pixelSize: 20
                 color: colors.onSurfaceVariant
@@ -72,7 +86,8 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 text: Math.round(root.volume * 100) + "%"
                 font.family: ChiTheme.fontFamily
-                font.pixelSize: 12; font.weight: Font.Medium
+                font.pixelSize: 12
+                font.weight: Font.Medium
                 color: colors.onSurfaceVariant
                 visible: root._expanded
             }
@@ -88,23 +103,26 @@ Item {
             property real _startX: 0
             property real _startVol: 0
 
-            onPressed: function(mouse) {
-                _startX = mouse.x
-                _startVol = root.volume
+            onPressed: function (mouse) {
+                _startX = mouse.x;
+                _startVol = root.volume;
             }
 
-            onPositionChanged: function(mouse) {
-                if (!pressed || !root._expanded) return
-                var delta = (mouse.x - _startX) / (parent.width - 20)
-                root.volume = Math.max(0, Math.min(1, _startVol + delta))
-                if (root.muted && root.volume > 0) root.muted = false
+            onPositionChanged: function (mouse) {
+                if (!pressed || !root._expanded)
+                    return;
+                var delta = (mouse.x - _startX) / (parent.width - 20);
+                root.volume = Math.max(0, Math.min(1, _startVol + delta));
+                if (root.muted && root.volume > 0)
+                    root.muted = false;
             }
 
             // Single click on track sets volume directly
-            onClicked: function(mouse) {
+            onClicked: function (mouse) {
                 if (root._expanded && mouse.x > 30) {
-                    root.volume = Math.max(0, Math.min(1, mouse.x / parent.width))
-                    if (root.muted && root.volume > 0) root.muted = false
+                    root.volume = Math.max(0, Math.min(1, mouse.x / parent.width));
+                    if (root.muted && root.volume > 0)
+                        root.muted = false;
                 }
             }
 
@@ -112,9 +130,10 @@ Item {
             onDoubleClicked: root.muted = !root.muted
 
             // Scroll wheel adjusts volume
-            onWheel: function(wheel) {
-                root.volume = Math.max(0, Math.min(1, root.volume + (wheel.angleDelta.y > 0 ? 0.05 : -0.05)))
-                if (root.muted && root.volume > 0) root.muted = false
+            onWheel: function (wheel) {
+                root.volume = Math.max(0, Math.min(1, root.volume + (wheel.angleDelta.y > 0 ? 0.05 : -0.05)));
+                if (root.muted && root.volume > 0)
+                    root.muted = false;
             }
         }
     }

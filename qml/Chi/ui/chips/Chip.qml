@@ -13,8 +13,8 @@ Item {
     property bool enabled: true
     property bool elevated: false
 
-    signal clicked()
-    signal trailingIconClicked()
+    signal clicked
+    signal trailingIconClicked
 
     readonly property bool hasLeadingIcon: leadingIcon !== ""
     readonly property bool hasTrailingIcon: trailingIcon !== ""
@@ -39,19 +39,26 @@ Item {
         id: container
         anchors.fill: parent
         radius: 8
-        color: root._fs ? colors.secondaryContainer :
-               root.elevated ? colors.surfaceContainerLow : "transparent"
+        color: root._fs ? colors.secondaryContainer : root.elevated ? colors.surfaceContainerLow : "transparent"
         border.width: (root.elevated || root._fs) ? 0 : 1
         border.color: root.selected ? "transparent" : colors.outline
 
-        Behavior on color { ColorAnimation { duration: 150 } }
+        Behavior on color {
+            ColorAnimation {
+                duration: 150
+            }
+        }
 
         Rectangle {
             anchors.fill: parent
             radius: parent.radius
             color: colors.onSurface
             opacity: mouseArea.pressed ? 0.12 : (mouseArea.containsMouse ? 0.08 : 0)
-            Behavior on opacity { NumberAnimation { duration: 100 } }
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 100
+                }
+            }
         }
 
         Row {
@@ -102,8 +109,9 @@ Item {
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: {
-            if (root.variant === "filter") root.selected = !root.selected
-            root.clicked()
+            if (root.variant === "filter")
+                root.selected = !root.selected;
+            root.clicked();
         }
     }
 }

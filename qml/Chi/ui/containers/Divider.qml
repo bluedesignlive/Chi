@@ -18,41 +18,57 @@ Rectangle {
     color: colors.outlineVariant
 
     Behavior on color {
-        ColorAnimation { duration: 200 }
+        ColorAnimation {
+            duration: 200
+        }
     }
 
     // Adjust for inset variants
     anchors.leftMargin: {
-        if (orientation !== "horizontal") return 0
+        if (orientation !== "horizontal")
+            return 0;
         switch (variant) {
-        case "inset": return insetStart
-        case "middle": return insetStart
-        default: return 0
+        case "inset":
+            return insetStart;
+        case "middle":
+            return insetStart;
+        default:
+            return 0;
         }
     }
 
     anchors.rightMargin: {
-        if (orientation !== "horizontal") return 0
+        if (orientation !== "horizontal")
+            return 0;
         switch (variant) {
-        case "middle": return insetEnd
-        default: return 0
+        case "middle":
+            return insetEnd;
+        default:
+            return 0;
         }
     }
 
     anchors.topMargin: {
-        if (orientation !== "vertical") return 0
+        if (orientation !== "vertical")
+            return 0;
         switch (variant) {
-        case "inset": return insetStart
-        case "middle": return insetStart
-        default: return 0
+        case "inset":
+            return insetStart;
+        case "middle":
+            return insetStart;
+        default:
+            return 0;
         }
     }
 
     anchors.bottomMargin: {
-        if (orientation !== "vertical") return 0
+        if (orientation !== "vertical")
+            return 0;
         switch (variant) {
-        case "middle": return insetEnd
-        default: return 0
+        case "middle":
+            return insetEnd;
+        default:
+            return 0;
         }
     }
 }

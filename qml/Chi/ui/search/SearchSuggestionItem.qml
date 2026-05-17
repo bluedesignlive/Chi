@@ -24,8 +24,8 @@ Item {
     // SIGNALS
     // ═══════════════════════════════════════════════════════════════════
 
-    signal clicked()
-    signal insertClicked()
+    signal clicked
+    signal insertClicked
 
     // ═══════════════════════════════════════════════════════════════════
     // DERIVED STATE
@@ -35,28 +35,33 @@ Item {
     readonly property bool isPressed: mouseArea.pressed
 
     readonly property string displayText: {
-        if (suggestionData === undefined || suggestionData === null) return ""
-        return suggestionData.text !== undefined ? suggestionData.text : String(suggestionData)
+        if (suggestionData === undefined || suggestionData === null)
+            return "";
+        return suggestionData.text !== undefined ? suggestionData.text : String(suggestionData);
     }
 
     readonly property string displayIcon: {
-        if (suggestionData === undefined || suggestionData === null) return "history"
-        return suggestionData.icon !== undefined ? suggestionData.icon : "history"
+        if (suggestionData === undefined || suggestionData === null)
+            return "history";
+        return suggestionData.icon !== undefined ? suggestionData.icon : "history";
     }
 
     readonly property string displaySubtitle: {
-        if (suggestionData === undefined || suggestionData === null) return ""
-        return suggestionData.subtitle !== undefined ? suggestionData.subtitle : ""
+        if (suggestionData === undefined || suggestionData === null)
+            return "";
+        return suggestionData.subtitle !== undefined ? suggestionData.subtitle : "";
     }
 
     readonly property string displayTrailing: {
-        if (suggestionData === undefined || suggestionData === null) return "north_west"
-        return suggestionData.trailing !== undefined ? suggestionData.trailing : "north_west"
+        if (suggestionData === undefined || suggestionData === null)
+            return "north_west";
+        return suggestionData.trailing !== undefined ? suggestionData.trailing : "north_west";
     }
 
     readonly property bool showTrailing: {
-        if (suggestionData === undefined || suggestionData === null) return true
-        return suggestionData.showTrailing !== false
+        if (suggestionData === undefined || suggestionData === null)
+            return true;
+        return suggestionData.showTrailing !== false;
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -79,7 +84,10 @@ Item {
         opacity: isPressed ? 0.12 : (isHovered ? 0.08 : 0)
 
         Behavior on opacity {
-            NumberAnimation { duration: root.motion.durationFast; easing.type: Easing.OutCubic }
+            NumberAnimation {
+                duration: root.motion.durationFast
+                easing.type: Easing.OutCubic
+            }
         }
     }
 
@@ -141,13 +149,18 @@ Item {
             Rectangle {
                 id: trailingHover
                 anchors.centerIn: parent
-                width: parent.width + 8; height: parent.height + 8
+                width: parent.width + 8
+                height: parent.height + 8
                 radius: width / 2
                 color: colors.onSurface
-                opacity: 0; z: -1
+                opacity: 0
+                z: -1
 
                 Behavior on opacity {
-                    NumberAnimation { duration: root.motion.durationFast; easing.type: Easing.OutCubic }
+                    NumberAnimation {
+                        duration: root.motion.durationFast
+                        easing.type: Easing.OutCubic
+                    }
                 }
             }
 
@@ -167,14 +180,14 @@ Item {
                 propagateComposedEvents: false
 
                 onContainsMouseChanged: trailingHover.opacity = containsMouse ? 0.08 : 0
-                onPressed: function(mouse) {
-                    trailingHover.opacity = 0.12
-                    mouse.accepted = true
+                onPressed: function (mouse) {
+                    trailingHover.opacity = 0.12;
+                    mouse.accepted = true;
                 }
                 onReleased: trailingHover.opacity = containsMouse ? 0.08 : 0
-                onClicked: function(mouse) {
-                    mouse.accepted = true
-                    root.insertClicked()
+                onClicked: function (mouse) {
+                    mouse.accepted = true;
+                    root.insertClicked();
                 }
             }
         }

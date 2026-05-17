@@ -18,7 +18,7 @@ Rectangle {
     property bool copyOnSelect: true
 
     signal commandEntered(string command)
-    signal interrupted()
+    signal interrupted
 
     implicitWidth: 600
     implicitHeight: 400
@@ -30,25 +30,25 @@ Rectangle {
 
     // Terminal colors
     property var termColors: ({
-        background: "#1a1a1a",
-        foreground: "#f0f0f0",
-        black: "#000000",
-        red: "#ff5555",
-        green: "#50fa7b",
-        yellow: "#f1fa8c",
-        blue: "#6272a4",
-        magenta: "#ff79c6",
-        cyan: "#8be9fd",
-        white: "#f8f8f2",
-        brightBlack: "#6272a4",
-        brightRed: "#ff6e6e",
-        brightGreen: "#69ff94",
-        brightYellow: "#ffffa5",
-        brightBlue: "#d6acff",
-        brightMagenta: "#ff92df",
-        brightCyan: "#a4ffff",
-        brightWhite: "#ffffff"
-    })
+            background: "#1a1a1a",
+            foreground: "#f0f0f0",
+            black: "#000000",
+            red: "#ff5555",
+            green: "#50fa7b",
+            yellow: "#f1fa8c",
+            blue: "#6272a4",
+            magenta: "#ff79c6",
+            cyan: "#8be9fd",
+            white: "#f8f8f2",
+            brightBlack: "#6272a4",
+            brightRed: "#ff6e6e",
+            brightGreen: "#69ff94",
+            brightYellow: "#ffffa5",
+            brightBlue: "#d6acff",
+            brightMagenta: "#ff92df",
+            brightCyan: "#a4ffff",
+            brightWhite: "#ffffff"
+        })
 
     Flickable {
         id: flickable
@@ -59,7 +59,7 @@ Rectangle {
         boundsBehavior: Flickable.StopAtBounds
 
         function scrollToBottom() {
-            contentY = Math.max(0, contentHeight - height)
+            contentY = Math.max(0, contentHeight - height);
         }
 
         Column {
@@ -109,41 +109,41 @@ Rectangle {
 
                 onAccepted: {
                     if (text.trim() !== "") {
-                        history.push(text)
-                        historyIndex = history.length
-                        commandEntered(text)
+                        history.push(text);
+                        historyIndex = history.length;
+                        commandEntered(text);
                     }
-                    text = ""
-                    flickable.scrollToBottom()
+                    text = "";
+                    flickable.scrollToBottom();
                 }
 
                 Keys.onUpPressed: {
                     if (historyIndex > 0) {
-                        historyIndex--
-                        text = history[historyIndex]
-                        cursorPosition = text.length
+                        historyIndex--;
+                        text = history[historyIndex];
+                        cursorPosition = text.length;
                     }
                 }
 
                 Keys.onDownPressed: {
                     if (historyIndex < history.length - 1) {
-                        historyIndex++
-                        text = history[historyIndex]
-                        cursorPosition = text.length
+                        historyIndex++;
+                        text = history[historyIndex];
+                        cursorPosition = text.length;
                     } else {
-                        historyIndex = history.length
-                        text = ""
+                        historyIndex = history.length;
+                        text = "";
                     }
                 }
 
-                Keys.onPressed: (event) => {
+                Keys.onPressed: event => {
                     if (event.key === Qt.Key_C && event.modifiers & Qt.ControlModifier) {
-                        interrupted()
-                        event.accepted = true
+                        interrupted();
+                        event.accepted = true;
                     }
                     if (event.key === Qt.Key_L && event.modifiers & Qt.ControlModifier) {
-                        root.clear()
-                        event.accepted = true
+                        root.clear();
+                        event.accepted = true;
                     }
                 }
             }
@@ -156,36 +156,39 @@ Rectangle {
     }
 
     function write(text, color) {
-        output.push({ text: text, color: color || termColors.foreground })
+        output.push({
+            text: text,
+            color: color || termColors.foreground
+        });
         if (output.length > maxLines) {
-            output.shift()
+            output.shift();
         }
-        outputChanged()
-        flickable.scrollToBottom()
+        outputChanged();
+        flickable.scrollToBottom();
     }
 
     function writeLine(text, color) {
-        write(text + "\n", color)
+        write(text + "\n", color);
     }
 
     function writeError(text) {
-        write(text, termColors.red)
+        write(text, termColors.red);
     }
 
     function writeSuccess(text) {
-        write(text, termColors.green)
+        write(text, termColors.green);
     }
 
     function writeWarning(text) {
-        write(text, termColors.yellow)
+        write(text, termColors.yellow);
     }
 
     function clear() {
-        output = []
+        output = [];
     }
 
     function focus() {
-        commandInput.forceActiveFocus()
+        commandInput.forceActiveFocus();
     }
 
     Component.onCompleted: focus()

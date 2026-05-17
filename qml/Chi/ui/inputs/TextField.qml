@@ -36,10 +36,10 @@ Item {
 
     property alias inputField: textInput
 
-    signal accepted()
-    signal editingFinished()
-    signal trailingIconClicked()
-    signal leadingIconClicked()
+    signal accepted
+    signal editingFinished
+    signal trailingIconClicked
+    signal leadingIconClicked
 
     readonly property bool hasLeadingIcon: leadingIcon !== ""
     readonly property bool hasTrailingIcon: trailingIcon !== "" || showPasswordToggle
@@ -58,58 +58,59 @@ Item {
     property bool _passwordVisible: false
 
     function _storeSelection() {
-        _storedSelectedText = textInput.selectedText
-        _storedSelectionStart = textInput.selectionStart
-        _storedSelectionEnd = textInput.selectionEnd
+        _storedSelectedText = textInput.selectedText;
+        _storedSelectionStart = textInput.selectionStart;
+        _storedSelectionEnd = textInput.selectionEnd;
     }
 
     function _restoreSelection() {
         if (_storedSelectionStart !== _storedSelectionEnd) {
-            textInput.select(_storedSelectionStart, _storedSelectionEnd)
+            textInput.select(_storedSelectionStart, _storedSelectionEnd);
         }
     }
 
     readonly property var sizeSpecs: ({
-        small: {
-            height: 48,
-            fontSize: 14,
-            labelFontSize: 11,
-            iconSize: 20,
-            horizontalPadding: 12,
-            roundedHorizontalPadding: 16,
-            iconPadding: 8,
-            labelTopPadding: 6,
-            inputTopPadding: 20
-        },
-        medium: {
-            height: 56,
-            fontSize: 16,
-            labelFontSize: 12,
-            iconSize: 24,
-            horizontalPadding: 16,
-            roundedHorizontalPadding: 20,
-            iconPadding: 12,
-            labelTopPadding: 8,
-            inputTopPadding: 24
-        },
-        large: {
-            height: 64,
-            fontSize: 18,
-            labelFontSize: 12,
-            iconSize: 28,
-            horizontalPadding: 20,
-            roundedHorizontalPadding: 24,
-            iconPadding: 16,
-            labelTopPadding: 10,
-            inputTopPadding: 28
-        }
-    })
+            small: {
+                height: 48,
+                fontSize: 14,
+                labelFontSize: 11,
+                iconSize: 20,
+                horizontalPadding: 12,
+                roundedHorizontalPadding: 16,
+                iconPadding: 8,
+                labelTopPadding: 6,
+                inputTopPadding: 20
+            },
+            medium: {
+                height: 56,
+                fontSize: 16,
+                labelFontSize: 12,
+                iconSize: 24,
+                horizontalPadding: 16,
+                roundedHorizontalPadding: 20,
+                iconPadding: 12,
+                labelTopPadding: 8,
+                inputTopPadding: 24
+            },
+            large: {
+                height: 64,
+                fontSize: 18,
+                labelFontSize: 12,
+                iconSize: 28,
+                horizontalPadding: 20,
+                roundedHorizontalPadding: 24,
+                iconPadding: 16,
+                labelTopPadding: 10,
+                inputTopPadding: 28
+            }
+        })
 
     readonly property var currentSize: sizeSpecs[size] || sizeSpecs.medium
     readonly property real effectivePadding: isRounded ? currentSize.roundedHorizontalPadding : currentSize.horizontalPadding
     readonly property real containerRadius: {
-        if (isRounded) return currentSize.height / 2
-        return 4
+        if (isRounded)
+            return currentSize.height / 2;
+        return 4;
     }
 
     implicitWidth: 280
@@ -118,7 +119,10 @@ Item {
     opacity: enabled ? 1.0 : 0.38
 
     Behavior on opacity {
-        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+        NumberAnimation {
+            duration: 150
+            easing.type: Easing.OutCubic
+        }
     }
 
     property var colors: Theme.ChiTheme.colors
@@ -138,28 +142,28 @@ Item {
 
     function _performCut() {
         if (_storedSelectedText.length > 0) {
-            _clipboardHelper.text = _storedSelectedText
-            _clipboardHelper.selectAll()
-            _clipboardHelper.cut()
+            _clipboardHelper.text = _storedSelectedText;
+            _clipboardHelper.selectAll();
+            _clipboardHelper.cut();
 
-            var before = root.text.substring(0, _storedSelectionStart)
-            var after = root.text.substring(_storedSelectionEnd)
-            root.text = before + after
-            textInput.text = root.text
+            var before = root.text.substring(0, _storedSelectionStart);
+            var after = root.text.substring(_storedSelectionEnd);
+            root.text = before + after;
+            textInput.text = root.text;
 
-            textInput.forceActiveFocus()
-            textInput.cursorPosition = _storedSelectionStart
+            textInput.forceActiveFocus();
+            textInput.cursorPosition = _storedSelectionStart;
         }
     }
 
     function _performCopy() {
         if (_storedSelectedText.length > 0) {
-            _clipboardHelper.text = _storedSelectedText
-            _clipboardHelper.selectAll()
-            _clipboardHelper.copy()
+            _clipboardHelper.text = _storedSelectedText;
+            _clipboardHelper.selectAll();
+            _clipboardHelper.copy();
 
-            textInput.forceActiveFocus()
-            _restoreSelection()
+            textInput.forceActiveFocus();
+            _restoreSelection();
         }
     }
 
@@ -171,10 +175,10 @@ Item {
 
         onOpenChanged: {
             if (!open && _storedSelectionStart !== _storedSelectionEnd) {
-                Qt.callLater(function() {
-                    textInput.forceActiveFocus()
-                    root._restoreSelection()
-                })
+                Qt.callLater(function () {
+                    textInput.forceActiveFocus();
+                    root._restoreSelection();
+                });
             }
         }
 
@@ -203,9 +207,9 @@ Item {
             trailingText: "Ctrl+V"
             enabled: textInput.canPaste && root.enabled
             onClicked: {
-                textInput.forceActiveFocus()
-                root._restoreSelection()
-                textInput.paste()
+                textInput.forceActiveFocus();
+                root._restoreSelection();
+                textInput.paste();
             }
         }
 
@@ -220,8 +224,8 @@ Item {
             trailingText: "Ctrl+A"
             enabled: root.text.length > 0
             onClicked: {
-                textInput.forceActiveFocus()
-                textInput.selectAll()
+                textInput.forceActiveFocus();
+                textInput.selectAll();
             }
         }
     }
@@ -240,18 +244,26 @@ Item {
             radius: containerRadius
 
             color: {
-                if (variant === "outlined") return "transparent"
-                if (!enabled) return Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.04)
-                if (error) return Qt.rgba(colors.errorContainer.r, colors.errorContainer.g, colors.errorContainer.b, 0.15)
-                return colors.surfaceContainerHighest
+                if (variant === "outlined")
+                    return "transparent";
+                if (!enabled)
+                    return Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.04);
+                if (error)
+                    return Qt.rgba(colors.errorContainer.r, colors.errorContainer.g, colors.errorContainer.b, 0.15);
+                return colors.surfaceContainerHighest;
             }
 
             Behavior on color {
-                ColorAnimation { duration: 150 }
+                ColorAnimation {
+                    duration: 150
+                }
             }
 
             Behavior on radius {
-                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                NumberAnimation {
+                    duration: 200
+                    easing.type: Easing.OutCubic
+                }
             }
 
             // Bottom border for filled variant (not shown when rounded)
@@ -262,18 +274,26 @@ Item {
                 anchors.bottom: parent.bottom
                 height: isFocused ? 2 : 1
                 color: {
-                    if (!enabled) return colors.onSurface
-                    if (error) return colors.error
-                    if (isFocused) return colors.primary
-                    return colors.onSurfaceVariant
+                    if (!enabled)
+                        return colors.onSurface;
+                    if (error)
+                        return colors.error;
+                    if (isFocused)
+                        return colors.primary;
+                    return colors.onSurfaceVariant;
                 }
                 opacity: enabled ? 1 : 0.38
 
                 Behavior on height {
-                    NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+                    NumberAnimation {
+                        duration: 100
+                        easing.type: Easing.OutCubic
+                    }
                 }
                 Behavior on color {
-                    ColorAnimation { duration: 150 }
+                    ColorAnimation {
+                        duration: 150
+                    }
                 }
             }
 
@@ -285,17 +305,24 @@ Item {
                 color: "transparent"
                 border.width: isFocused ? 2 : 1
                 border.color: {
-                    if (!enabled) return colors.outline
-                    if (error) return colors.error
-                    if (isFocused) return colors.primary
-                    return colors.outline
+                    if (!enabled)
+                        return colors.outline;
+                    if (error)
+                        return colors.error;
+                    if (isFocused)
+                        return colors.primary;
+                    return colors.outline;
                 }
 
                 Behavior on border.width {
-                    NumberAnimation { duration: 100 }
+                    NumberAnimation {
+                        duration: 100
+                    }
                 }
                 Behavior on border.color {
-                    ColorAnimation { duration: 150 }
+                    ColorAnimation {
+                        duration: 150
+                    }
                 }
             }
 
@@ -309,7 +336,9 @@ Item {
                 z: 0
 
                 Behavior on opacity {
-                    NumberAnimation { duration: 150 }
+                    NumberAnimation {
+                        duration: 150
+                    }
                 }
             }
 
@@ -327,36 +356,51 @@ Item {
                 font.weight: Font.Normal
 
                 color: {
-                    if (!enabled) return colors.onSurface
-                    if (error) return colors.error
-                    if (isFocused) return colors.primary
-                    return colors.onSurfaceVariant
+                    if (!enabled)
+                        return colors.onSurface;
+                    if (error)
+                        return colors.error;
+                    if (isFocused)
+                        return colors.primary;
+                    return colors.onSurfaceVariant;
                 }
 
                 x: {
-                    var base = effectivePadding
-                    if (hasLeadingIcon) base += currentSize.iconSize + currentSize.iconPadding
-                    return base
+                    var base = effectivePadding;
+                    if (hasLeadingIcon)
+                        base += currentSize.iconSize + currentSize.iconPadding;
+                    return base;
                 }
 
                 y: {
                     if (labelFloated) {
-                        return variant === "filled" ? currentSize.labelTopPadding : -height / 2
+                        return variant === "filled" ? currentSize.labelTopPadding : -height / 2;
                     }
-                    return (container.height - height) / 2
+                    return (container.height - height) / 2;
                 }
 
                 Behavior on x {
-                    NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    NumberAnimation {
+                        duration: 150
+                        easing.type: Easing.OutCubic
+                    }
                 }
                 Behavior on y {
-                    NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    NumberAnimation {
+                        duration: 150
+                        easing.type: Easing.OutCubic
+                    }
                 }
                 Behavior on font.pixelSize {
-                    NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    NumberAnimation {
+                        duration: 150
+                        easing.type: Easing.OutCubic
+                    }
                 }
                 Behavior on color {
-                    ColorAnimation { duration: 150 }
+                    ColorAnimation {
+                        duration: 150
+                    }
                 }
 
                 // Background for outlined variant label
@@ -369,7 +413,9 @@ Item {
                     z: -1
 
                     Behavior on color {
-                        ColorAnimation { duration: 150 }
+                        ColorAnimation {
+                            duration: 150
+                        }
                     }
                 }
             }
@@ -393,7 +439,9 @@ Item {
                     color: error ? colors.error : colors.onSurfaceVariant
 
                     Behavior on color {
-                        ColorAnimation { duration: 150 }
+                        ColorAnimation {
+                            duration: 150
+                        }
                     }
                 }
 
@@ -433,7 +481,7 @@ Item {
 
                     onContainsMouseChanged: {
                         if (enabled && !isFocused) {
-                            hoverLayer.opacity = containsMouse ? 0.08 : 0
+                            hoverLayer.opacity = containsMouse ? 0.08 : 0;
                         }
                     }
                 }
@@ -453,8 +501,9 @@ Item {
                     enabled: root.enabled && !root.readOnly
                     readOnly: root.readOnly
                     echoMode: {
-                        if (!password) return TextInput.Normal
-                        return _passwordVisible ? TextInput.Normal : TextInput.Password
+                        if (!password)
+                            return TextInput.Normal;
+                        return _passwordVisible ? TextInput.Normal : TextInput.Password;
                     }
                     maximumLength: maxLength > 0 ? maxLength : 32767
                     inputMethodHints: root.inputMethodHints
@@ -469,12 +518,14 @@ Item {
 
                     onActiveFocusChanged: {
                         if (activeFocus) {
-                            hoverLayer.opacity = 0
+                            hoverLayer.opacity = 0;
                         }
                     }
 
                     Behavior on color {
-                        ColorAnimation { duration: 150 }
+                        ColorAnimation {
+                            duration: 150
+                        }
                     }
 
                     // Placeholder (always shown when rounded OR when no label)
@@ -488,7 +539,9 @@ Item {
                         elide: Text.ElideRight
 
                         Behavior on color {
-                            ColorAnimation { duration: 150 }
+                            ColorAnimation {
+                                duration: 150
+                            }
                         }
                     }
                 }
@@ -499,10 +552,10 @@ Item {
                     acceptedButtons: Qt.RightButton
                     cursorShape: Qt.IBeamCursor
 
-                    onClicked: function(mouse) {
+                    onClicked: function (mouse) {
                         if (mouse.button === Qt.RightButton && root.enableContextMenu) {
-                            root._storeSelection()
-                            contextMenu.popup(mouse.x, mouse.y)
+                            root._storeSelection();
+                            contextMenu.popup(mouse.x, mouse.y);
                         }
                     }
                 }
@@ -532,7 +585,9 @@ Item {
                     z: -1
 
                     Behavior on opacity {
-                        NumberAnimation { duration: 100 }
+                        NumberAnimation {
+                            duration: 100
+                        }
                     }
                 }
 
@@ -540,15 +595,17 @@ Item {
                     anchors.centerIn: parent
                     source: {
                         if (showPasswordToggle && password) {
-                            return _passwordVisible ? "visibility_off" : "visibility"
+                            return _passwordVisible ? "visibility_off" : "visibility";
                         }
-                        return trailingIcon
+                        return trailingIcon;
                     }
                     size: currentSize.iconSize
                     color: error ? colors.error : colors.onSurfaceVariant
 
                     Behavior on color {
-                        ColorAnimation { duration: 150 }
+                        ColorAnimation {
+                            duration: 150
+                        }
                     }
                 }
 
@@ -564,9 +621,9 @@ Item {
 
                     onClicked: {
                         if (showPasswordToggle && password) {
-                            _passwordVisible = !_passwordVisible
+                            _passwordVisible = !_passwordVisible;
                         } else {
-                            root.trailingIconClicked()
+                            root.trailingIconClicked();
                         }
                     }
                 }
@@ -581,19 +638,23 @@ Item {
 
                 onContainsMouseChanged: {
                     if (enabled && !isFocused) {
-                        hoverLayer.opacity = containsMouse ? 0.08 : 0
+                        hoverLayer.opacity = containsMouse ? 0.08 : 0;
                     }
                 }
 
-                onClicked: function(mouse) {
-                    textInput.forceActiveFocus()
-                    var pos = textInput.mapFromItem(this, mouse.x, mouse.y)
-                    textInput.cursorPosition = textInput.positionAt(pos.x, pos.y)
-                    mouse.accepted = false
+                onClicked: function (mouse) {
+                    textInput.forceActiveFocus();
+                    var pos = textInput.mapFromItem(this, mouse.x, mouse.y);
+                    textInput.cursorPosition = textInput.positionAt(pos.x, pos.y);
+                    mouse.accepted = false;
                 }
 
-                onPressed: function(mouse) { mouse.accepted = false }
-                onReleased: function(mouse) { mouse.accepted = false }
+                onPressed: function (mouse) {
+                    mouse.accepted = false;
+                }
+                onReleased: function (mouse) {
+                    mouse.accepted = false;
+                }
             }
         }
 
@@ -616,7 +677,9 @@ Item {
                 wrapMode: Text.WordWrap
 
                 Behavior on color {
-                    ColorAnimation { duration: 150 }
+                    ColorAnimation {
+                        duration: 150
+                    }
                 }
             }
 
@@ -633,14 +696,18 @@ Item {
                 font.family: fontFamily
                 font.pixelSize: 12
                 color: {
-                    if (error) return colors.error
-                    if (maxLength > 0 && textInput.text.length >= maxLength) return colors.error
-                    return colors.onSurfaceVariant
+                    if (error)
+                        return colors.error;
+                    if (maxLength > 0 && textInput.text.length >= maxLength)
+                        return colors.error;
+                    return colors.onSurfaceVariant;
                 }
                 horizontalAlignment: Text.AlignRight
 
                 Behavior on color {
-                    ColorAnimation { duration: 150 }
+                    ColorAnimation {
+                        duration: 150
+                    }
                 }
             }
         }
@@ -649,25 +716,25 @@ Item {
     // ═══════════════════════════════════════════════════════════════════
     // KEYBOARD SHORTCUTS
     // ═══════════════════════════════════════════════════════════════════
-    Keys.onPressed: function(event) {
+    Keys.onPressed: function (event) {
         if (event.key === Qt.Key_A && (event.modifiers & Qt.ControlModifier)) {
-            textInput.selectAll()
-            event.accepted = true
+            textInput.selectAll();
+            event.accepted = true;
         } else if (event.key === Qt.Key_C && (event.modifiers & Qt.ControlModifier)) {
             if (textInput.selectedText.length > 0) {
-                _storedSelectedText = textInput.selectedText
-                _storedSelectionStart = textInput.selectionStart
-                _storedSelectionEnd = textInput.selectionEnd
-                _performCopy()
-                event.accepted = true
+                _storedSelectedText = textInput.selectedText;
+                _storedSelectionStart = textInput.selectionStart;
+                _storedSelectionEnd = textInput.selectionEnd;
+                _performCopy();
+                event.accepted = true;
             }
         } else if (event.key === Qt.Key_X && (event.modifiers & Qt.ControlModifier)) {
             if (textInput.selectedText.length > 0 && !readOnly) {
-                _storedSelectedText = textInput.selectedText
-                _storedSelectionStart = textInput.selectionStart
-                _storedSelectionEnd = textInput.selectionEnd
-                _performCut()
-                event.accepted = true
+                _storedSelectedText = textInput.selectedText;
+                _storedSelectionStart = textInput.selectionStart;
+                _storedSelectionEnd = textInput.selectionEnd;
+                _performCut();
+                event.accepted = true;
             }
         }
     }
@@ -676,28 +743,28 @@ Item {
     // PUBLIC FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════
     function clear() {
-        textInput.clear()
-        root.text = ""
+        textInput.clear();
+        root.text = "";
     }
 
     function selectAll() {
-        textInput.selectAll()
+        textInput.selectAll();
     }
 
     function forceActiveFocus() {
-        textInput.forceActiveFocus()
+        textInput.forceActiveFocus();
     }
 
     function deselect() {
-        textInput.deselect()
+        textInput.deselect();
     }
 
     function select(start, end) {
-        textInput.select(start, end)
+        textInput.select(start, end);
     }
 
     function positionAt(x, y) {
-        return textInput.positionAt(x, y)
+        return textInput.positionAt(x, y);
     }
 
     // ═══════════════════════════════════════════════════════════════════

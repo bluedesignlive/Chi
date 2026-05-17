@@ -59,7 +59,9 @@ Item {
                 color: isSelected ? colors.primaryContainer : "transparent"
 
                 Behavior on color {
-                    ColorAnimation { duration: 150 }
+                    ColorAnimation {
+                        duration: 150
+                    }
                 }
 
                 Rectangle {
@@ -89,7 +91,9 @@ Item {
                             rotation: nodeColumn.nodeData.expanded ? 0 : 0
 
                             Behavior on color {
-                                ColorAnimation { duration: 150 }
+                                ColorAnimation {
+                                    duration: 150
+                                }
                             }
                         }
 
@@ -98,9 +102,9 @@ Item {
                             anchors.margins: -4
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                nodeColumn.nodeData.expanded = !nodeColumn.nodeData.expanded
-                                itemToggled(nodeColumn.nodeData, nodeColumn.nodeData.expanded)
-                                root.modelChanged()
+                                nodeColumn.nodeData.expanded = !nodeColumn.nodeData.expanded;
+                                itemToggled(nodeColumn.nodeData, nodeColumn.nodeData.expanded);
+                                root.modelChanged();
                             }
                         }
                     }
@@ -131,7 +135,9 @@ Item {
                         Layout.alignment: Qt.AlignVCenter
 
                         Behavior on color {
-                            ColorAnimation { duration: 150 }
+                            ColorAnimation {
+                                duration: 150
+                            }
                         }
                     }
 
@@ -163,23 +169,23 @@ Item {
 
                     onClicked: {
                         if (multiSelect) {
-                            var indices = selectedIndices.slice()
-                            var idx = indices.indexOf(index)
+                            var indices = selectedIndices.slice();
+                            var idx = indices.indexOf(index);
                             if (idx !== -1) {
-                                indices.splice(idx, 1)
+                                indices.splice(idx, 1);
                             } else {
-                                indices.push(index)
+                                indices.push(index);
                             }
-                            selectedIndices = indices
+                            selectedIndices = indices;
                         } else {
-                            selectedIndex = index
-                            selectedItem = nodeColumn.nodeData
+                            selectedIndex = index;
+                            selectedItem = nodeColumn.nodeData;
                         }
-                        itemClicked(nodeColumn.nodeData, index, nodeColumn.nodePath)
+                        itemClicked(nodeColumn.nodeData, index, nodeColumn.nodePath);
                     }
 
                     onDoubleClicked: {
-                        itemDoubleClicked(nodeColumn.nodeData, index)
+                        itemDoubleClicked(nodeColumn.nodeData, index);
                     }
                 }
             }
@@ -197,9 +203,9 @@ Item {
                         sourceComponent: treeDelegate
 
                         onLoaded: {
-                            item.nodeData = modelData
-                            item.nodeDepth = nodeColumn.nodeDepth + 1
-                            item.nodePath = nodeColumn.nodePath.concat([index])
+                            item.nodeData = modelData;
+                            item.nodeDepth = nodeColumn.nodeDepth + 1;
+                            item.nodePath = nodeColumn.nodePath.concat([index]);
                         }
                     }
                 }
@@ -211,26 +217,26 @@ Item {
         function expand(items) {
             for (var i = 0; i < items.length; i++) {
                 if (items[i].children) {
-                    items[i].expanded = true
-                    expand(items[i].children)
+                    items[i].expanded = true;
+                    expand(items[i].children);
                 }
             }
         }
-        expand(model)
-        modelChanged()
+        expand(model);
+        modelChanged();
     }
 
     function collapseAll() {
         function collapse(items) {
             for (var i = 0; i < items.length; i++) {
                 if (items[i].children) {
-                    items[i].expanded = false
-                    collapse(items[i].children)
+                    items[i].expanded = false;
+                    collapse(items[i].children);
                 }
             }
         }
-        collapse(model)
-        modelChanged()
+        collapse(model);
+        modelChanged();
     }
 
     Accessible.role: Accessible.Tree

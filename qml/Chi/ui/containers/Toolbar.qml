@@ -28,7 +28,11 @@ Item {
         radius: root.isFloating ? 32 : 0
         color: root.isVibrant ? colors.primaryContainer : colors.surfaceContainer
 
-        Behavior on color { ColorAnimation { duration: 200 } }
+        Behavior on color {
+            ColorAnimation {
+                duration: 200
+            }
+        }
 
         layer.enabled: root.isFloating
         layer.effect: MultiEffect {
@@ -69,8 +73,8 @@ Item {
                         width: 48
                         height: 48
                         visible: {
-                            var c = itemsContainer.children[index]
-                            return c ? c.visible : false
+                            var c = itemsContainer.children[index];
+                            return c ? c.visible : false;
                         }
                         Loader {
                             anchors.fill: parent
@@ -84,38 +88,45 @@ Item {
 
     onTypeChanged: _updateItems()
     onEnabledChanged: _updateItems()
-    Component.onCompleted: { _updateItems(); _relayout() }
+    Component.onCompleted: {
+        _updateItems();
+        _relayout();
+    }
     onItemsChanged: _relayout()
 
     function _updateItems() {
-        var c = itemsContainer.children
-        var n = c.length
-        var t = type
-        var e = root.enabled
+        var c = itemsContainer.children;
+        var n = c.length;
+        var t = type;
+        var e = root.enabled;
         for (var i = 0; i < n; ++i) {
-            var item = c[i]
+            var item = c[i];
             if (item.hasOwnProperty("toolbarType"))
-                item.toolbarType = t
+                item.toolbarType = t;
             if (item.hasOwnProperty("enabled"))
-                item.enabled = Qt.binding(function() { return root.enabled })
+                item.enabled = Qt.binding(function () {
+                    return root.enabled;
+                });
         }
     }
 
     function _relayout() {
-        var c = itemsContainer.children
-        var n = c.length
-        var horiz = isHorizontal
-        var sp = horiz ? _spacing : 4
-        var offset = 0
+        var c = itemsContainer.children;
+        var n = c.length;
+        var horiz = isHorizontal;
+        var sp = horiz ? _spacing : 4;
+        var offset = 0;
         for (var i = 0; i < n; ++i) {
-            var item = c[i]
+            var item = c[i];
             if (item.visible) {
                 if (horiz) {
-                    item.x = offset; item.y = 0
-                    offset += item.width + sp
+                    item.x = offset;
+                    item.y = 0;
+                    offset += item.width + sp;
                 } else {
-                    item.x = 0; item.y = offset
-                    offset += item.height + sp
+                    item.x = 0;
+                    item.y = offset;
+                    offset += item.height + sp;
                 }
             }
         }

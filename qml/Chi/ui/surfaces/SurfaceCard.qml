@@ -15,7 +15,7 @@ Item {
     property int radius: 12                  // Corner radius
 
     default property alias content: container.children
-    signal clicked()
+    signal clicked
 
     // ─── Theme Tokens ───────────────────────────────────────────
     readonly property var colors: Theme.ChiTheme.colors
@@ -33,33 +33,46 @@ Item {
         clip: true
 
         color: {
-            switch(variant) {
-                case "filled": return colors.surfaceContainerHighest
-                case "elevated": return colors.surfaceContainerLow
-                case "outlined": return colors.surface
-                default: return colors.surface
+            switch (variant) {
+            case "filled":
+                return colors.surfaceContainerHighest;
+            case "elevated":
+                return colors.surfaceContainerLow;
+            case "outlined":
+                return colors.surface;
+            default:
+                return colors.surface;
             }
         }
 
         border.width: variant === "outlined" ? 1 : 0
         border.color: colors.outlineVariant
 
-        Behavior on color { ColorAnimation { duration: motion.durationMedium } }
+        Behavior on color {
+            ColorAnimation {
+                duration: motion.durationMedium
+            }
+        }
 
         // State Layer (Hover/Press overlay)
         Rectangle {
             anchors.fill: parent
             color: colors.onSurface
             opacity: {
-                if (!interactive) return 0
-                if (mouseArea.pressed) return 0.12
-                if (mouseArea.containsMouse) return 0.08
-                return 0
+                if (!interactive)
+                    return 0;
+                if (mouseArea.pressed)
+                    return 0.12;
+                if (mouseArea.containsMouse)
+                    return 0.08;
+                return 0;
             }
             visible: interactive
 
             Behavior on opacity {
-                NumberAnimation { duration: motion.durationFast }
+                NumberAnimation {
+                    duration: motion.durationFast
+                }
             }
         }
 

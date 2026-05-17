@@ -14,15 +14,15 @@ Item {
     property int maxVisible: 8
 
     signal commandSelected(var command)
-    signal closed()
+    signal closed
 
     readonly property var filteredCommands: {
-        if (searchText === "") return commands
-        var s = searchText.toLowerCase()
-        return commands.filter(function(cmd) {
-            return cmd.label.toLowerCase().indexOf(s) !== -1 ||
-                   (cmd.category && cmd.category.toLowerCase().indexOf(s) !== -1)
-        })
+        if (searchText === "")
+            return commands;
+        var s = searchText.toLowerCase();
+        return commands.filter(function (cmd) {
+            return cmd.label.toLowerCase().indexOf(s) !== -1 || (cmd.category && cmd.category.toLowerCase().indexOf(s) !== -1);
+        });
     }
 
     anchors.fill: parent
@@ -65,7 +65,10 @@ Item {
         color: colors.surfaceContainerHigh
         clip: true
 
-        transform: Scale { origin.x: palette.width / 2; origin.y: 0 }
+        transform: Scale {
+            origin.x: palette.width / 2
+            origin.y: 0
+        }
 
         scale: root.open ? 1 : 0.92
         opacity: root.open ? 1 : 0
@@ -139,16 +142,22 @@ Item {
                         selectedTextColor: colors.onPrimaryContainer
 
                         onTextChanged: {
-                            root.searchText = text
-                            root.selectedIndex = 0
+                            root.searchText = text;
+                            root.selectedIndex = 0;
                         }
 
-                        Keys.onUpPressed: { if (root.selectedIndex > 0) root.selectedIndex-- }
-                        Keys.onDownPressed: { if (root.selectedIndex < root.filteredCommands.length - 1) root.selectedIndex++ }
+                        Keys.onUpPressed: {
+                            if (root.selectedIndex > 0)
+                                root.selectedIndex--;
+                        }
+                        Keys.onDownPressed: {
+                            if (root.selectedIndex < root.filteredCommands.length - 1)
+                                root.selectedIndex++;
+                        }
                         Keys.onReturnPressed: {
                             if (root.filteredCommands.length > 0) {
-                                root.commandSelected(root.filteredCommands[root.selectedIndex])
-                                root.close()
+                                root.commandSelected(root.filteredCommands[root.selectedIndex]);
+                                root.close();
                             }
                         }
                         Keys.onEscapePressed: root.close()
@@ -176,7 +185,10 @@ Item {
                             anchors.fill: parent
                             anchors.margins: -8
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: { searchInput.clear(); searchInput.forceActiveFocus() }
+                            onClicked: {
+                                searchInput.clear();
+                                searchInput.forceActiveFocus();
+                            }
                         }
                     }
                 }
@@ -267,13 +279,13 @@ Item {
                                         elide: Text.ElideRight
                                         Layout.fillWidth: true
                                         Behavior on color {
-                                        enabled: Theme.ChiMotion.animationsEnabled
-                                        ColorAnimation {
-                                            duration: Theme.ChiMotion.colorChange.duration
-                                            easing.type: Easing.Bezier
-                                            easing.bezierCurve: Theme.ChiMotion.colorChange.curve
+                                            enabled: Theme.ChiMotion.animationsEnabled
+                                            ColorAnimation {
+                                                duration: Theme.ChiMotion.colorChange.duration
+                                                easing.type: Easing.Bezier
+                                                easing.bezierCurve: Theme.ChiMotion.colorChange.curve
+                                            }
                                         }
-                                    }
                                     }
 
                                     Text {
@@ -311,7 +323,10 @@ Item {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: { root.commandSelected(modelData); root.close() }
+                                onClicked: {
+                                    root.commandSelected(modelData);
+                                    root.close();
+                                }
                                 onEntered: root.selectedIndex = index
                             }
                         }
@@ -364,7 +379,9 @@ Item {
                         font.pixelSize: _typo.bodySmall.size
                         color: colors.onSurfaceVariant
                     }
-                    Item { Layout.fillWidth: true }
+                    Item {
+                        Layout.fillWidth: true
+                    }
                 }
             }
         }
@@ -372,15 +389,25 @@ Item {
 
     onOpenChanged: {
         if (open) {
-            searchInput.clear()
-            selectedIndex = 0
-            searchInput.forceActiveFocus()
+            searchInput.clear();
+            selectedIndex = 0;
+            searchInput.forceActiveFocus();
         }
     }
 
-    function show() { open = true }
-    function close() { open = false; closed() }
-    function toggle() { if (open) close(); else show() }
+    function show() {
+        open = true;
+    }
+    function close() {
+        open = false;
+        closed();
+    }
+    function toggle() {
+        if (open)
+            close();
+        else
+            show();
+    }
 
     Accessible.role: Accessible.Dialog
     Accessible.name: "Command palette"

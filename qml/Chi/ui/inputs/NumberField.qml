@@ -16,13 +16,31 @@ Item {
     property bool wrap: false
     property string size: "medium"
 
-    signal valueModified()
+    signal valueModified
 
     readonly property var sizeSpecs: ({
-        small: { height: 32, width: 100, fontSize: 13, buttonSize: 28, iconSize: 16 },
-        medium: { height: 40, width: 120, fontSize: 14, buttonSize: 36, iconSize: 20 },
-        large: { height: 48, width: 140, fontSize: 16, buttonSize: 44, iconSize: 24 }
-    })
+            small: {
+                height: 32,
+                width: 100,
+                fontSize: 13,
+                buttonSize: 28,
+                iconSize: 16
+            },
+            medium: {
+                height: 40,
+                width: 120,
+                fontSize: 14,
+                buttonSize: 36,
+                iconSize: 20
+            },
+            large: {
+                height: 48,
+                width: 140,
+                fontSize: 16,
+                buttonSize: 44,
+                iconSize: 24
+            }
+        })
 
     readonly property var currentSize: sizeSpecs[size] || sizeSpecs.medium
 
@@ -43,7 +61,9 @@ Item {
         border.color: colors.outline
 
         Behavior on color {
-            ColorAnimation { duration: 200 }
+            ColorAnimation {
+                duration: 200
+            }
         }
 
         RowLayout {
@@ -63,7 +83,9 @@ Item {
                     opacity: decMouse.containsMouse && root.enabled && (root.value > root.from || root.wrap) ? 0.08 : 0
 
                     Behavior on opacity {
-                        NumberAnimation { duration: 100 }
+                        NumberAnimation {
+                            duration: 100
+                        }
                     }
                 }
 
@@ -75,7 +97,9 @@ Item {
                     opacity: root.value <= root.from && !root.wrap ? 0.5 : 1
 
                     Behavior on opacity {
-                        NumberAnimation { duration: 150 }
+                        NumberAnimation {
+                            duration: 150
+                        }
                     }
                 }
 
@@ -128,16 +152,20 @@ Item {
                     }
 
                     onEditingFinished: {
-                        var newVal = parseFloat(text)
+                        var newVal = parseFloat(text);
                         if (!isNaN(newVal)) {
-                            root.value = Math.max(root.from, Math.min(root.to, newVal))
-                            root.valueModified()
+                            root.value = Math.max(root.from, Math.min(root.to, newVal));
+                            root.valueModified();
                         }
-                        text = Qt.binding(function() { return root.value.toFixed(root.decimals) })
+                        text = Qt.binding(function () {
+                            return root.value.toFixed(root.decimals);
+                        });
                     }
 
                     Behavior on color {
-                        ColorAnimation { duration: 200 }
+                        ColorAnimation {
+                            duration: 200
+                        }
                     }
                 }
             }
@@ -155,7 +183,9 @@ Item {
                     opacity: incMouse.containsMouse && root.enabled && (root.value < root.to || root.wrap) ? 0.08 : 0
 
                     Behavior on opacity {
-                        NumberAnimation { duration: 100 }
+                        NumberAnimation {
+                            duration: 100
+                        }
                     }
                 }
 
@@ -167,7 +197,9 @@ Item {
                     opacity: root.value >= root.to && !root.wrap ? 0.5 : 1
 
                     Behavior on opacity {
-                        NumberAnimation { duration: 150 }
+                        NumberAnimation {
+                            duration: 150
+                        }
                     }
                 }
 
@@ -195,24 +227,28 @@ Item {
 
     function increase() {
         if (value + stepSize > to) {
-            if (wrap) value = from
+            if (wrap)
+                value = from;
         } else {
-            value += stepSize
+            value += stepSize;
         }
-        valueModified()
+        valueModified();
     }
 
     function decrease() {
         if (value - stepSize < from) {
-            if (wrap) value = to
+            if (wrap)
+                value = to;
         } else {
-            value -= stepSize
+            value -= stepSize;
         }
-        valueModified()
+        valueModified();
     }
 
-    Keys.onUpPressed: if (enabled) increase()
-    Keys.onDownPressed: if (enabled) decrease()
+    Keys.onUpPressed: if (enabled)
+        increase()
+    Keys.onDownPressed: if (enabled)
+        decrease()
 
     Accessible.role: Accessible.SpinBox
     Accessible.name: "Number input"

@@ -45,11 +45,11 @@ Popup {
                 required property var modelData
                 required property int index
 
-                readonly property string itemId:       modelData.id || ""
-                readonly property string itemText:     modelData.text || ""
-                readonly property string itemIcon:     modelData.icon || ""
+                readonly property string itemId: modelData.id || ""
+                readonly property string itemText: modelData.text || ""
+                readonly property string itemIcon: modelData.icon || ""
                 readonly property string itemShortcut: modelData.shortcut || ""
-                readonly property bool   isDivider:    modelData.type === "divider"
+                readonly property bool isDivider: modelData.type === "divider"
 
                 // Divider
                 Rectangle {
@@ -66,10 +66,7 @@ Popup {
                     anchors.fill: parent
                     anchors.margins: 2
                     radius: Theme.SmartTheme.shape.medium
-                    color: dropdownItemMouse.containsMouse
-                        ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b,
-                                   Theme.SmartTheme.stateLayer.hover)
-                        : "transparent"
+                    color: dropdownItemMouse.containsMouse ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, Theme.SmartTheme.stateLayer.hover) : "transparent"
 
                     Row {
                         anchors.left: parent.left
@@ -110,8 +107,8 @@ Popup {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            root.itemClicked(itemId)
-                            root.close()
+                            root.itemClicked(itemId);
+                            root.close();
                         }
                     }
                 }

@@ -12,14 +12,29 @@ Item {
     property bool removable: false
     property bool enabled: true
 
-    signal clicked()
-    signal removed()
+    signal clicked
+    signal removed
 
     readonly property var sizeSpecs: ({
-        small: { height: 20, fontSize: 11, iconSize: 12, padding: 6 },
-        medium: { height: 24, fontSize: 12, iconSize: 14, padding: 8 },
-        large: { height: 32, fontSize: 14, iconSize: 18, padding: 12 }
-    })
+            small: {
+                height: 20,
+                fontSize: 11,
+                iconSize: 12,
+                padding: 6
+            },
+            medium: {
+                height: 24,
+                fontSize: 12,
+                iconSize: 14,
+                padding: 8
+            },
+            large: {
+                height: 32,
+                fontSize: 14,
+                iconSize: 18,
+                padding: 12
+            }
+        })
 
     readonly property var currentSize: sizeSpecs[size] || sizeSpecs.medium
 
@@ -37,7 +52,9 @@ Item {
         color: backgroundColor
 
         Behavior on color {
-            ColorAnimation { duration: 150 }
+            ColorAnimation {
+                duration: 150
+            }
         }
 
         Row {
@@ -62,7 +79,9 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
 
                 Behavior on color {
-                    ColorAnimation { duration: 150 }
+                    ColorAnimation {
+                        duration: 150
+                    }
                 }
             }
 

@@ -21,15 +21,16 @@ Item {
 
     onSearchingChanged: {
         if (searching) {
-            input.text = ""
-            input.forceActiveFocus()
+            input.text = "";
+            input.forceActiveFocus();
         } else {
-            input.text = root.path
+            input.text = root.path;
         }
     }
 
     onPathChanged: {
-        if (!searching) input.text = path
+        if (!searching)
+            input.text = path;
     }
 
     Rectangle {
@@ -38,7 +39,11 @@ Item {
         color: colors.surfaceContainerHighest
         border.width: root.searching ? 1.5 : 0
         border.color: colors.primary
-        Behavior on border.width { NumberAnimation { duration: 150 } }
+        Behavior on border.width {
+            NumberAnimation {
+                duration: 150
+            }
+        }
 
         Icon {
             id: leadingIcon
@@ -67,11 +72,13 @@ Item {
             clip: true
 
             onAccepted: {
-                if (!root.searching) root.pathAccepted(text)
+                if (!root.searching)
+                    root.pathAccepted(text);
             }
 
             Keys.onEscapePressed: {
-                if (root.searching) root.searchToggled(false)
+                if (root.searching)
+                    root.searchToggled(false);
             }
 
             Text {
@@ -88,11 +95,14 @@ Item {
             anchors.right: parent.right
             anchors.rightMargin: 4
             anchors.verticalCenter: parent.verticalCenter
-            width: 28; height: 28; radius: 6
+            width: 28
+            height: 28
+            radius: 6
             color: "transparent"
 
             Rectangle {
-                anchors.fill: parent; radius: parent.radius
+                anchors.fill: parent
+                radius: parent.radius
                 color: colors.onSurface
                 opacity: trailingMouse.pressed ? 0.12 : trailingMouse.containsMouse ? 0.08 : 0
             }
@@ -111,10 +121,10 @@ Item {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
                     if (root.searching && input.text.length > 0) {
-                        input.text = ""
-                        input.forceActiveFocus()
+                        input.text = "";
+                        input.forceActiveFocus();
                     } else {
-                        root.searchToggled(!root.searching)
+                        root.searchToggled(!root.searching);
                     }
                 }
             }

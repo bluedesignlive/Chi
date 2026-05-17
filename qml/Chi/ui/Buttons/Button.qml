@@ -77,8 +77,7 @@ Item {
         return colors.primary
     }
 
-    readonly property bool needsShadow: enabled
-        && (isElevated || (isFilled && root.state === "hovered") || (isTonal && root.state === "hovered"))
+    readonly property bool needsShadow: enabled && (isElevated || (isFilled && root.state === "hovered") || (isTonal && root.state === "hovered"))
 
     // ─── Geometry ───────────────────────────────────────────────
     implicitWidth: content.implicitWidth
@@ -88,8 +87,9 @@ Item {
 
     Behavior on opacity {
         NumberAnimation {
-            _animDur
+            duration: _animDur
             easing.type: Easing.BezierSpline
+            easing.bezierCurve: Theme.ChiMotion.easing.standard
         }
     }
 
@@ -195,14 +195,16 @@ Item {
 
         Behavior on shadowVerticalOffset {
             NumberAnimation {
-                _animDur
+                duration: _animDur
                 easing.type: Easing.BezierSpline
+                easing.bezierCurve: Theme.ChiMotion.easing.standard
             }
         }
         Behavior on shadowBlur {
             NumberAnimation {
-                _animDur
+                duration: _animDur
                 easing.type: Easing.BezierSpline
+                easing.bezierCurve: Theme.ChiMotion.easing.standard
             }
         }
     }

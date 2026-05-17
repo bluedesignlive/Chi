@@ -16,7 +16,7 @@ Item {
     property bool enabled: true
     property bool menuOpen: false
 
-    signal clicked()
+    signal clicked
 
     // ─── Theme Tokens ───────────────────────────────────────────
     readonly property var colors: Theme.ChiTheme.colors
@@ -26,19 +26,27 @@ Item {
     // ─── Variant Colors ──────────────────────────────────────────
     readonly property color _containerColor: {
         switch (variant) {
-            case "secondary": return colors.secondaryContainer
-            case "tertiary": return colors.tertiaryContainer
-            case "surface": return colors.surfaceContainerHigh
-            default: return colors.primaryContainer
+        case "secondary":
+            return colors.secondaryContainer;
+        case "tertiary":
+            return colors.tertiaryContainer;
+        case "surface":
+            return colors.surfaceContainerHigh;
+        default:
+            return colors.primaryContainer;
         }
     }
 
     readonly property color _contentColor: {
         switch (variant) {
-            case "secondary": return colors.onSecondaryContainer
-            case "tertiary": return colors.onTertiaryContainer
-            case "surface": return colors.primary
-            default: return colors.onPrimaryContainer
+        case "secondary":
+            return colors.onSecondaryContainer;
+        case "tertiary":
+            return colors.onTertiaryContainer;
+        case "surface":
+            return colors.primary;
+        default:
+            return colors.onPrimaryContainer;
         }
     }
 
@@ -48,7 +56,10 @@ Item {
 
     opacity: enabled ? 1.0 : 0.38
     Behavior on opacity {
-        NumberAnimation { duration: motion.durationMedium; easing.type: motion.easeStandard }
+        NumberAnimation {
+            duration: motion.durationMedium
+            easing.type: motion.easeStandard
+        }
     }
 
     // ─── Visual Container ───────────────────────────────────────
@@ -94,7 +105,11 @@ Item {
             size: spec.iconSize
             color: fab._contentColor
             rotation: fab.menuOpen ? 45 : 0
-            Behavior on rotation { NumberAnimation { duration: motion.durationMedium } }
+            Behavior on rotation {
+                NumberAnimation {
+                    duration: motion.durationMedium
+                }
+            }
         }
     }
 
@@ -109,11 +124,14 @@ Item {
     }
 
     // ─── Keyboard Support ───────────────────────────────────────
-    Keys.onSpacePressed:  if (enabled) activate()
-    Keys.onEnterPressed:  if (enabled) activate()
-    Keys.onReturnPressed: if (enabled) activate()
+    Keys.onSpacePressed: if (enabled)
+        activate()
+    Keys.onEnterPressed: if (enabled)
+        activate()
+    Keys.onReturnPressed: if (enabled)
+        activate()
 
     function activate() {
-        clicked()
+        clicked();
     }
 }

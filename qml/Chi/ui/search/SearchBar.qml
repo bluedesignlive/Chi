@@ -56,15 +56,15 @@ Item {
     // ═══════════════════════════════════════════════════════════════════
 
     signal search(string query)
-    signal cleared()
+    signal cleared
     signal suggestionClicked(int index, var item)
-    signal trailingIconClicked()
-    signal leadingIconClicked()
+    signal trailingIconClicked
+    signal leadingIconClicked
     signal inputFocusChanged(bool hasFocus)
-    signal cutRequested()
-    signal copyRequested()
-    signal pasteRequested()
-    signal selectAllRequested()
+    signal cutRequested
+    signal copyRequested
+    signal pasteRequested
+    signal selectAllRequested
 
     // ═══════════════════════════════════════════════════════════════════
     // READONLY PROPERTIES
@@ -85,14 +85,14 @@ Item {
     property int _storedSelectionEnd: 0
 
     function _storeSelection() {
-        _storedSelectedText = searchInput.selectedText
-        _storedSelectionStart = searchInput.selectionStart
-        _storedSelectionEnd = searchInput.selectionEnd
+        _storedSelectedText = searchInput.selectedText;
+        _storedSelectionStart = searchInput.selectionStart;
+        _storedSelectionEnd = searchInput.selectionEnd;
     }
 
     function _restoreSelection() {
         if (_storedSelectionStart !== _storedSelectionEnd)
-            searchInput.select(_storedSelectionStart, _storedSelectionEnd)
+            searchInput.select(_storedSelectionStart, _storedSelectionEnd);
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -102,10 +102,37 @@ Item {
     // ═══════════════════════════════════════════════════════════════════
 
     readonly property var _sizeSpecs: ({
-        "0": { ch: 36, hp: 10, is: 16, as: 22, isp: 10, sih: 36, typo: "bodySmall",  subTypo: "labelSmall"  },
-        "1": { ch: 44, hp: 12, is: 20, as: 26, isp: 12, sih: 40, typo: "bodyMedium", subTypo: "bodySmall"  },
-        "2": { ch: 56, hp: 16, is: 24, as: 30, isp: 16, sih: 48, typo: "bodyLarge",  subTypo: "bodyMedium" }
-    })
+            "0": {
+                ch: 36,
+                hp: 10,
+                is: 16,
+                as: 22,
+                isp: 10,
+                sih: 36,
+                typo: "bodySmall",
+                subTypo: "labelSmall"
+            },
+            "1": {
+                ch: 44,
+                hp: 12,
+                is: 20,
+                as: 26,
+                isp: 12,
+                sih: 40,
+                typo: "bodyMedium",
+                subTypo: "bodySmall"
+            },
+            "2": {
+                ch: 56,
+                hp: 16,
+                is: 24,
+                as: 30,
+                isp: 16,
+                sih: 48,
+                typo: "bodyLarge",
+                subTypo: "bodyMedium"
+            }
+        })
     readonly property var _ss: _sizeSpecs[String(size)] || _sizeSpecs["1"]
 
     // Resolved typography from the M3 scale
@@ -123,18 +150,16 @@ Item {
     readonly property real minWidth: 360
     readonly property real maxWidth: 720
 
-    readonly property real suggestionsHeight: hasSuggestions
-        ? Math.min(suggestions.length * suggestionItemHeight + 8, maxSuggestionHeight) : 0
+    readonly property real suggestionsHeight: hasSuggestions ? Math.min(suggestions.length * suggestionItemHeight + 8, maxSuggestionHeight) : 0
 
     readonly property real maxSuggestionHeight: {
         if (!docked && root.parent)
-            return root.parent.height - headerHeight
-        return root.parent ? Math.min(root.parent.height * 0.66, 400) : 400
+            return root.parent.height - headerHeight;
+        return root.parent ? Math.min(root.parent.height * 0.66, 400) : 400;
     }
 
     // Single height driver — container Behavior animates this
-    readonly property real targetHeight: containerHeight
-        + (showSuggestions ? suggestionsHeight : 0)
+    readonly property real targetHeight: containerHeight + (showSuggestions ? suggestionsHeight : 0)
 
     implicitWidth: Math.max(minWidth, Math.min(parent ? parent.width : 360, maxWidth))
     implicitHeight: containerHeight
@@ -166,10 +191,10 @@ Item {
 
         onOpenChanged: {
             if (!open && _storedSelectionStart !== _storedSelectionEnd) {
-                Qt.callLater(function() {
-                    searchInput.forceActiveFocus()
-                    root._restoreSelection()
-                })
+                Qt.callLater(function () {
+                    searchInput.forceActiveFocus();
+                    root._restoreSelection();
+                });
             }
         }
 
@@ -195,10 +220,10 @@ Item {
             leadingIcon: "content_paste"
             enabled: searchInput.canPaste && root.enabled
             onClicked: {
-                searchInput.forceActiveFocus()
-                root._restoreSelection()
-                searchInput.paste()
-                root.pasteRequested()
+                searchInput.forceActiveFocus();
+                root._restoreSelection();
+                searchInput.paste();
+                root.pasteRequested();
             }
         }
 
@@ -213,9 +238,9 @@ Item {
             enabled: root.text.length > 0
             trailingText: "Ctrl+A"
             onClicked: {
-                searchInput.forceActiveFocus()
-                searchInput.selectAll()
-                root.selectAllRequested()
+                searchInput.forceActiveFocus();
+                searchInput.selectAll();
+                root.selectAllRequested();
             }
         }
 
@@ -233,30 +258,30 @@ Item {
 
     function _performCut() {
         if (_storedSelectedText.length > 0) {
-            _clipboardHelper.text = _storedSelectedText
-            _clipboardHelper.selectAll()
-            _clipboardHelper.cut()
+            _clipboardHelper.text = _storedSelectedText;
+            _clipboardHelper.selectAll();
+            _clipboardHelper.cut();
 
-            var before = root.text.substring(0, _storedSelectionStart)
-            var after = root.text.substring(_storedSelectionEnd)
-            root.text = before + after
-            searchInput.text = root.text
+            var before = root.text.substring(0, _storedSelectionStart);
+            var after = root.text.substring(_storedSelectionEnd);
+            root.text = before + after;
+            searchInput.text = root.text;
 
-            searchInput.forceActiveFocus()
-            searchInput.cursorPosition = _storedSelectionStart
-            root.cutRequested()
+            searchInput.forceActiveFocus();
+            searchInput.cursorPosition = _storedSelectionStart;
+            root.cutRequested();
         }
     }
 
     function _performCopy() {
         if (_storedSelectedText.length > 0) {
-            _clipboardHelper.text = _storedSelectedText
-            _clipboardHelper.selectAll()
-            _clipboardHelper.copy()
+            _clipboardHelper.text = _storedSelectedText;
+            _clipboardHelper.selectAll();
+            _clipboardHelper.copy();
 
-            searchInput.forceActiveFocus()
-            root._restoreSelection()
-            root.copyRequested()
+            searchInput.forceActiveFocus();
+            root._restoreSelection();
+            root.copyRequested();
         }
     }
 
@@ -264,7 +289,8 @@ Item {
     TextInput {
         id: _clipboardHelper
         visible: false
-        width: 0; height: 0
+        width: 0
+        height: 0
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -276,7 +302,8 @@ Item {
         id: _avatarMaskSource
         visible: false
         layer.enabled: true
-        width: root.avatarSize; height: root.avatarSize
+        width: root.avatarSize
+        height: root.avatarSize
         Rectangle {
             anchors.fill: parent
             radius: width / 2
@@ -300,11 +327,17 @@ Item {
         clip: true
 
         Behavior on color {
-            ColorAnimation { duration: motion.durationMedium; easing.type: Easing.OutCubic }
+            ColorAnimation {
+                duration: motion.durationMedium
+                easing.type: Easing.OutCubic
+            }
         }
 
         Behavior on radius {
-            NumberAnimation { duration: motion.durationMedium; easing.type: Easing.OutCubic }
+            NumberAnimation {
+                duration: motion.durationMedium
+                easing.type: Easing.OutCubic
+            }
         }
 
         Behavior on height {
@@ -409,9 +442,22 @@ Item {
 
                             Behavior on source {
                                 SequentialAnimation {
-                                    NumberAnimation { target: leadingIconItem; property: "opacity"; to: 0; duration: 100 }
-                                    PropertyAction { target: leadingIconItem; property: "source" }
-                                    NumberAnimation { target: leadingIconItem; property: "opacity"; to: 1; duration: 100 }
+                                    NumberAnimation {
+                                        target: leadingIconItem
+                                        property: "opacity"
+                                        to: 0
+                                        duration: 100
+                                    }
+                                    PropertyAction {
+                                        target: leadingIconItem
+                                        property: "source"
+                                    }
+                                    NumberAnimation {
+                                        target: leadingIconItem
+                                        property: "opacity"
+                                        to: 1
+                                        duration: 100
+                                    }
                                 }
                             }
                         }
@@ -420,13 +466,17 @@ Item {
                         Rectangle {
                             id: leadingHover
                             anchors.centerIn: parent
-                            width: parent.width + 8; height: parent.height + 8
+                            width: parent.width + 8
+                            height: parent.height + 8
                             radius: width / 2
                             color: colors.onSurface
-                            opacity: 0; z: -1
+                            opacity: 0
+                            z: -1
 
                             Behavior on opacity {
-                                NumberAnimation { duration: motion.durationFast }
+                                NumberAnimation {
+                                    duration: motion.durationFast
+                                }
                             }
                         }
 
@@ -440,8 +490,10 @@ Item {
                             onPressed: leadingHover.opacity = 0.12
                             onReleased: leadingHover.opacity = containsMouse ? 0.08 : 0
                             onClicked: {
-                                if (root.expanded) root.collapse()
-                                else root.leadingIconClicked()
+                                if (root.expanded)
+                                    root.collapse();
+                                else
+                                    root.leadingIconClicked();
                             }
                         }
                     }
@@ -472,15 +524,18 @@ Item {
                             onTextChanged: root.text = text
                             onAccepted: {
                                 if (text.trim().length > 0)
-                                    root.search(text)
+                                    root.search(text);
                             }
                             onActiveFocusChanged: {
-                                if (activeFocus) root.expanded = true
-                                root.inputFocusChanged(activeFocus)
+                                if (activeFocus)
+                                    root.expanded = true;
+                                root.inputFocusChanged(activeFocus);
                             }
 
                             Behavior on color {
-                                ColorAnimation { duration: motion.durationMedium }
+                                ColorAnimation {
+                                    duration: motion.durationMedium
+                                }
                             }
 
                             // Placeholder
@@ -494,7 +549,9 @@ Item {
                                 elide: Text.ElideRight
 
                                 Behavior on color {
-                                    ColorAnimation { duration: motion.durationMedium }
+                                    ColorAnimation {
+                                        duration: motion.durationMedium
+                                    }
                                 }
                             }
                         }
@@ -505,10 +562,10 @@ Item {
                             acceptedButtons: Qt.RightButton
                             cursorShape: Qt.IBeamCursor
 
-                            onClicked: function(mouse) {
+                            onClicked: function (mouse) {
                                 if (mouse.button === Qt.RightButton && root.enableContextMenu) {
-                                    root._storeSelection()
-                                    contextMenu.popup(mouse.x, mouse.y)
+                                    root._storeSelection();
+                                    contextMenu.popup(mouse.x, mouse.y);
                                 }
                             }
                         }
@@ -525,13 +582,17 @@ Item {
                         Rectangle {
                             id: clearHover
                             anchors.centerIn: parent
-                            width: parent.width + 12; height: parent.height + 12
+                            width: parent.width + 12
+                            height: parent.height + 12
                             radius: width / 2
                             color: colors.onSurface
-                            opacity: 0; z: -1
+                            opacity: 0
+                            z: -1
 
                             Behavior on opacity {
-                                NumberAnimation { duration: motion.durationFast }
+                                NumberAnimation {
+                                    duration: motion.durationFast
+                                }
                             }
                         }
 
@@ -552,9 +613,9 @@ Item {
                             onPressed: clearHover.opacity = 0.12
                             onReleased: clearHover.opacity = containsMouse ? 0.08 : 0
                             onClicked: {
-                                searchInput.clear()
-                                root.cleared()
-                                searchInput.forceActiveFocus()
+                                searchInput.clear();
+                                root.cleared();
+                                searchInput.forceActiveFocus();
                             }
                         }
                     }
@@ -570,13 +631,17 @@ Item {
                         Rectangle {
                             id: trailingHover
                             anchors.centerIn: parent
-                            width: parent.width + 12; height: parent.height + 12
+                            width: parent.width + 12
+                            height: parent.height + 12
                             radius: width / 2
                             color: colors.onSurface
-                            opacity: 0; z: -1
+                            opacity: 0
+                            z: -1
 
                             Behavior on opacity {
-                                NumberAnimation { duration: motion.durationFast }
+                                NumberAnimation {
+                                    duration: motion.durationFast
+                                }
                             }
                         }
 
@@ -618,7 +683,10 @@ Item {
                 opacity: showSuggestions ? 1 : 0
 
                 Behavior on opacity {
-                    NumberAnimation { duration: motion.durationMedium; easing.type: Easing.OutCubic }
+                    NumberAnimation {
+                        duration: motion.durationMedium
+                        easing.type: Easing.OutCubic
+                    }
                 }
             }
 
@@ -637,7 +705,10 @@ Item {
                 opacity: showSuggestions ? 1 : 0
 
                 Behavior on opacity {
-                    NumberAnimation { duration: motion.durationMedium; easing.type: Easing.OutCubic }
+                    NumberAnimation {
+                        duration: motion.durationMedium
+                        easing.type: Easing.OutCubic
+                    }
                 }
 
                 Flickable {
@@ -673,20 +744,20 @@ Item {
                                 suggestionIndex: index
 
                                 onClicked: {
-                                    var t = modelData.text !== undefined ? modelData.text : modelData
-                                    root.text = t
-                                    searchInput.text = t
-                                    root.suggestionClicked(index, modelData)
+                                    var t = modelData.text !== undefined ? modelData.text : modelData;
+                                    root.text = t;
+                                    searchInput.text = t;
+                                    root.suggestionClicked(index, modelData);
                                     if (modelData.autoSearch !== false)
-                                        root.search(root.text)
+                                        root.search(root.text);
                                 }
 
                                 onInsertClicked: {
-                                    var t = modelData.text !== undefined ? modelData.text : modelData
-                                    root.text = t
-                                    searchInput.text = t
-                                    searchInput.forceActiveFocus()
-                                    searchInput.cursorPosition = searchInput.text.length
+                                    var t = modelData.text !== undefined ? modelData.text : modelData;
+                                    root.text = t;
+                                    searchInput.text = t;
+                                    searchInput.forceActiveFocus();
+                                    searchInput.cursorPosition = searchInput.text.length;
                                 }
                             }
                         }
@@ -718,28 +789,29 @@ Item {
     // ═══════════════════════════════════════════════════════════════════
 
     Keys.onEscapePressed: {
-        if (root.expanded) collapse()
+        if (root.expanded)
+            collapse();
     }
 
-    Keys.onPressed: function(event) {
+    Keys.onPressed: function (event) {
         if (event.key === Qt.Key_A && (event.modifiers & Qt.ControlModifier)) {
-            searchInput.selectAll()
-            event.accepted = true
+            searchInput.selectAll();
+            event.accepted = true;
         } else if (event.key === Qt.Key_C && (event.modifiers & Qt.ControlModifier)) {
             if (searchInput.selectedText.length > 0) {
-                _storedSelectedText = searchInput.selectedText
-                _storedSelectionStart = searchInput.selectionStart
-                _storedSelectionEnd = searchInput.selectionEnd
-                _performCopy()
-                event.accepted = true
+                _storedSelectedText = searchInput.selectedText;
+                _storedSelectionStart = searchInput.selectionStart;
+                _storedSelectionEnd = searchInput.selectionEnd;
+                _performCopy();
+                event.accepted = true;
             }
         } else if (event.key === Qt.Key_X && (event.modifiers & Qt.ControlModifier)) {
             if (searchInput.selectedText.length > 0) {
-                _storedSelectedText = searchInput.selectedText
-                _storedSelectionStart = searchInput.selectionStart
-                _storedSelectionEnd = searchInput.selectionEnd
-                _performCut()
-                event.accepted = true
+                _storedSelectedText = searchInput.selectedText;
+                _storedSelectionStart = searchInput.selectionStart;
+                _storedSelectionEnd = searchInput.selectionEnd;
+                _performCut();
+                event.accepted = true;
             }
         }
     }
@@ -748,27 +820,35 @@ Item {
     // PUBLIC FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════
 
-    function focusInput() { searchInput.forceActiveFocus() }
-    function clear()      { searchInput.clear(); root.text = ""; cleared() }
-    function selectAll()  { searchInput.selectAll() }
+    function focusInput() {
+        searchInput.forceActiveFocus();
+    }
+    function clear() {
+        searchInput.clear();
+        root.text = "";
+        cleared();
+    }
+    function selectAll() {
+        searchInput.selectAll();
+    }
 
     function collapse() {
-        root.expanded = false
-        searchInput.focus = false
+        root.expanded = false;
+        searchInput.focus = false;
     }
 
     function expand() {
-        root.expanded = true
-        searchInput.forceActiveFocus()
+        root.expanded = true;
+        searchInput.forceActiveFocus();
     }
 
     function setText(newText) {
-        root.text = newText
-        searchInput.text = newText
+        root.text = newText;
+        searchInput.text = newText;
     }
 
     function getSelectedText() {
-        return searchInput.selectedText
+        return searchInput.selectedText;
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -777,8 +857,6 @@ Item {
 
     Accessible.role: Accessible.EditableText
     Accessible.name: placeholderText
-    Accessible.description: hasText
-        ? "Search field containing: " + text
-        : "Empty search field. " + placeholderText
+    Accessible.description: hasText ? "Search field containing: " + text : "Empty search field. " + placeholderText
     Accessible.focusable: true
 }

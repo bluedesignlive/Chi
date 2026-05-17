@@ -15,7 +15,7 @@ Column {
     spacing: 8
     property var colors: Theme.ChiTheme.colors
     readonly property string fontFamily: Theme.ChiTheme.fontFamily
-    
+
     // Track our radio buttons separately
     property var radioButtons: []
 
@@ -30,76 +30,82 @@ Column {
         color: colors.onSurface
 
         Behavior on color {
-            ColorAnimation { duration: 150 }
+            ColorAnimation {
+                duration: 150
+            }
         }
     }
 
     // When children change, update our button list
     onChildrenChanged: {
-        updateRadioButtons()
+        updateRadioButtons();
     }
 
     Component.onCompleted: {
-        updateRadioButtons()
+        updateRadioButtons();
         if (selectedIndex >= 0) {
-            updateSelection()
+            updateSelection();
         }
     }
 
     onSelectedIndexChanged: {
-        updateSelection()
+        updateSelection();
     }
 
     function updateRadioButtons() {
         // Find all RadioButton children (excluding the label)
-        radioButtons = []
+        radioButtons = [];
         for (var i = 0; i < children.length; i++) {
-            var child = children[i]
+            var child = children[i];
             if (child !== labelText && child.hasOwnProperty("checked") && child.hasOwnProperty("toggled")) {
-                radioButtons.push(child)
-                
+                radioButtons.push(child);
+
                 // Set properties
-                child.size = size
-                child.enabled = Qt.binding(function() { return root.enabled })
-                
+                child.size = size;
+                child.enabled = Qt.binding(function () {
+                    return root.enabled;
+                });
+
                 // Connect to toggled signal
-                connectButton(child, radioButtons.length - 1)
+                connectButton(child, radioButtons.length - 1);
             }
         }
     }
 
     function connectButton(button, index) {
         // Disconnect any existing connections
-        try { button.toggled.disconnect(handleToggle) } catch(e) {}
-        
+        try {
+            button.toggled.disconnect(handleToggle);
+        } catch (e) {}
+
         // Connect with the proper index
-        button.toggled.connect(function() {
-            handleToggle(index)
-        })
+        button.toggled.connect(function () {
+            handleToggle(index);
+        });
     }
 
     function handleToggle(index) {
-        console.log("RadioGroup: Button", index, "toggled")
-        
+        console.log("RadioGroup: Button", index, "toggled");
+
         // Update selected index
-        selectedIndex = index
-        
+        selectedIndex = index;
+
         // Manually update all buttons
         for (var i = 0; i < radioButtons.length; i++) {
-            radioButtons[i].checked = (i === index)
-            console.log("  - Button", i, "checked =", radioButtons[i].checked)
+            radioButtons[i].checked = (i === index);
+            console.log("  - Button", i, "checked =", radioButtons[i].checked);
         }
-        
+
         // Emit signal
-        selectionChanged(index)
+        selectionChanged(index);
     }
 
     function updateSelection() {
-        console.log("RadioGroup: Updating selection to index", selectedIndex)
+        console.log("RadioGroup: Updating selection to index", selectedIndex);
         for (var i = 0; i < radioButtons.length; i++) {
-            var shouldBeChecked = (i === selectedIndex)
-            radioButtons[i].checked = shouldBeChecked
-            console.log("  - Button", i, "set to", shouldBeChecked)
+            var shouldBeChecked = (i === selectedIndex);
+            radioButtons[i].checked = shouldBeChecked;
+            console.log("  - Button", i, "set to", shouldBeChecked);
         }
     }
 }

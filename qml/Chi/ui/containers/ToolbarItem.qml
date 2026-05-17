@@ -11,14 +11,13 @@ Item {
     property bool enabled: true
     property string toolbarType: "standard"  // Set by parent Toolbar
 
-    signal clicked()
+    signal clicked
 
     readonly property bool hasLabel: label !== ""
     readonly property bool isVibrant: toolbarType === "vibrant"
 
     // Cached content color — shared by icon and label
-    readonly property color _contentColor: selected ? colors.onSecondaryContainer :
-        (isVibrant ? colors.onPrimaryContainer : colors.onSurfaceVariant)
+    readonly property color _contentColor: selected ? colors.onSecondaryContainer : (isVibrant ? colors.onPrimaryContainer : colors.onSurfaceVariant)
 
     implicitWidth: hasLabel ? contentRow.implicitWidth + 32 : 48
     implicitHeight: 48
@@ -37,19 +36,28 @@ Item {
 
         color: root.selected ? colors.secondaryContainer : "transparent"
 
-        Behavior on color { ColorAnimation { duration: 150 } }
-        Behavior on radius { NumberAnimation { duration: 100 } }
+        Behavior on color {
+            ColorAnimation {
+                duration: 150
+            }
+        }
+        Behavior on radius {
+            NumberAnimation {
+                duration: 100
+            }
+        }
 
         // State layer
         Rectangle {
             anchors.fill: parent
             radius: parent.radius
             color: root._contentColor
-            opacity: !root.enabled ? 0 :
-                     (mouseArea.pressed ? 0.1 :
-                     (mouseArea.containsMouse ? 0.08 :
-                     (root.activeFocus ? 0.1 : 0)))
-            Behavior on opacity { NumberAnimation { duration: 100 } }
+            opacity: !root.enabled ? 0 : (mouseArea.pressed ? 0.1 : (mouseArea.containsMouse ? 0.08 : (root.activeFocus ? 0.1 : 0)))
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 100
+                }
+            }
         }
 
         // Elevation on hover for labeled buttons
@@ -75,7 +83,11 @@ Item {
                 font.pixelSize: 24
                 color: root._contentColor
                 anchors.verticalCenter: parent.verticalCenter
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 150
+                    }
+                }
             }
 
             // Label
@@ -88,7 +100,11 @@ Item {
                 font.letterSpacing: _typo.labelLarge.spacing
                 color: root._contentColor
                 anchors.verticalCenter: parent.verticalCenter
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 150
+                    }
+                }
             }
         }
 

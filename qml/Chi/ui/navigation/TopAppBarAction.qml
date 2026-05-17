@@ -9,7 +9,7 @@ Item {
     property string tooltip: ""
     property bool enabled: true
 
-    signal clicked()
+    signal clicked
 
     implicitWidth: 48
     implicitHeight: 48
@@ -27,7 +27,9 @@ Item {
         opacity: mouseArea.containsMouse && enabled ? 0.08 : 0
 
         Behavior on opacity {
-            NumberAnimation { duration: 100 }
+            NumberAnimation {
+                duration: 100
+            }
         }
     }
 
@@ -39,7 +41,9 @@ Item {
         color: colors.onSurfaceVariant
 
         Behavior on color {
-            ColorAnimation { duration: 200 }
+            ColorAnimation {
+                duration: 200
+            }
         }
     }
 

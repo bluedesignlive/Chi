@@ -18,7 +18,9 @@ Item {
         color: colors.outlineVariant
 
         Behavior on color {
-            ColorAnimation { duration: 200 }
+            ColorAnimation {
+                duration: 200
+            }
         }
     }
 }

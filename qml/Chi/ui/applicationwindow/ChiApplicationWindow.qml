@@ -66,10 +66,10 @@ Window {
     //    "auto"          — traditional when space allows, else overflow
     // ═══════════════════════════════════════════════════════════════
 
-    property bool   showMenu: true
+    property bool showMenu: true
     property string menuStyle: "overflow"
-    property var    customMenus: []
-    property bool   showDefaultMenus: true
+    property var customMenus: []
+    property bool showDefaultMenus: true
 
     // ═══════════════════════════════════════════════════════════════
     //  GLOBAL MENU  (DBus / Platform)
@@ -103,10 +103,10 @@ Window {
     //  SIGNALS
     // ═══════════════════════════════════════════════════════════════
 
-    signal leadingActionTriggered()
+    signal leadingActionTriggered
     signal toolbarActionTriggered(int index)
     signal menuItemTriggered(string menuId, string itemId)
-    signal sidebarButtonClicked()
+    signal sidebarButtonClicked
     signal breakpointChanged(string breakpoint)
 
     // ═══════════════════════════════════════════════════════════════
@@ -116,57 +116,59 @@ Window {
     readonly property QtObject context: QtObject {
         id: _ctx
 
-        readonly property bool isMacOS:   Qt.platform.os === "osx"
+        readonly property bool isMacOS: Qt.platform.os === "osx"
         readonly property bool isWindows: Qt.platform.os === "windows"
-        readonly property bool isLinux:   Qt.platform.os === "linux"
-        readonly property bool isMobile:  Qt.platform.os === "android"
-                                          || Qt.platform.os === "ios"
-        readonly property bool isWeb:     Qt.platform.os === "wasm"
+        readonly property bool isLinux: Qt.platform.os === "linux"
+        readonly property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
+        readonly property bool isWeb: Qt.platform.os === "wasm"
         readonly property bool isDesktop: !isMobile && !isWeb
 
-        readonly property int windowWidth:  root.width
+        readonly property int windowWidth: root.width
         readonly property int windowHeight: root.height
 
         property string breakpoint: "expanded"
 
-        readonly property bool isCompact:  breakpoint === "compact"
-        readonly property bool isMedium:   breakpoint === "medium"
+        readonly property bool isCompact: breakpoint === "compact"
+        readonly property bool isMedium: breakpoint === "medium"
         readonly property bool isExpanded: breakpoint === "expanded"
-        readonly property bool isLarge:    breakpoint === "large"
-        readonly property bool isXLarge:   breakpoint === "xlarge"
+        readonly property bool isLarge: breakpoint === "large"
+        readonly property bool isXLarge: breakpoint === "xlarge"
 
         readonly property bool showWindowControls: isDesktop && !isWeb
-        readonly property bool useOverlaySidebar:  isCompact || isMedium
+        readonly property bool useOverlaySidebar: isCompact || isMedium
 
         readonly property bool globalMenuAvailable: {
-            if (isMacOS) return true
+            if (isMacOS)
+                return true;
             if (isLinux) {
-                function getEnv(name) { try { return Qt.runtime.environmentVariable(name) } catch(e) {} return "" }
-                var desktop = getEnv("XDG_CURRENT_DESKTOP").toLowerCase()
-                var session = getEnv("DESKTOP_SESSION").toLowerCase()
-                return desktop.indexOf("kde") >= 0
-                    || desktop.indexOf("plasma") >= 0
-                    || desktop.indexOf("unity") >= 0
-                    || desktop.indexOf("budgie") >= 0
-                    || getEnv("UBUNTU_MENUPROXY") !== ""
+                function getEnv(name) {
+                    try {
+                        return Qt.runtime.environmentVariable(name);
+                    } catch (e) {}
+                    return "";
+                }
+                var desktop = getEnv("XDG_CURRENT_DESKTOP").toLowerCase();
+                var session = getEnv("DESKTOP_SESSION").toLowerCase();
+                return desktop.indexOf("kde") >= 0 || desktop.indexOf("plasma") >= 0 || desktop.indexOf("unity") >= 0 || desktop.indexOf("budgie") >= 0 || getEnv("UBUNTU_MENUPROXY") !== "";
             }
-            return false
+            return false;
         }
 
         onBreakpointChanged: root.breakpointChanged(breakpoint)
 
         function _recalc() {
-            var w  = root.width
-            var bp = w < 600  ? "compact"
-                   : w < 840  ? "medium"
-                   : w < 1200 ? "expanded"
-                   : w < 1600 ? "large"
-                   :            "xlarge"
-            if (breakpoint !== bp) breakpoint = bp
+            var w = root.width;
+            var bp = w < 600 ? "compact" : w < 840 ? "medium" : w < 1200 ? "expanded" : w < 1600 ? "large" : "xlarge";
+            if (breakpoint !== bp)
+                breakpoint = bp;
         }
     }
 
-    Timer { id: _bpDebounce; interval: 80; onTriggered: _ctx._recalc() }
+    Timer {
+        id: _bpDebounce
+        interval: 80
+        onTriggered: _ctx._recalc()
+    }
     onWidthChanged: _bpDebounce.restart()
     Component.onCompleted: _ctx._recalc()
 
@@ -183,7 +185,9 @@ Window {
     Shortcut {
         sequence: "Tab"
         context: Qt.ApplicationShortcut
-        onActivated: { root._keyboardFocusActive = true }
+        onActivated: {
+            root._keyboardFocusActive = true;
+        }
     }
 
     // Detect mouse clicks anywhere to exit keyboard focus mode
@@ -192,9 +196,9 @@ Window {
         z: -100
         acceptedButtons: Qt.AllButtons
         hoverEnabled: false
-        onPressed: function(mouse) {
-            root._keyboardFocusActive = false
-            mouse.accepted = false  // pass through
+        onPressed: function (mouse) {
+            root._keyboardFocusActive = false;
+            mouse.accepted = false;  // pass through
         }
     }
 
@@ -202,40 +206,49 @@ Window {
     //  INTERNAL STATE
     // ═══════════════════════════════════════════════════════════════
 
-    readonly property bool isMaximized:  visibility === Window.Maximized
+    readonly property bool isMaximized: visibility === Window.Maximized
     readonly property bool isFullScreen: visibility === Window.FullScreen
     readonly property real windowRadius: (isMaximized || isFullScreen) ? 0 : 24
 
     // ─── Recording State ───
     property bool _recording: false
     property int _recordingElapsed: 0
-    property var _lastRecSettings: ({ area: 0, quality: 2, mic: 0 })
+    property var _lastRecSettings: ({
+            area: 0,
+            quality: 2,
+            mic: 0
+        })
     property url _recordingOutput: Qt.url("")
 
     readonly property string _resolvedMenuStyle: {
-        if (!showMenu || globalMenuActive) return "none"
-        if (menuStyle === "overflow" || menuStyle === "collapsed") return "overflow"
-        if (menuStyle === "traditional") return "traditional"
-        var needed = _allMenus.length * 70 + _rightSectionWidth + 100
-        return root.width < needed ? "overflow" : "traditional"
+        if (!showMenu || globalMenuActive)
+            return "none";
+        if (menuStyle === "overflow" || menuStyle === "collapsed")
+            return "overflow";
+        if (menuStyle === "traditional")
+            return "traditional";
+        var needed = _allMenus.length * 70 + _rightSectionWidth + 100;
+        return root.width < needed ? "overflow" : "traditional";
     }
 
-    readonly property real _rightSectionWidth:
-        (toolbarActions.length * 40) + (controlsOnLeft ? 0 : 120)
+    readonly property real _rightSectionWidth: (toolbarActions.length * 40) + (controlsOnLeft ? 0 : 120)
 
-    signal openOverflowMenuRequested()
+    signal openOverflowMenuRequested
     property bool _toolbarAutoHidden: false
     property bool _anyMenuOpen: false
     property bool _focusMode: false
     property bool _qpOpen: false
 
     readonly property bool _showToolbar: {
-        if (isFullScreen) return false
-        if (_focusMode) return false
-        if (!toolbarVisible) return false
+        if (isFullScreen)
+            return false;
+        if (_focusMode)
+            return false;
+        if (!toolbarVisible)
+            return false;
         if (toolbarBehavior === "autoHide")
-            return !_toolbarAutoHidden || _hoverTrigger.containsMouse
-        return true
+            return !_toolbarAutoHidden || _hoverTrigger.containsMouse;
+        return true;
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -244,55 +257,160 @@ Window {
 
     readonly property var _defaultMenus: showMenu ? [
         {
-            id: "file", title: qsTr("File"),
+            id: "file",
+            title: qsTr("File"),
             items: [
-                { id: "new",    text: qsTr("New"),       shortcut: "Ctrl+N",       icon: "add" },
-                { id: "open",   text: qsTr("Open"),      shortcut: "Ctrl+O",       icon: "folder_open" },
-                { type: "divider" },
-                { id: "save",   text: qsTr("Save"),      shortcut: "Ctrl+S",       icon: "save" },
-                { id: "saveAs", text: qsTr("Save As…"),  shortcut: "Ctrl+Shift+S" },
-                { type: "divider" },
-                { id: "exit",   text: qsTr("Exit"),      shortcut: "Alt+F4",       icon: "logout" }
+                {
+                    id: "new",
+                    text: qsTr("New"),
+                    shortcut: "Ctrl+N",
+                    icon: "add"
+                },
+                {
+                    id: "open",
+                    text: qsTr("Open"),
+                    shortcut: "Ctrl+O",
+                    icon: "folder_open"
+                },
+                {
+                    type: "divider"
+                },
+                {
+                    id: "save",
+                    text: qsTr("Save"),
+                    shortcut: "Ctrl+S",
+                    icon: "save"
+                },
+                {
+                    id: "saveAs",
+                    text: qsTr("Save As…"),
+                    shortcut: "Ctrl+Shift+S"
+                },
+                {
+                    type: "divider"
+                },
+                {
+                    id: "exit",
+                    text: qsTr("Exit"),
+                    shortcut: "Alt+F4",
+                    icon: "logout"
+                }
             ]
         },
         {
-            id: "edit", title: qsTr("Edit"),
+            id: "edit",
+            title: qsTr("Edit"),
             items: [
-                { id: "undo",  text: qsTr("Undo"),  shortcut: "Ctrl+Z", icon: "undo" },
-                { id: "redo",  text: qsTr("Redo"),  shortcut: "Ctrl+Y", icon: "redo" },
-                { type: "divider" },
-                { id: "cut",   text: qsTr("Cut"),   shortcut: "Ctrl+X", icon: "content_cut" },
-                { id: "copy",  text: qsTr("Copy"),  shortcut: "Ctrl+C", icon: "content_copy" },
-                { id: "paste", text: qsTr("Paste"), shortcut: "Ctrl+V", icon: "content_paste" }
+                {
+                    id: "undo",
+                    text: qsTr("Undo"),
+                    shortcut: "Ctrl+Z",
+                    icon: "undo"
+                },
+                {
+                    id: "redo",
+                    text: qsTr("Redo"),
+                    shortcut: "Ctrl+Y",
+                    icon: "redo"
+                },
+                {
+                    type: "divider"
+                },
+                {
+                    id: "cut",
+                    text: qsTr("Cut"),
+                    shortcut: "Ctrl+X",
+                    icon: "content_cut"
+                },
+                {
+                    id: "copy",
+                    text: qsTr("Copy"),
+                    shortcut: "Ctrl+C",
+                    icon: "content_copy"
+                },
+                {
+                    id: "paste",
+                    text: qsTr("Paste"),
+                    shortcut: "Ctrl+V",
+                    icon: "content_paste"
+                }
             ]
         },
         {
-            id: "view", title: qsTr("View"),
+            id: "view",
+            title: qsTr("View"),
             items: [
-                { id: "sidebar",          text: qsTr("Toggle Sidebar"),      shortcut: "Ctrl+B",       icon: "view_sidebar" },
-                { type: "divider" },
-                { id: "toolbar_autohide", text: qsTr("Auto-Hide Headerbar"), shortcut: "Ctrl+Shift+H", icon: "vertical_align_top" },
-                { id: "focus",            text: qsTr("Focus Mode"),          shortcut: "Ctrl+Shift+F", icon: "center_focus_strong" },
-                { type: "divider" },
-                { id: "menu_overflow",    text: qsTr("Overflow Menu"),       icon: "more_horiz" },
-                { id: "menu_traditional", text: qsTr("Traditional Menu"),    icon: "menu_open" },
-                { id: "menu_auto",        text: qsTr("Auto Menu"),           icon: "tune" }
+                {
+                    id: "sidebar",
+                    text: qsTr("Toggle Sidebar"),
+                    shortcut: "Ctrl+B",
+                    icon: "view_sidebar"
+                },
+                {
+                    type: "divider"
+                },
+                {
+                    id: "toolbar_autohide",
+                    text: qsTr("Auto-Hide Headerbar"),
+                    shortcut: "Ctrl+Shift+H",
+                    icon: "vertical_align_top"
+                },
+                {
+                    id: "focus",
+                    text: qsTr("Focus Mode"),
+                    shortcut: "Ctrl+Shift+F",
+                    icon: "center_focus_strong"
+                },
+                {
+                    type: "divider"
+                },
+                {
+                    id: "menu_overflow",
+                    text: qsTr("Overflow Menu"),
+                    icon: "more_horiz"
+                },
+                {
+                    id: "menu_traditional",
+                    text: qsTr("Traditional Menu"),
+                    icon: "menu_open"
+                },
+                {
+                    id: "menu_auto",
+                    text: qsTr("Auto Menu"),
+                    icon: "tune"
+                }
             ]
         },
         {
-            id: "help", title: qsTr("Help"),
+            id: "help",
+            title: qsTr("Help"),
             items: [
-                { id: "docs",      text: qsTr("Documentation"),      icon: "menu_book" },
-                { id: "shortcuts", text: qsTr("Keyboard Shortcuts"),  icon: "keyboard" },
-                { type: "divider" },
-                { id: "about",     text: qsTr("About"),              icon: "info" }
+                {
+                    id: "docs",
+                    text: qsTr("Documentation"),
+                    icon: "menu_book"
+                },
+                {
+                    id: "shortcuts",
+                    text: qsTr("Keyboard Shortcuts"),
+                    icon: "keyboard"
+                },
+                {
+                    type: "divider"
+                },
+                {
+                    id: "about",
+                    text: qsTr("About"),
+                    icon: "info"
+                }
             ]
         }
     ] : []
 
     readonly property var _allMenus: {
-        if (!showMenu) return []
-        return showDefaultMenus ? _defaultMenus.concat(customMenus) : customMenus
+        if (!showMenu)
+            return [];
+        return showDefaultMenus ? _defaultMenus.concat(customMenus) : customMenus;
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -348,18 +466,22 @@ Window {
         sequence: "Ctrl+Shift+R"
         context: Qt.ApplicationShortcut
         onActivated: {
-            console.log("Shortcut: Ctrl+Shift+R, recording=" + root._recording)
-            if (root._recording) root._stopRecording()
-            else _recDialog.show()
+            console.log("Shortcut: Ctrl+Shift+R, recording=" + root._recording);
+            if (root._recording)
+                root._stopRecording();
+            else
+                _recDialog.show();
         }
     }
     Shortcut {
         sequence: "Ctrl+Alt+R"
         context: Qt.ApplicationShortcut
         onActivated: {
-            console.log("Shortcut: Ctrl+Alt+R, recording=" + root._recording)
-            if (root._recording) root._stopRecording()
-            else root._quickRecord()
+            console.log("Shortcut: Ctrl+Alt+R, recording=" + root._recording);
+            if (root._recording)
+                root._stopRecording();
+            else
+                root._quickRecord();
         }
     }
     Shortcut {
@@ -372,11 +494,11 @@ Window {
         context: Qt.ApplicationShortcut
         onActivated: {
             if (root._qpOpen)
-                root._qpOpen = false
+                root._qpOpen = false;
             else if (root._focusMode)
-                root._focusMode = false
+                root._focusMode = false;
             else if (root.visibility === Window.FullScreen)
-                root.visibility = Window.Windowed
+                root.visibility = Window.Windowed;
         }
     }
     // Mouse click to exit fullscreen
@@ -395,8 +517,8 @@ Window {
         context: Qt.ApplicationShortcut
         enabled: root.showMenu && root._resolvedMenuStyle === "overflow"
         onActivated: {
-            root._keyboardFocusActive = true
-            root.openOverflowMenuRequested()
+            root._keyboardFocusActive = true;
+            root.openOverflowMenuRequested();
         }
     }
 
@@ -434,11 +556,15 @@ Window {
         // Auto-hide hover trigger
         MouseArea {
             id: _hoverTrigger
-            anchors { top: parent.top; left: parent.left; right: parent.right }
+            anchors {
+                top: parent.top
+                left: parent.left
+                right: parent.right
+            }
             height: toolbarBehavior === "autoHide" && _toolbarAutoHidden ? 16 : 0
             hoverEnabled: toolbarBehavior === "autoHide"
-            enabled:      toolbarBehavior === "autoHide"
-            visible:      toolbarBehavior === "autoHide"
+            enabled: toolbarBehavior === "autoHide"
+            visible: toolbarBehavior === "autoHide"
             z: 101
             Accessible.ignored: true
         }
@@ -450,7 +576,11 @@ Window {
         Rectangle {
             id: _toolbar
             height: root.toolbarHeight
-            anchors { top: parent.top; left: parent.left; right: parent.right }
+            anchors {
+                top: parent.top
+                left: parent.left
+                right: parent.right
+            }
             z: 100
             color: colors.surfaceContainer
 
@@ -464,16 +594,16 @@ Window {
 
             on_ShouldShowChanged: {
                 if (_shouldShow) {
-                    _toolbarOpacity = 0.0
-                    visible = true
-                    _toolbarOpacity = 1.0
+                    _toolbarOpacity = 0.0;
+                    visible = true;
+                    _toolbarOpacity = 1.0;
                 } else {
-                    _toolbarOpacity = 0.0
+                    _toolbarOpacity = 0.0;
                 }
             }
             on_ToolbarOpacityChanged: {
                 if (_toolbarOpacity <= 0.001)
-                    visible = false
+                    visible = false;
             }
 
             Behavior on _toolbarOpacity {
@@ -488,16 +618,18 @@ Window {
                 anchors.fill: parent
                 z: -1
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
-                onPressed: function(mouse) {
-                    root._keyboardFocusActive = false
+                onPressed: function (mouse) {
+                    root._keyboardFocusActive = false;
                     if (mouse.button === Qt.RightButton)
-                        _windowMenu.popup(mouse.x, mouse.y)
+                        _windowMenu.popup(mouse.x, mouse.y);
                     else
-                        root.startSystemMove()
+                        root.startSystemMove();
                 }
                 onDoubleClicked: {
-                    if (root.isMaximized) root.showNormal()
-                    else root.showMaximized()
+                    if (root.isMaximized)
+                        root.showNormal();
+                    else
+                        root.showMaximized();
                 }
             }
 
@@ -541,72 +673,81 @@ Window {
                 Menus.MenuItem {
                     text: qsTr("Left half")
                     onClicked: {
-                        var s = Screen
-                        root.x = 0
-                        root.y = 0
-                        root.width = Math.round(s.desktopAvailableWidth / 2)
-                        root.height = s.desktopAvailableHeight
+                        var s = Screen;
+                        root.x = 0;
+                        root.y = 0;
+                        root.width = Math.round(s.desktopAvailableWidth / 2);
+                        root.height = s.desktopAvailableHeight;
                     }
                 }
                 Menus.MenuItem {
                     text: qsTr("Right half")
                     onClicked: {
-                        var s = Screen
-                        root.x = Math.round(s.desktopAvailableWidth / 2)
-                        root.y = 0
-                        root.width = Math.round(s.desktopAvailableWidth / 2)
-                        root.height = s.desktopAvailableHeight
+                        var s = Screen;
+                        root.x = Math.round(s.desktopAvailableWidth / 2);
+                        root.y = 0;
+                        root.width = Math.round(s.desktopAvailableWidth / 2);
+                        root.height = s.desktopAvailableHeight;
                     }
                 }
                 Menus.MenuItem {
                     text: qsTr("Top-left")
                     onClicked: {
-                        var s = Screen
-                        var hw = Math.round(s.desktopAvailableWidth / 2)
-                        var hh = Math.round(s.desktopAvailableHeight / 2)
-                        root.x = 0; root.y = 0
-                        root.width = hw; root.height = hh
+                        var s = Screen;
+                        var hw = Math.round(s.desktopAvailableWidth / 2);
+                        var hh = Math.round(s.desktopAvailableHeight / 2);
+                        root.x = 0;
+                        root.y = 0;
+                        root.width = hw;
+                        root.height = hh;
                     }
                 }
                 Menus.MenuItem {
                     text: qsTr("Top-right")
                     onClicked: {
-                        var s = Screen
-                        var hw = Math.round(s.desktopAvailableWidth / 2)
-                        var hh = Math.round(s.desktopAvailableHeight / 2)
-                        root.x = hw; root.y = 0
-                        root.width = hw; root.height = hh
+                        var s = Screen;
+                        var hw = Math.round(s.desktopAvailableWidth / 2);
+                        var hh = Math.round(s.desktopAvailableHeight / 2);
+                        root.x = hw;
+                        root.y = 0;
+                        root.width = hw;
+                        root.height = hh;
                     }
                 }
                 Menus.MenuItem {
                     text: qsTr("Bottom-left")
                     onClicked: {
-                        var s = Screen
-                        var hw = Math.round(s.desktopAvailableWidth / 2)
-                        var hh = Math.round(s.desktopAvailableHeight / 2)
-                        root.x = 0; root.y = hh
-                        root.width = hw; root.height = hh
+                        var s = Screen;
+                        var hw = Math.round(s.desktopAvailableWidth / 2);
+                        var hh = Math.round(s.desktopAvailableHeight / 2);
+                        root.x = 0;
+                        root.y = hh;
+                        root.width = hw;
+                        root.height = hh;
                     }
                 }
                 Menus.MenuItem {
                     text: qsTr("Bottom-right")
                     onClicked: {
-                        var s = Screen
-                        var hw = Math.round(s.desktopAvailableWidth / 2)
-                        var hh = Math.round(s.desktopAvailableHeight / 2)
-                        root.x = hw; root.y = hh
-                        root.width = hw; root.height = hh
+                        var s = Screen;
+                        var hw = Math.round(s.desktopAvailableWidth / 2);
+                        var hh = Math.round(s.desktopAvailableHeight / 2);
+                        root.x = hw;
+                        root.y = hh;
+                        root.width = hw;
+                        root.height = hh;
                     }
                 }
                 Menus.MenuItem {
                     text: qsTr("Center")
                     onClicked: {
-                        var s = Screen
-                        var w = Math.round(s.desktopAvailableWidth * 0.6)
-                        var h = Math.round(s.desktopAvailableHeight * 0.8)
-                        root.x = Math.round((s.desktopAvailableWidth - w) / 2)
-                        root.y = Math.round((s.desktopAvailableHeight - h) / 2)
-                        root.width = w; root.height = h
+                        var s = Screen;
+                        var w = Math.round(s.desktopAvailableWidth * 0.6);
+                        var h = Math.round(s.desktopAvailableHeight * 0.8);
+                        root.x = Math.round((s.desktopAvailableWidth - w) / 2);
+                        root.y = Math.round((s.desktopAvailableHeight - h) / 2);
+                        root.width = w;
+                        root.height = h;
                     }
                 }
                 Menus.MenuDivider {}
@@ -620,7 +761,6 @@ Window {
                     trailingText: qsTr("Ctrl+Shift+R")
                     onClicked: _recDialog.show()
                 }
-
             }
 
             // ═══ LEFT SECTION ═══
@@ -641,9 +781,7 @@ Window {
                     spacing: 4
 
                     WindowControls {
-                        visible: root.showControls
-                                 && root.controlsOnLeft
-                                 && _ctx.showWindowControls
+                        visible: root.showControls && root.controlsOnLeft && _ctx.showWindowControls
                         targetWindow: root
                         variant: root.controlsStyle
                         menuOpen: root._anyMenuOpen
@@ -651,10 +789,9 @@ Window {
                     }
 
                     Item {
-                        width: 8; height: 1
-                        visible: root.controlsOnLeft
-                                 && root.showControls
-                                 && _ctx.showWindowControls
+                        width: 8
+                        height: 1
+                        visible: root.controlsOnLeft && root.showControls && _ctx.showWindowControls
                     }
 
                     // Overflow menu button (⋯)
@@ -672,14 +809,14 @@ Window {
                             menus: root._allMenus
                             maxHeight: root.height - 100
                             onVisibleChanged: root._anyMenuOpen = visible
-                            onItemTriggered: function(menuId, itemId) {
-                                root._handleMenuAction(menuId, itemId)
+                            onItemTriggered: function (menuId, itemId) {
+                                root._handleMenuAction(menuId, itemId);
                             }
                         }
                         Connections {
                             target: root
                             function onOpenOverflowMenuRequested() {
-                                _overflowMenu.open()
+                                _overflowMenu.open();
                             }
                         }
                     }
@@ -715,8 +852,8 @@ Window {
                                 required property var modelData
                                 required property int index
                                 menuData: modelData
-                                onItemTriggered: function(itemId) {
-                                    root._handleMenuAction(modelData.id, itemId)
+                                onItemTriggered: function (itemId) {
+                                    root._handleMenuAction(modelData.id, itemId);
                                 }
                             }
                         }
@@ -754,23 +891,21 @@ Window {
                             Accessible.name: modelData.tooltip || modelData.icon || qsTr("Action %1").arg(index + 1)
 
                             onClicked: {
-                                if (modelData.triggered) modelData.triggered()
-                                root.toolbarActionTriggered(index)
+                                if (modelData.triggered)
+                                    modelData.triggered();
+                                root.toolbarActionTriggered(index);
                             }
                         }
                     }
 
                     Item {
-                        width: 8; height: 1
-                        visible: !root.controlsOnLeft
-                                 && root.showControls
-                                 && _ctx.showWindowControls
+                        width: 8
+                        height: 1
+                        visible: !root.controlsOnLeft && root.showControls && _ctx.showWindowControls
                     }
 
                     WindowControls {
-                        visible: root.showControls
-                                 && !root.controlsOnLeft
-                                 && _ctx.showWindowControls
+                        visible: root.showControls && !root.controlsOnLeft && _ctx.showWindowControls
                         targetWindow: root
                         variant: root.controlsStyle
                         menuOpen: root._anyMenuOpen
@@ -802,8 +937,7 @@ Window {
                 visible: root.showTitle
 
                 readonly property real _fontSize: root.typography.titleSmall.size
-                readonly property real _minWidth:
-                    Math.max(40, root.titleMinChars * _fontSize * 0.65 + 20)
+                readonly property real _minWidth: Math.max(40, root.titleMinChars * _fontSize * 0.65 + 20)
                 readonly property real _availableWidth: Math.max(0, width)
                 readonly property bool _tooNarrow: _availableWidth < _minWidth
 
@@ -815,11 +949,12 @@ Window {
                     anchors.verticalCenter: parent.verticalCenter
 
                     x: {
-                        if (!root.centerTitle) return 0
-                        var windowCenterLocal = (_toolbar.width / 2) - _titleContainer.x
-                        var idealX = windowCenterLocal - (paintedWidth / 2)
-                        var maxX = _titleContainer._availableWidth - paintedWidth
-                        return Math.max(0, Math.min(idealX, Math.max(0, maxX)))
+                        if (!root.centerTitle)
+                            return 0;
+                        var windowCenterLocal = (_toolbar.width / 2) - _titleContainer.x;
+                        var idealX = windowCenterLocal - (paintedWidth / 2);
+                        var maxX = _titleContainer._availableWidth - paintedWidth;
+                        return Math.max(0, Math.min(idealX, Math.max(0, maxX)));
                     }
 
                     width: _titleContainer._availableWidth
@@ -835,13 +970,17 @@ Window {
                     verticalAlignment: Text.AlignVCenter
 
                     opacity: {
-                        if (!root.autoHideTitle) return 1.0
-                        if (_titleContainer._tooNarrow) return 0
-                        var fadeStart = _titleContainer._minWidth * 2.0
-                        if (_titleContainer._availableWidth >= fadeStart) return 1.0
-                        var range = fadeStart - _titleContainer._minWidth
-                        if (range <= 0) return 1.0
-                        return (_titleContainer._availableWidth - _titleContainer._minWidth) / range
+                        if (!root.autoHideTitle)
+                            return 1.0;
+                        if (_titleContainer._tooNarrow)
+                            return 0;
+                        var fadeStart = _titleContainer._minWidth * 2.0;
+                        if (_titleContainer._availableWidth >= fadeStart)
+                            return 1.0;
+                        var range = fadeStart - _titleContainer._minWidth;
+                        if (range <= 0)
+                            return 1.0;
+                        return (_titleContainer._availableWidth - _titleContainer._minWidth) / range;
                     }
 
                     visible: !root.autoHideTitle || !_titleContainer._tooNarrow
@@ -941,51 +1080,91 @@ Window {
         readonly property int corner: 24
 
         MouseArea {
-            anchors { top: parent.top; left: parent.left; right: parent.right }
-            height: _resizeHandles.edge; hoverEnabled: true
+            anchors {
+                top: parent.top
+                left: parent.left
+                right: parent.right
+            }
+            height: _resizeHandles.edge
+            hoverEnabled: true
             cursorShape: Qt.SizeVerCursor
             onPressed: root.startSystemResize(Qt.TopEdge)
         }
         MouseArea {
-            anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
-            height: _resizeHandles.edge; hoverEnabled: true
+            anchors {
+                bottom: parent.bottom
+                left: parent.left
+                right: parent.right
+            }
+            height: _resizeHandles.edge
+            hoverEnabled: true
             cursorShape: Qt.SizeVerCursor
             onPressed: root.startSystemResize(Qt.BottomEdge)
         }
         MouseArea {
-            anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
-            width: _resizeHandles.edge; hoverEnabled: true
+            anchors {
+                left: parent.left
+                top: parent.top
+                bottom: parent.bottom
+            }
+            width: _resizeHandles.edge
+            hoverEnabled: true
             cursorShape: Qt.SizeHorCursor
             onPressed: root.startSystemResize(Qt.LeftEdge)
         }
         MouseArea {
-            anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
-            width: _resizeHandles.edge; hoverEnabled: true
+            anchors {
+                right: parent.right
+                top: parent.top
+                bottom: parent.bottom
+            }
+            width: _resizeHandles.edge
+            hoverEnabled: true
             cursorShape: Qt.SizeHorCursor
             onPressed: root.startSystemResize(Qt.RightEdge)
         }
         MouseArea {
-            anchors { top: parent.top; left: parent.left }
-            width: _resizeHandles.corner; height: _resizeHandles.corner
-            hoverEnabled: true; cursorShape: Qt.SizeFDiagCursor
+            anchors {
+                top: parent.top
+                left: parent.left
+            }
+            width: _resizeHandles.corner
+            height: _resizeHandles.corner
+            hoverEnabled: true
+            cursorShape: Qt.SizeFDiagCursor
             onPressed: root.startSystemResize(Qt.TopEdge | Qt.LeftEdge)
         }
         MouseArea {
-            anchors { top: parent.top; right: parent.right }
-            width: _resizeHandles.corner; height: _resizeHandles.corner
-            hoverEnabled: true; cursorShape: Qt.SizeBDiagCursor
+            anchors {
+                top: parent.top
+                right: parent.right
+            }
+            width: _resizeHandles.corner
+            height: _resizeHandles.corner
+            hoverEnabled: true
+            cursorShape: Qt.SizeBDiagCursor
             onPressed: root.startSystemResize(Qt.TopEdge | Qt.RightEdge)
         }
         MouseArea {
-            anchors { bottom: parent.bottom; left: parent.left }
-            width: _resizeHandles.corner; height: _resizeHandles.corner
-            hoverEnabled: true; cursorShape: Qt.SizeBDiagCursor
+            anchors {
+                bottom: parent.bottom
+                left: parent.left
+            }
+            width: _resizeHandles.corner
+            height: _resizeHandles.corner
+            hoverEnabled: true
+            cursorShape: Qt.SizeBDiagCursor
             onPressed: root.startSystemResize(Qt.BottomEdge | Qt.LeftEdge)
         }
         MouseArea {
-            anchors { bottom: parent.bottom; right: parent.right }
-            width: _resizeHandles.corner; height: _resizeHandles.corner
-            hoverEnabled: true; cursorShape: Qt.SizeFDiagCursor
+            anchors {
+                bottom: parent.bottom
+                right: parent.right
+            }
+            width: _resizeHandles.corner
+            height: _resizeHandles.corner
+            hoverEnabled: true
+            cursorShape: Qt.SizeFDiagCursor
             onPressed: root.startSystemResize(Qt.BottomEdge | Qt.RightEdge)
         }
     }
@@ -1055,18 +1234,18 @@ Window {
         fileName: "Chi-screenshot.png"
 
         function openDialog() {
-            fileName = "Chi-screenshot-" + Date.now() + ".png"
-            open()
+            fileName = "Chi-screenshot-" + Date.now() + ".png";
+            open();
         }
 
         onAccepted: {
-            var path = _screenshotDialog.selectedFile
-            var name = path.toString().split("/").pop()
-            _surface.grabToImage(function(r) {
-                r.saveToFile(path)
-                _clipboard.copyImage(path)
-                _snackbar.show(qsTr("Screenshot saved: %1 · Copied to clipboard").arg(name))
-            })
+            var path = _screenshotDialog.selectedFile;
+            var name = path.toString().split("/").pop();
+            _surface.grabToImage(function (r) {
+                r.saveToFile(path);
+                _clipboard.copyImage(path);
+                _snackbar.show(qsTr("Screenshot saved: %1 · Copied to clipboard").arg(name));
+            });
         }
     }
 
@@ -1078,7 +1257,8 @@ Window {
     Connections {
         target: _snackbar
         function onActionClicked() {
-            if (root._recording) root._stopRecording()
+            if (root._recording)
+                root._stopRecording();
         }
     }
 
@@ -1101,14 +1281,14 @@ Window {
         fileName: "Chi-recording.mp4"
 
         function openDialog() {
-            fileName = "Chi-recording-" + Date.now() + ".mp4"
-            open()
+            fileName = "Chi-recording-" + Date.now() + ".mp4";
+            open();
         }
 
         onAccepted: {
-            root._recordingOutput = _saveRecDialog.selectedFile
-            console.log("Recording: save dialog accepted, output=" + root._recordingOutput)
-            _startRecording()
+            root._recordingOutput = _saveRecDialog.selectedFile;
+            console.log("Recording: save dialog accepted, output=" + root._recordingOutput);
+            _startRecording();
         }
     }
 
@@ -1120,33 +1300,33 @@ Window {
         windowCapture: WindowCapture {
             id: _windowCapture
             onWindowChanged: console.log("Recording: WindowCapture window=" + (_windowCapture.window ? _windowCapture.window.description : "null"))
-            onErrorOccurred: function(error, errorString) {
-                console.log("Recording: WindowCapture error=" + error + " " + errorString)
+            onErrorOccurred: function (error, errorString) {
+                console.log("Recording: WindowCapture error=" + error + " " + errorString);
             }
         }
         recorder: MediaRecorder {
             id: _mediaRecorder
             outputLocation: root._recordingOutput
 
-            onRecorderStateChanged: function(state) {
-                console.log("Recording: MediaRecorder state=" + state)
+            onRecorderStateChanged: function (state) {
+                console.log("Recording: MediaRecorder state=" + state);
                 if (state === MediaRecorder.StoppedState && !root._recording) {
-                    var name = root._recordingOutput.toString().split("/").pop()
-                    console.log("Recording: finalized, saved as " + name)
-                    _snackbar.duration = 4000
-                    _snackbar.multiLine = false
-                    _snackbar.show(qsTr("Recording saved: %1").arg(name))
+                    var name = root._recordingOutput.toString().split("/").pop();
+                    console.log("Recording: finalized, saved as " + name);
+                    _snackbar.duration = 4000;
+                    _snackbar.multiLine = false;
+                    _snackbar.show(qsTr("Recording saved: %1").arg(name));
                 }
             }
-            onErrorOccurred: function(error, errorString) {
-                console.log("Recording ERROR: code=" + error + " message=" + errorString)
-                root._recording = false
-                root._recTimer.stop()
-                _screenCapture.active = false
-                _windowCapture.active = false
-                _snackbar.duration = 4000
-                _snackbar.multiLine = false
-                _snackbar.show(qsTr("Recording failed: %1").arg(errorString))
+            onErrorOccurred: function (error, errorString) {
+                console.log("Recording ERROR: code=" + error + " message=" + errorString);
+                root._recording = false;
+                root._recTimer.stop();
+                _screenCapture.active = false;
+                _windowCapture.active = false;
+                _snackbar.duration = 4000;
+                _snackbar.multiLine = false;
+                _snackbar.show(qsTr("Recording failed: %1").arg(errorString));
             }
         }
         audioInput: AudioInput {
@@ -1176,7 +1356,9 @@ Window {
                         color: root.colors.onSurface
                     }
 
-                    Item { Layout.fillWidth: true }
+                    Item {
+                        Layout.fillWidth: true
+                    }
 
                     ComboBox {
                         id: _areaCombo
@@ -1199,7 +1381,9 @@ Window {
                         color: root.colors.onSurface
                     }
 
-                    Item { Layout.fillWidth: true }
+                    Item {
+                        Layout.fillWidth: true
+                    }
 
                     ComboBox {
                         id: _qualityCombo
@@ -1222,7 +1406,9 @@ Window {
                         color: root.colors.onSurface
                     }
 
-                    Item { Layout.fillWidth: true }
+                    Item {
+                        Layout.fillWidth: true
+                    }
 
                     ComboBox {
                         id: _micCombo
@@ -1246,14 +1432,14 @@ Window {
                 text: qsTr("Start Recording")
                 variant: "text"
                 onClicked: {
-                    _recDialog.accept()
+                    _recDialog.accept();
                 }
             }
         ]
 
         onAccepted: {
-            console.log("Recording: dialog accepted")
-            _saveRecDialog.openDialog()
+            console.log("Recording: dialog accepted");
+            _saveRecDialog.openDialog();
         }
     }
 
@@ -1285,13 +1471,17 @@ Window {
             spacing: 6
 
             Rectangle {
-                width: 8; height: 8; radius: 4
+                width: 8
+                height: 8
+                radius: 4
                 anchors.verticalCenter: parent.verticalCenter
                 color: "#e53935"
                 opacity: 0.9
                 NumberAnimation on opacity {
                     loops: Animation.Infinite
-                    from: 1.0; to: 0.3; duration: 800
+                    from: 1.0
+                    to: 0.3
+                    duration: 800
                     running: root._recording
                 }
             }
@@ -1302,23 +1492,29 @@ Window {
                 font.family: Theme.ChiTheme.fontFamily
                 font.pixelSize: root.typography.labelLarge.size
                 font.weight: Font.Medium
-                font.features: { "tnum": 1 }
+                font.features: {
+                    "tnum": 1
+                }
                 color: root.colors.onErrorContainer
                 text: {
-                    var m = Math.floor(root._recordingElapsed / 60)
-                    var s = root._recordingElapsed % 60
-                    return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0")
+                    var m = Math.floor(root._recordingElapsed / 60);
+                    var s = root._recordingElapsed % 60;
+                    return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
                 }
             }
 
             Rectangle {
-                width: 24; height: 24; radius: 12
+                width: 24
+                height: 24
+                radius: 12
                 anchors.verticalCenter: parent.verticalCenter
                 color: "#e53935"
 
                 Rectangle {
                     anchors.centerIn: parent
-                    width: 10; height: 10; radius: 2
+                    width: 10
+                    height: 10
+                    radius: 2
                     color: "white"
                 }
 
@@ -1339,107 +1535,99 @@ Window {
     }
 
     function _startRecording() {
-        console.log("Recording: _startRecording called, output=" + root._recordingOutput)
-        var qualityMap = [
-            MediaRecorder.VeryLowQuality,
-            MediaRecorder.LowQuality,
-            MediaRecorder.HighQuality,
-            MediaRecorder.VeryHighQuality
-        ]
-        var qIdx = root._lastRecSettings.quality
-        _mediaRecorder.quality = qualityMap[qIdx]
-        console.log("Recording: quality=" + qIdx + " area=" + root._lastRecSettings.area + " mic=" + root._lastRecSettings.mic)
+        console.log("Recording: _startRecording called, output=" + root._recordingOutput);
+        var qualityMap = [MediaRecorder.VeryLowQuality, MediaRecorder.LowQuality, MediaRecorder.HighQuality, MediaRecorder.VeryHighQuality];
+        var qIdx = root._lastRecSettings.quality;
+        _mediaRecorder.quality = qualityMap[qIdx];
+        console.log("Recording: quality=" + qIdx + " area=" + root._lastRecSettings.area + " mic=" + root._lastRecSettings.mic);
 
         if (root._lastRecSettings.mic === 1) {
-            _captureSession.audioInput = _audioInput
-            console.log("Recording: microphone enabled")
+            _captureSession.audioInput = _audioInput;
+            console.log("Recording: microphone enabled");
         } else {
-            _captureSession.audioInput = null
-            console.log("Recording: microphone disabled")
+            _captureSession.audioInput = null;
+            console.log("Recording: microphone disabled");
         }
 
-        _screenCapture.active = false
-        _windowCapture.active = false
+        _screenCapture.active = false;
+        _windowCapture.active = false;
 
         if (root._lastRecSettings.area === 0) {
-            _captureSession.windowCapture = null
-            _captureSession.screenCapture = _screenCapture
-            _screenCapture.screen = Screen
-            _screenCapture.active = true
-            console.log("Recording: full screen capture")
+            _captureSession.windowCapture = null;
+            _captureSession.screenCapture = _screenCapture;
+            _screenCapture.screen = Screen;
+            _screenCapture.active = true;
+            console.log("Recording: full screen capture");
         } else {
-            _captureSession.screenCapture = null
-            _captureSession.windowCapture = _windowCapture
-            var w = _findChiWindow()
+            _captureSession.screenCapture = null;
+            _captureSession.windowCapture = _windowCapture;
+            var w = _findChiWindow();
             if (w && w.isValid) {
-                _windowCapture.window = w
-                _windowCapture.active = true
-                console.log("Recording: window capture: " + w.description)
+                _windowCapture.window = w;
+                _windowCapture.active = true;
+                console.log("Recording: window capture: " + w.description);
             } else {
-                console.log("Recording: no capturable window found, use full screen")
-                _captureSession.windowCapture = null
-                _captureSession.screenCapture = _screenCapture
-                _screenCapture.screen = Screen
-                _screenCapture.active = true
+                console.log("Recording: no capturable window found, use full screen");
+                _captureSession.windowCapture = null;
+                _captureSession.screenCapture = _screenCapture;
+                _screenCapture.screen = Screen;
+                _screenCapture.active = true;
             }
         }
-        _recordingElapsed = 0
-        _recording = true
-        _recTimer.start()
-        _mediaRecorder.record()
-        console.log("Recording: started successfully")
+        _recordingElapsed = 0;
+        _recording = true;
+        _recTimer.start();
+        _mediaRecorder.record();
+        console.log("Recording: started successfully");
 
-        _snackbar.duration = 0
-        _snackbar.multiLine = false
-        _snackbar.show(qsTr("Recording…"), qsTr("Stop"))
+        _snackbar.duration = 0;
+        _snackbar.multiLine = false;
+        _snackbar.show(qsTr("Recording…"), qsTr("Stop"));
     }
 
     function _stopRecording() {
         if (!_recording) {
-            console.log("Recording: _stopRecording called but not recording, ignored")
-            return
+            console.log("Recording: _stopRecording called but not recording, ignored");
+            return;
         }
-        console.log("Recording: stopping...")
-        _recording = false
-        _recTimer.stop()
-        _mediaRecorder.stop()
-        _screenCapture.active = false
-        _windowCapture.active = false
-        _snackbar.duration = 0
-        _snackbar.hide()
-        console.log("Recording: stop requested, waiting for finalization")
+        console.log("Recording: stopping...");
+        _recording = false;
+        _recTimer.stop();
+        _mediaRecorder.stop();
+        _screenCapture.active = false;
+        _windowCapture.active = false;
+        _snackbar.duration = 0;
+        _snackbar.hide();
+        console.log("Recording: stop requested, waiting for finalization");
     }
 
     function _findChiWindow() {
-        var windows = _windowCapture.capturableWindows()
-        console.log("Recording: capturable windows count=" + windows.length)
+        var windows = _windowCapture.capturableWindows();
+        console.log("Recording: capturable windows count=" + windows.length);
         for (var i = 0; i < windows.length; i++) {
-            console.log("Recording:   window[" + i + "] '" + windows[i].description + "' valid=" + windows[i].isValid)
+            console.log("Recording:   window[" + i + "] '" + windows[i].description + "' valid=" + windows[i].isValid);
         }
         for (var j = 0; j < windows.length; j++) {
-            if (windows[j].description === root.title) return windows[j]
+            if (windows[j].description === root.title)
+                return windows[j];
         }
         for (var k = 0; k < windows.length; k++) {
-            if (windows[k].isValid) return windows[k]
+            if (windows[k].isValid)
+                return windows[k];
         }
-        return null
+        return null;
     }
 
     function _quickRecord() {
-        root._recordingOutput = _defaultRecordingPath()
-        console.log("Recording: quick record, path=" + root._recordingOutput)
-        _startRecording()
+        root._recordingOutput = _defaultRecordingPath();
+        console.log("Recording: quick record, path=" + root._recordingOutput);
+        _startRecording();
     }
 
     function _defaultRecordingPath() {
-        var d = new Date()
-        var ts = d.getFullYear() + "-" +
-            String(d.getMonth() + 1).padStart(2, "0") + "-" +
-            String(d.getDate()).padStart(2, "0") + "-" +
-            String(d.getHours()).padStart(2, "0") +
-            String(d.getMinutes()).padStart(2, "0") +
-            String(d.getSeconds()).padStart(2, "0")
-        return "file://" + _clipboard.videosDir() + "/Chi-recording-" + ts + ".mp4"
+        var d = new Date();
+        var ts = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") + "-" + String(d.getHours()).padStart(2, "0") + String(d.getMinutes()).padStart(2, "0") + String(d.getSeconds()).padStart(2, "0");
+        return "file://" + _clipboard.videosDir() + "/Chi-recording-" + ts + ".mp4";
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -1453,10 +1641,12 @@ Window {
         property string iconName: ""
         property string tooltipText: ""
         property bool checked: false
-        signal clicked()
+        signal clicked
 
-        implicitWidth: 36; implicitHeight: 36
-        width: 36; height: 36
+        implicitWidth: 36
+        implicitHeight: 36
+        width: 36
+        height: 36
         opacity: _tbtn.enabled ? 1.0 : 0.38
 
         activeFocusOnTab: true
@@ -1487,20 +1677,18 @@ Window {
             radius: 10
             color: {
                 if (_tbtn.checked)
-                    return root.colors.secondaryContainer
+                    return root.colors.secondaryContainer;
                 if (_tbtnMouse.pressed)
-                    return Qt.rgba(root.colors.primary.r,
-                                   root.colors.primary.g,
-                                   root.colors.primary.b, 0.15)
+                    return Qt.rgba(root.colors.primary.r, root.colors.primary.g, root.colors.primary.b, 0.15);
                 if (_tbtnMouse.containsMouse)
-                    return Qt.rgba(root.colors.onSurface.r,
-                                   root.colors.onSurface.g,
-                                   root.colors.onSurface.b, 0.08)
-                return "transparent"
+                    return Qt.rgba(root.colors.onSurface.r, root.colors.onSurface.g, root.colors.onSurface.b, 0.08);
+                return "transparent";
             }
 
             Behavior on color {
-                ColorAnimation { duration: root.motion.durationFast }
+                ColorAnimation {
+                    duration: root.motion.durationFast
+                }
             }
         }
 
@@ -1508,9 +1696,7 @@ Window {
             anchors.centerIn: parent
             source: _tbtn.iconName
             size: 20
-            color: _tbtn.checked
-                   ? root.colors.onSecondaryContainer
-                   : root.colors.onSurface
+            color: _tbtn.checked ? root.colors.onSecondaryContainer : root.colors.onSurface
         }
 
         MouseArea {
@@ -1519,47 +1705,52 @@ Window {
             hoverEnabled: true
             cursorShape: _tbtn.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
             onClicked: {
-                root._keyboardFocusActive = false
-                _tbtn.forceActiveFocus()
-                _tbtn.clicked()
+                root._keyboardFocusActive = false;
+                _tbtn.forceActiveFocus();
+                _tbtn.clicked();
             }
         }
 
         Menus.Tooltip {
             id: _tooltipPopup
-            text: _tbtn.tooltipText !== "" && _tbtn.enabled && !root._anyMenuOpen
-                  ? _tbtn.tooltipText : ""
+            text: _tbtn.tooltipText !== "" && _tbtn.enabled && !root._anyMenuOpen ? _tbtn.tooltipText : ""
             delay: 500
             positionTarget: _tbtnMouse
         }
 
         function _clampTbTooltip() {
-            _tooltipPopup.x = (_tbtn.width - _tooltipPopup.width) / 2
-            _tooltipPopup.y = _tbtn.height + 6
+            _tooltipPopup.x = (_tbtn.width - _tooltipPopup.width) / 2;
+            _tooltipPopup.y = _tbtn.height + 6;
             if (root) {
-                var sx = _tooltipPopup.mapToItem(root.contentItem, 0, 0).x
-                if (sx < 4) _tooltipPopup.x += 4 - sx
+                var sx = _tooltipPopup.mapToItem(root.contentItem, 0, 0).x;
+                if (sx < 4)
+                    _tooltipPopup.x += 4 - sx;
                 if (sx + _tooltipPopup.width > root.width - 4)
-                    _tooltipPopup.x -= sx + _tooltipPopup.width - root.width + 4
+                    _tooltipPopup.x -= sx + _tooltipPopup.width - root.width + 4;
             }
-            _tooltipPopup._positionCaret()
+            _tooltipPopup._positionCaret();
         }
 
         Connections {
             target: _tbtnMouse
             function onContainsMouseChanged() {
                 if (_tbtnMouse.containsMouse && _tbtn.tooltipText !== "" && _tbtn.enabled && !root._anyMenuOpen) {
-                    _clampTbTooltip()
-                    _tooltipPopup.show()
+                    _clampTbTooltip();
+                    _tooltipPopup.show();
                 } else {
-                    _tooltipPopup.hide()
+                    _tooltipPopup.hide();
                 }
             }
         }
 
         Connections {
             target: _tooltipPopup
-            function onWidthChanged() { if (_tooltipPopup.isVisible) { _clampTbTooltip(); _tooltipPopup._positionCaret() } }
+            function onWidthChanged() {
+                if (_tooltipPopup.isVisible) {
+                    _clampTbTooltip();
+                    _tooltipPopup._positionCaret();
+                }
+            }
         }
     }
 
@@ -1574,7 +1765,8 @@ Window {
 
         implicitWidth: _mbtnLabel.implicitWidth + 24
         implicitHeight: 36
-        width: implicitWidth; height: 36
+        width: implicitWidth
+        height: 36
 
         activeFocusOnTab: true
 
@@ -1587,18 +1779,22 @@ Window {
         Keys.onEnterPressed: _ddMenu.open()
         Keys.onSpacePressed: _ddMenu.open()
         Keys.onRightPressed: {
-            if (_ddMenu.visible) return
-            var next = _menuBarRepeater.itemAt(index + 1)
-            if (next) next.forceActiveFocus()
+            if (_ddMenu.visible)
+                return;
+            var next = _menuBarRepeater.itemAt(index + 1);
+            if (next)
+                next.forceActiveFocus();
         }
         Keys.onLeftPressed: {
-            if (_ddMenu.visible) return
-            var prev = _menuBarRepeater.itemAt(index - 1)
-            if (prev) prev.forceActiveFocus()
+            if (_ddMenu.visible)
+                return;
+            var prev = _menuBarRepeater.itemAt(index - 1);
+            if (prev)
+                prev.forceActiveFocus();
         }
         Keys.onEscapePressed: {
             if (_ddMenu.visible)
-                _ddMenu.close()
+                _ddMenu.close();
         }
 
         // Focus ring — keyboard only
@@ -1618,14 +1814,14 @@ Window {
             radius: 8
             color: {
                 if (_mbtnMouse.containsMouse || _ddMenu.visible)
-                    return Qt.rgba(root.colors.onSurface.r,
-                                   root.colors.onSurface.g,
-                                   root.colors.onSurface.b, 0.08)
-                return "transparent"
+                    return Qt.rgba(root.colors.onSurface.r, root.colors.onSurface.g, root.colors.onSurface.b, 0.08);
+                return "transparent";
             }
 
             Behavior on color {
-                ColorAnimation { duration: root.motion.durationFast }
+                ColorAnimation {
+                    duration: root.motion.durationFast
+                }
             }
         }
 
@@ -1646,12 +1842,12 @@ Window {
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: {
-                root._keyboardFocusActive = false
-                _mbtn.forceActiveFocus()
+                root._keyboardFocusActive = false;
+                _mbtn.forceActiveFocus();
                 if (_ddMenu.open) {
-                    _ddMenu.close()
+                    _ddMenu.close();
                 } else {
-                    _ddMenu.open()
+                    _ddMenu.open();
                 }
             }
         }
@@ -1666,50 +1862,56 @@ Window {
             target: _mbtnMouse
             function onContainsMouseChanged() {
                 if (_mbtnMouse.containsMouse)
-                    _mbtnHoverTimer.restart()
+                    _mbtnHoverTimer.restart();
                 else
-                    _mbtnHoverTimer.stop()
+                    _mbtnHoverTimer.stop();
             }
         }
 
         Menus.Tooltip {
             id: _mbtnTooltip
             text: {
-                var t = _mbtn.tooltipText || _mbtn.menuData.title || ""
-                return t !== "" && !root._anyMenuOpen ? t : ""
+                var t = _mbtn.tooltipText || _mbtn.menuData.title || "";
+                return t !== "" && !root._anyMenuOpen ? t : "";
             }
             delay: 500
             positionTarget: _mbtnMouse
         }
 
         function _clampMbTooltip() {
-            _mbtnTooltip.x = (_mbtn.width - _mbtnTooltip.width) / 2
-            _mbtnTooltip.y = _mbtn.height + 6
+            _mbtnTooltip.x = (_mbtn.width - _mbtnTooltip.width) / 2;
+            _mbtnTooltip.y = _mbtn.height + 6;
             if (root) {
-                var sx = _mbtnTooltip.mapToItem(root.contentItem, 0, 0).x
-                if (sx < 4) _mbtnTooltip.x += 4 - sx
+                var sx = _mbtnTooltip.mapToItem(root.contentItem, 0, 0).x;
+                if (sx < 4)
+                    _mbtnTooltip.x += 4 - sx;
                 if (sx + _mbtnTooltip.width > root.width - 4)
-                    _mbtnTooltip.x -= sx + _mbtnTooltip.width - root.width + 4
+                    _mbtnTooltip.x -= sx + _mbtnTooltip.width - root.width + 4;
             }
-            _mbtnTooltip._positionCaret()
+            _mbtnTooltip._positionCaret();
         }
 
         Connections {
             target: _mbtnMouse
             function onContainsMouseChanged() {
-                var t = _mbtn.tooltipText || _mbtn.menuData.title || ""
+                var t = _mbtn.tooltipText || _mbtn.menuData.title || "";
                 if (_mbtnMouse.containsMouse && t !== "" && !root._anyMenuOpen) {
-                    _clampMbTooltip()
-                    _mbtnTooltip.show()
+                    _clampMbTooltip();
+                    _mbtnTooltip.show();
                 } else {
-                    _mbtnTooltip.hide()
+                    _mbtnTooltip.hide();
                 }
             }
         }
 
         Connections {
             target: _mbtnTooltip
-            function onWidthChanged() { if (_mbtnTooltip.isVisible) { _clampMbTooltip(); _mbtnTooltip._positionCaret() } }
+            function onWidthChanged() {
+                if (_mbtnTooltip.isVisible) {
+                    _clampMbTooltip();
+                    _mbtnTooltip._positionCaret();
+                }
+            }
         }
 
         Menus.DropdownMenu {
@@ -1717,8 +1919,8 @@ Window {
             y: parent.height + 4
             items: _mbtn.menuData.items || []
             onVisibleChanged: root._anyMenuOpen = visible
-            onItemClicked: function(itemId) {
-                _mbtn.itemTriggered(itemId)
+            onItemClicked: function (itemId) {
+                _mbtn.itemTriggered(itemId);
             }
         }
     }
@@ -1731,53 +1933,83 @@ Window {
         z: 100002
 
         readonly property var _qpAllItems: {
-            var r = []
+            var r = [];
             for (var mi = 0; mi < root._allMenus.length; mi++) {
-                var menu = root._allMenus[mi]
-                if (!menu.items) continue
+                var menu = root._allMenus[mi];
+                if (!menu.items)
+                    continue;
                 for (var ii = 0; ii < menu.items.length; ii++) {
-                    var item = menu.items[ii]
-                    if (item.type === "divider") continue
+                    var item = menu.items[ii];
+                    if (item.type === "divider")
+                        continue;
                     r.push({
                         menuId: menu.id,
                         itemId: item.id,
                         text: item.text || "",
                         shortcut: item.shortcut || "",
                         icon: item.icon || ""
-                    })
+                    });
                 }
             }
             // Window actions
-            r.push(
-                { menuId: "_window", itemId: "screenshot", text: qsTr("Take Screenshot"), shortcut: "Ctrl+Print", icon: "camera" },
-                { menuId: "_window", itemId: "recording", text: qsTr("Screen Recording"), shortcut: "Ctrl+Shift+R", icon: "videocam" },
-                { menuId: "_window", itemId: "quickrecord", text: qsTr("Quick Record"), shortcut: "Ctrl+Alt+R", icon: "radio_button_checked" },
-                { menuId: "_window", itemId: "focus", text: qsTr("Toggle Focus Mode"), shortcut: "Ctrl+Shift+F", icon: "center_focus_strong" },
-                { menuId: "_window", itemId: "fullscreen", text: qsTr("Toggle Fullscreen"), shortcut: "F11", icon: "fullscreen" },
-                { menuId: "_window", itemId: "sidebar", text: qsTr("Toggle Sidebar"), shortcut: "Ctrl+B", icon: "view_sidebar" }
-            )
-            return r
+            r.push({
+                menuId: "_window",
+                itemId: "screenshot",
+                text: qsTr("Take Screenshot"),
+                shortcut: "Ctrl+Print",
+                icon: "camera"
+            }, {
+                menuId: "_window",
+                itemId: "recording",
+                text: qsTr("Screen Recording"),
+                shortcut: "Ctrl+Shift+R",
+                icon: "videocam"
+            }, {
+                menuId: "_window",
+                itemId: "quickrecord",
+                text: qsTr("Quick Record"),
+                shortcut: "Ctrl+Alt+R",
+                icon: "radio_button_checked"
+            }, {
+                menuId: "_window",
+                itemId: "focus",
+                text: qsTr("Toggle Focus Mode"),
+                shortcut: "Ctrl+Shift+F",
+                icon: "center_focus_strong"
+            }, {
+                menuId: "_window",
+                itemId: "fullscreen",
+                text: qsTr("Toggle Fullscreen"),
+                shortcut: "F11",
+                icon: "fullscreen"
+            }, {
+                menuId: "_window",
+                itemId: "sidebar",
+                text: qsTr("Toggle Sidebar"),
+                shortcut: "Ctrl+B",
+                icon: "view_sidebar"
+            });
+            return r;
         }
 
         property string _qpFilter: ""
 
         readonly property var _qpFiltered: {
-            var f = _qpFilter.toLowerCase().trim()
-            if (!f) return _qpAllItems
-            var r = []
+            var f = _qpFilter.toLowerCase().trim();
+            if (!f)
+                return _qpAllItems;
+            var r = [];
             for (var i = 0; i < _qpAllItems.length; i++) {
-                var it = _qpAllItems[i]
-                if ((it.text || "").toLowerCase().indexOf(f) >= 0
-                    || (it.shortcut || "").toLowerCase().indexOf(f) >= 0)
-                    r.push(it)
+                var it = _qpAllItems[i];
+                if ((it.text || "").toLowerCase().indexOf(f) >= 0 || (it.shortcut || "").toLowerCase().indexOf(f) >= 0)
+                    r.push(it);
             }
-            return r
+            return r;
         }
 
         property int _qpNavOffset: 0
 
-        readonly property int _qpSelected: _qpFiltered.length > 0
-            ? Math.min(_qpNavOffset, _qpFiltered.length - 1) : -1
+        readonly property int _qpSelected: _qpFiltered.length > 0 ? Math.min(_qpNavOffset, _qpFiltered.length - 1) : -1
 
         visible: root._qpOpen
 
@@ -1786,7 +2018,11 @@ Window {
             anchors.fill: parent
             color: "#000000"
             opacity: root._qpOpen ? 0.3 : 0.0
-            Behavior on opacity { NumberAnimation { duration: 150 } }
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 150
+                }
+            }
 
             MouseArea {
                 anchors.fill: parent
@@ -1826,7 +2062,13 @@ Window {
 
                     TextInput {
                         id: _qpSearch
-                        anchors { left: parent.left; leftMargin: 12; right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
+                        anchors {
+                            left: parent.left
+                            leftMargin: 12
+                            right: parent.right
+                            rightMargin: 12
+                            verticalCenter: parent.verticalCenter
+                        }
                         font.pixelSize: 14
                         font.family: root.fontFamily
                         color: root.colors.onSurface
@@ -1834,27 +2076,32 @@ Window {
 
                         focus: true
                         onTextChanged: {
-                            _qp._qpFilter = text
-                            _qp._qpNavOffset = 0
+                            _qp._qpFilter = text;
+                            _qp._qpNavOffset = 0;
                         }
 
                         Keys.onUpPressed: {
-                            if (_qp._qpNavOffset > 0) _qp._qpNavOffset--
+                            if (_qp._qpNavOffset > 0)
+                                _qp._qpNavOffset--;
                         }
                         Keys.onDownPressed: {
-                            if (_qp._qpNavOffset < _qp._qpFiltered.length - 1) _qp._qpNavOffset++
+                            if (_qp._qpNavOffset < _qp._qpFiltered.length - 1)
+                                _qp._qpNavOffset++;
                         }
                         Keys.onReturnPressed: {
-                            var s = _qp._qpSelected
+                            var s = _qp._qpSelected;
                             if (s >= 0 && s < _qp._qpFiltered.length) {
-                                var it = _qp._qpFiltered[s]
-                                root._qpOpen = false
-                                root._handleMenuAction(it.menuId, it.itemId)
+                                var it = _qp._qpFiltered[s];
+                                root._qpOpen = false;
+                                root._handleMenuAction(it.menuId, it.itemId);
                             }
                         }
 
                         Text {
-                            anchors { left: parent.left; verticalCenter: parent.verticalCenter }
+                            anchors {
+                                left: parent.left
+                                verticalCenter: parent.verticalCenter
+                            }
                             text: qsTr("Search commands…")
                             font: parent.font
                             color: root.colors.onSurfaceVariant
@@ -1885,12 +2132,16 @@ Window {
                         width: _qpList.width
                         height: 36
                         radius: 8
-                        color: index === _qp._qpSelected
-                               ? root.colors.primaryContainer
-                               : (_qpMouse.containsMouse ? Qt.rgba(root.colors.onSurface.r, root.colors.onSurface.g, root.colors.onSurface.b, 0.06) : "transparent")
+                        color: index === _qp._qpSelected ? root.colors.primaryContainer : (_qpMouse.containsMouse ? Qt.rgba(root.colors.onSurface.r, root.colors.onSurface.g, root.colors.onSurface.b, 0.06) : "transparent")
 
                         RowLayout {
-                            anchors { left: parent.left; leftMargin: 12; right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
+                            anchors {
+                                left: parent.left
+                                leftMargin: 12
+                                right: parent.right
+                                rightMargin: 12
+                                verticalCenter: parent.verticalCenter
+                            }
                             spacing: 8
 
                             Text {
@@ -1918,14 +2169,13 @@ Window {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                root._qpOpen = false
-                                root._handleMenuAction(modelData.menuId, modelData.itemId)
+                                root._qpOpen = false;
+                                root._handleMenuAction(modelData.menuId, modelData.itemId);
                             }
                         }
                     }
                 }
             }
-
         }
     }
 
@@ -1934,35 +2184,36 @@ Window {
     // ═══════════════════════════════════════════════════════════════
 
     function showToolbar() {
-        toolbarVisible = true
-        _toolbarAutoHidden = false
+        toolbarVisible = true;
+        _toolbarAutoHidden = false;
     }
 
     function hideToolbar() {
         if (toolbarBehavior === "autoHide")
-            _toolbarAutoHidden = true
+            _toolbarAutoHidden = true;
         else
-            toolbarVisible = false
+            toolbarVisible = false;
     }
 
     function toggleToolbar() {
         if (toolbarBehavior === "autoHide")
-            _toolbarAutoHidden = !_toolbarAutoHidden
+            _toolbarAutoHidden = !_toolbarAutoHidden;
         else
-            toolbarVisible = !toolbarVisible
+            toolbarVisible = !toolbarVisible;
     }
 
     function setMenuStyle(style) {
-        if (showMenu) menuStyle = style
+        if (showMenu)
+            menuStyle = style;
     }
 
     function _toggleToolbarAutoHide() {
         if (toolbarBehavior === "autoHide") {
-            toolbarBehavior = "visible"
-            _toolbarAutoHidden = false
+            toolbarBehavior = "visible";
+            _toolbarAutoHidden = false;
         } else {
-            toolbarBehavior = "autoHide"
-            _toolbarAutoHidden = true
+            toolbarBehavior = "autoHide";
+            _toolbarAutoHidden = true;
         }
     }
 
@@ -1971,53 +2222,53 @@ Window {
     // ═══════════════════════════════════════════════════════════════
 
     function _handleMenuAction(menuId, itemId) {
-        if (!showMenu) return
-
-        menuItemTriggered(menuId, itemId)
+        if (!showMenu)
+            return;
+        menuItemTriggered(menuId, itemId);
 
         if (globalMenuActive)
-            globalMenuItemActivated(menuId, itemId)
+            globalMenuItemActivated(menuId, itemId);
 
         switch (menuId + "." + itemId) {
         case "view.sidebar":
-            sidebarButtonClicked()
-            break
+            sidebarButtonClicked();
+            break;
         case "view.toolbar_autohide":
-            _toggleToolbarAutoHide()
-            break
+            _toggleToolbarAutoHide();
+            break;
         case "view.focus":
-            _focusMode = !_focusMode
-            break
+            _focusMode = !_focusMode;
+            break;
         case "view.menu_overflow":
-            menuStyle = "overflow"
-            break
+            menuStyle = "overflow";
+            break;
         case "view.menu_traditional":
-            menuStyle = "traditional"
-            break
+            menuStyle = "traditional";
+            break;
         case "view.menu_auto":
-            menuStyle = "auto"
-            break
+            menuStyle = "auto";
+            break;
         case "file.exit":
-            root.close()
-            break
+            root.close();
+            break;
         case "_window.screenshot":
-            _screenshotDialog.openDialog()
-            break
+            _screenshotDialog.openDialog();
+            break;
         case "_window.recording":
-            _recDialog.show()
-            break
+            _recDialog.show();
+            break;
         case "_window.quickrecord":
-            _quickRecord()
-            break
+            _quickRecord();
+            break;
         case "_window.focus":
-            _focusMode = !_focusMode
-            break
+            _focusMode = !_focusMode;
+            break;
         case "_window.fullscreen":
-            root.visibility = root.visibility === Window.FullScreen ? Window.Windowed : Window.FullScreen
-            break
+            root.visibility = root.visibility === Window.FullScreen ? Window.Windowed : Window.FullScreen;
+            break;
         case "_window.sidebar":
-            sidebarButtonClicked()
-            break
+            sidebarButtonClicked();
+            break;
         }
     }
 }

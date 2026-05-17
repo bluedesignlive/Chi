@@ -29,21 +29,22 @@ Popup {
 
     // Content-aware width
     readonly property int _contentWidth: {
-        var w = 200
+        var w = 200;
         for (var i = 0; i < root.menus.length; i++) {
-            var t = root.menus[i].title || ""
-            var tw = t.length * 7 + 56
-            if (tw > w) w = tw
+            var t = root.menus[i].title || "";
+            var tw = t.length * 7 + 56;
+            if (tw > w)
+                w = tw;
         }
-        return Math.min(w, 360)
+        return Math.min(w, 360);
     }
     width: _contentWidth
 
     readonly property int _contentHeight: {
-        var h = 8
+        var h = 8;
         for (var i = 0; i < root.menus.length; i++)
-            h += 36
-        return h
+            h += 36;
+        return h;
     }
     height: Math.min(_contentHeight, maxHeight)
 
@@ -91,8 +92,7 @@ Popup {
                     anchors.leftMargin: 0
                     anchors.rightMargin: 0
 
-                    readonly property bool _hasItems: modelData.items
-                        && modelData.items.length > 0
+                    readonly property bool _hasItems: modelData.items && modelData.items.length > 0
 
                     Rectangle {
                         anchors.fill: parent
@@ -101,8 +101,7 @@ Popup {
                         anchors.topMargin: 1
                         anchors.bottomMargin: 1
                         radius: 8
-                        color: _headMouse.containsMouse && _hasItems
-                            ? Qt.alpha(root.colors.onSurface, 0.08) : "transparent"
+                        color: _headMouse.containsMouse && _hasItems ? Qt.alpha(root.colors.onSurface, 0.08) : "transparent"
 
                         RowLayout {
                             anchors.fill: parent
@@ -133,8 +132,7 @@ Popup {
                         Timer {
                             id: _cascadeTimer
                             interval: 60
-                            onTriggered: root._openCascade(modelData.items, modelData.id || "", index,
-                                _headMouse.mapToItem(null, 0, 0).y)
+                            onTriggered: root._openCascade(modelData.items, modelData.id || "", index, _headMouse.mapToItem(null, 0, 0).y)
                         }
 
                         MouseArea {
@@ -144,23 +142,21 @@ Popup {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
                                 if (_hasItems) {
-                                    _cascadeTimer.stop()
-                                    root._openCascade(modelData.items, modelData.id || "", index,
-                                        _headMouse.mapToItem(null, 0, 0).y)
+                                    _cascadeTimer.stop();
+                                    root._openCascade(modelData.items, modelData.id || "", index, _headMouse.mapToItem(null, 0, 0).y);
                                 }
                             }
                             onContainsMouseChanged: {
                                 if (containsMouse && _hasItems) {
                                     if (_cascadePopup.opened) {
-                                        _cascadeTimer.stop()
-                                        root._openCascade(modelData.items, modelData.id || "", index,
-                                            _headMouse.mapToItem(null, 0, 0).y)
+                                        _cascadeTimer.stop();
+                                        root._openCascade(modelData.items, modelData.id || "", index, _headMouse.mapToItem(null, 0, 0).y);
                                     } else {
-                                        _cascadeTimer.restart()
+                                        _cascadeTimer.restart();
                                     }
                                 } else {
-                                    _cascadeTimer.stop()
-                                    }
+                                    _cascadeTimer.stop();
+                                }
                             }
                         }
                     }
@@ -170,16 +166,16 @@ Popup {
     }
 
     function _openCascade(items, menuId, index, yPos) {
-        root._cascadeItems = items
-        root._cascadeMenuId = menuId
-        root._cascadeTargetIndex = index
+        root._cascadeItems = items;
+        root._cascadeMenuId = menuId;
+        root._cascadeTargetIndex = index;
 
         // Position to the right, aligned with hovered item
-        _cascadePopup.x = root.x + root.width
-        _cascadePopup.y = yPos
+        _cascadePopup.x = root.x + root.width;
+        _cascadePopup.y = yPos;
 
         if (!_cascadePopup.opened)
-            _cascadePopup.open()
+            _cascadePopup.open();
     }
 
     // ── Cascade flyout ──
@@ -190,10 +186,10 @@ Popup {
         focus: true
 
         readonly property int _contentH: {
-            var h = 0
+            var h = 0;
             for (var i = 0; i < root._cascadeItems.length; i++)
-                h += (root._cascadeItems[i].type === "divider" ? 9 : 36)
-            return h
+                h += (root._cascadeItems[i].type === "divider" ? 9 : 36);
+            return h;
         }
         height: Math.min(_contentH + 8, 400)
 
@@ -227,80 +223,81 @@ Popup {
                 spacing: 0
 
                 Repeater {
-                model: root._cascadeItems
+                    model: root._cascadeItems
 
-                delegate: Item {
-                    required property var modelData
-                    required property int index
+                    delegate: Item {
+                        required property var modelData
+                        required property int index
 
-                    width: parent ? parent.width : 232
-                    height: _isDivider ? 9 : 36
+                        width: parent ? parent.width : 232
+                        height: _isDivider ? 9 : 36
 
-                    readonly property string _id:       modelData.id || ""
-                    readonly property string _text:     modelData.text || ""
-                    readonly property string _icon:     modelData.icon || ""
-                    readonly property string _shortcut: modelData.shortcut || ""
-                    readonly property bool   _isDivider:  modelData.type === "divider"
+                        readonly property string _id: modelData.id || ""
+                        readonly property string _text: modelData.text || ""
+                        readonly property string _icon: modelData.icon || ""
+                        readonly property string _shortcut: modelData.shortcut || ""
+                        readonly property bool _isDivider: modelData.type === "divider"
 
-                    Rectangle {
-                        visible: _isDivider
-                        anchors.centerIn: parent
-                        width: parent.width - 16; height: 1
-                        color: root.colors.outlineVariant
-                    }
-
-                    Rectangle {
-                        visible: !_isDivider
-                        anchors.fill: parent
-                        anchors.margins: 1
-                        radius: 8
-                        color: _itemMouse.containsMouse
-                            ? Qt.alpha(root.colors.onSurface, 0.08) : "transparent"
-
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: 12
-                            anchors.rightMargin: 12
-                            spacing: 10
-
-                            Icon {
-                                visible: _icon !== ""
-                                source: _icon
-                                size: 18
-                                color: root.colors.onSurfaceVariant
-                                Layout.alignment: Qt.AlignVCenter
-                            }
-
-                            Text {
-                                text: _text
-                                font.family: Theme.ChiTheme.typography.bodyMedium.family
-                                font.pixelSize: Theme.ChiTheme.typography.bodyMedium.size
-                                font.weight: Theme.ChiTheme.typography.bodyMedium.weight
-                                color: root.colors.onSurface
-                                elide: Text.ElideRight
-                                Layout.fillWidth: true
-                            }
-
-                            Text {
-                                visible: _shortcut !== ""
-                                text: _shortcut
-                                font.family: Theme.ChiTheme.typography.labelSmall.family
-                                font.pixelSize: Theme.ChiTheme.typography.labelSmall.size
-                                font.weight: Theme.ChiTheme.typography.labelSmall.weight
-                                color: root.colors.onSurfaceVariant
-                                opacity: 0.6
-                                Layout.alignment: Qt.AlignVCenter
-                            }
+                        Rectangle {
+                            visible: _isDivider
+                            anchors.centerIn: parent
+                            width: parent.width - 16
+                            height: 1
+                            color: root.colors.outlineVariant
                         }
 
-                        MouseArea {
-                            id: _itemMouse
+                        Rectangle {
+                            visible: !_isDivider
                             anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                root.itemTriggered(root._cascadeMenuId, _id)
-                                root.close()
+                            anchors.margins: 1
+                            radius: 8
+                            color: _itemMouse.containsMouse ? Qt.alpha(root.colors.onSurface, 0.08) : "transparent"
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 12
+                                anchors.rightMargin: 12
+                                spacing: 10
+
+                                Icon {
+                                    visible: _icon !== ""
+                                    source: _icon
+                                    size: 18
+                                    color: root.colors.onSurfaceVariant
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+
+                                Text {
+                                    text: _text
+                                    font.family: Theme.ChiTheme.typography.bodyMedium.family
+                                    font.pixelSize: Theme.ChiTheme.typography.bodyMedium.size
+                                    font.weight: Theme.ChiTheme.typography.bodyMedium.weight
+                                    color: root.colors.onSurface
+                                    elide: Text.ElideRight
+                                    Layout.fillWidth: true
+                                }
+
+                                Text {
+                                    visible: _shortcut !== ""
+                                    text: _shortcut
+                                    font.family: Theme.ChiTheme.typography.labelSmall.family
+                                    font.pixelSize: Theme.ChiTheme.typography.labelSmall.size
+                                    font.weight: Theme.ChiTheme.typography.labelSmall.weight
+                                    color: root.colors.onSurfaceVariant
+                                    opacity: 0.6
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+                            }
+
+                            MouseArea {
+                                id: _itemMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    root.itemTriggered(root._cascadeMenuId, _id);
+                                    root.close();
+                                }
                             }
                         }
                     }
@@ -308,5 +305,4 @@ Popup {
             }
         }
     }
-}
 }

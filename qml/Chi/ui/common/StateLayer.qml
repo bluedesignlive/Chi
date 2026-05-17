@@ -19,12 +19,17 @@ Rectangle {
 
     // ─── Material 3 State Layer Opacities ────────────────────
     readonly property real _opacity: {
-        if (!enabled) return 0
-        if (dragged)  return Theme.ChiMotion.stateLayer.dragged
-        if (pressed) return Theme.ChiMotion.stateLayer.pressed
-        if (focused) return Theme.ChiMotion.stateLayer.focus
-        if (hovered) return Theme.ChiMotion.stateLayer.hover
-        return 0
+        if (!enabled)
+            return 0;
+        if (dragged)
+            return Theme.ChiMotion.stateLayer.dragged;
+        if (pressed)
+            return Theme.ChiMotion.stateLayer.pressed;
+        if (focused)
+            return Theme.ChiMotion.stateLayer.focus;
+        if (hovered)
+            return Theme.ChiMotion.stateLayer.hover;
+        return 0;
     }
 
     // ─── Implementation ───────────────────────────────────────
@@ -38,13 +43,9 @@ Rectangle {
     Behavior on opacity {
         enabled: Theme.ChiMotion.animationsEnabled
         OpacityAnimator {
-            duration: pressed
-                ? Theme.ChiMotion.press.duration
-                : Theme.ChiMotion.hoverState.duration
+            duration: pressed ? Theme.ChiMotion.press.duration : Theme.ChiMotion.hoverState.duration
             easing.type: Easing.BezierSpline
-            easing.bezierCurve: pressed
-                ? Theme.ChiMotion.press.curve
-                : Theme.ChiMotion.hoverState.curve
+            easing.bezierCurve: pressed ? Theme.ChiMotion.press.curve : Theme.ChiMotion.hoverState.curve
         }
     }
 }

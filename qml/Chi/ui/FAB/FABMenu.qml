@@ -56,8 +56,8 @@ Item {
                     enabled: modelData.enabled !== undefined ? modelData.enabled : true
 
                     onClicked: {
-                        fabMenu.itemClicked(index, text)
-                        fabMenu.open = false
+                        fabMenu.itemClicked(index, text);
+                        fabMenu.open = false;
                     }
                 }
             }

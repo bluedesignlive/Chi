@@ -90,16 +90,16 @@ QtObject {
     // ═══════════════════════════════════════════════════════════════
 
     readonly property QtObject easing: QtObject {
-        readonly property var emphasized:             [0.05, 0, 0.133333, 0.06, 0.166666, 0.4, 0.208333, 0.82, 0.25, 1, 1, 1]
-        readonly property var emphasizedAccelerate:   [0.3, 0.0, 0.8, 0.15]
-        readonly property var emphasizedDecelerate:   [0.05, 0.7, 0.1, 1.0]
-        readonly property var standard:               [0.2, 0.0, 0.0, 1.0]
-        readonly property var standardAccelerate:     [0.3, 0.0, 1.0, 1.0]
-        readonly property var standardDecelerate:     [0.0, 0.0, 0.0, 1.0]
-        readonly property var legacy:                 [0.4, 0.0, 0.2, 1.0]
-        readonly property var legacyAccelerate:       [0.4, 0.0, 1.0, 1.0]
-        readonly property var legacyDecelerate:       [0.0, 0.0, 0.2, 1.0]
-        readonly property var linear:                 [0.0, 0.0, 1.0, 1.0]
+        readonly property var emphasized: [0.05, 0, 0.133333, 0.06, 0.166666, 0.4, 0.208333, 0.82, 0.25, 1, 1, 1]
+        readonly property var emphasizedAccelerate: [0.3, 0.0, 0.8, 0.15]
+        readonly property var emphasizedDecelerate: [0.05, 0.7, 0.1, 1.0]
+        readonly property var standard: [0.2, 0.0, 0.0, 1.0]
+        readonly property var standardAccelerate: [0.3, 0.0, 1.0, 1.0]
+        readonly property var standardDecelerate: [0.0, 0.0, 0.0, 1.0]
+        readonly property var legacy: [0.4, 0.0, 0.2, 1.0]
+        readonly property var legacyAccelerate: [0.4, 0.0, 1.0, 1.0]
+        readonly property var legacyDecelerate: [0.0, 0.0, 0.2, 1.0]
+        readonly property var linear: [0.0, 0.0, 1.0, 1.0]
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -107,18 +107,18 @@ QtObject {
     // ═══════════════════════════════════════════════════════════════
 
     readonly property QtObject duration: QtObject {
-        readonly property int short1:      50
-        readonly property int short2:     100
-        readonly property int short3:     150
-        readonly property int short4:     200
-        readonly property int medium1:    250
-        readonly property int medium2:    300
-        readonly property int medium3:    350
-        readonly property int medium4:    400
-        readonly property int long1:      450
-        readonly property int long2:      500
-        readonly property int long3:      550
-        readonly property int long4:      600
+        readonly property int short1: 50
+        readonly property int short2: 100
+        readonly property int short3: 150
+        readonly property int short4: 200
+        readonly property int medium1: 250
+        readonly property int medium2: 300
+        readonly property int medium3: 350
+        readonly property int medium4: 400
+        readonly property int long1: 450
+        readonly property int long2: 500
+        readonly property int long3: 550
+        readonly property int long4: 600
         readonly property int extraLong1: 700
         readonly property int extraLong2: 800
         readonly property int extraLong3: 900
@@ -130,10 +130,10 @@ QtObject {
     // ═══════════════════════════════════════════════════════════════
 
     readonly property QtObject stateLayer: QtObject {
-        readonly property real hover:    0.08
-        readonly property real focus:    0.10
-        readonly property real pressed:  0.10
-        readonly property real dragged:  0.16
+        readonly property real hover: 0.08
+        readonly property real focus: 0.10
+        readonly property real pressed: 0.10
+        readonly property real dragged: 0.16
         readonly property real disabled: 0.38
     }
 
@@ -232,21 +232,21 @@ QtObject {
     //  New components should use the tokens/presets above.
     // ═══════════════════════════════════════════════════════════════
 
-    readonly property int durationFast:      motion.duration.short2
-    readonly property int durationMedium:    motion.duration.short4
-    readonly property int durationSlow:      motion.duration.medium3
+    readonly property int durationFast: motion.duration.short2
+    readonly property int durationMedium: motion.duration.short4
+    readonly property int durationSlow: motion.duration.medium3
     readonly property int durationExpressive: motion.duration.long2
 
-    readonly property int easeStandard:    Easing.OutCubic
-    readonly property int easeEmphasized:  Easing.OutQuart
-    readonly property int easeBounce:      Easing.OutBounce
-    readonly property int easeElastic:     Easing.OutElastic
-    readonly property int easeBack:        Easing.OutBack
+    readonly property int easeStandard: Easing.OutCubic
+    readonly property int easeEmphasized: Easing.OutQuart
+    readonly property int easeBounce: Easing.OutBounce
+    readonly property int easeElastic: Easing.OutElastic
+    readonly property int easeBack: Easing.OutBack
 
-    readonly property int pageExitDuration:  motion.page.exitDuration
+    readonly property int pageExitDuration: motion.page.exitDuration
     readonly property int pageEnterDuration: motion.page.enterDuration
-    readonly property int pageExitEasing:    Easing.InQuart
-    readonly property int pageEnterEasing:   Easing.OutQuart
+    readonly property int pageExitEasing: Easing.InQuart
+    readonly property int pageEnterEasing: Easing.OutQuart
     readonly property real pageSlideDistance: motion.page.slideDistance
-    readonly property real pageScaleOut:      motion.page.scaleOut
+    readonly property real pageScaleOut: motion.page.scaleOut
 }

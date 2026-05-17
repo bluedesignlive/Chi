@@ -15,13 +15,28 @@ Item {
     property bool wrap: false
     property string size: "medium"           // "small", "medium", "large"
 
-    signal valueModified()
+    signal valueModified
 
     readonly property var sizeSpecs: ({
-        small: { height: 32, width: 100, fontSize: 13, buttonSize: 28 },
-        medium: { height: 40, width: 120, fontSize: 14, buttonSize: 36 },
-        large: { height: 48, width: 140, fontSize: 16, buttonSize: 44 }
-    })
+            small: {
+                height: 32,
+                width: 100,
+                fontSize: 13,
+                buttonSize: 28
+            },
+            medium: {
+                height: 40,
+                width: 120,
+                fontSize: 14,
+                buttonSize: 36
+            },
+            large: {
+                height: 48,
+                width: 140,
+                fontSize: 16,
+                buttonSize: 44
+            }
+        })
 
     readonly property var currentSize: sizeSpecs[size] || sizeSpecs.medium
 
@@ -41,7 +56,9 @@ Item {
         border.color: colors.outline
 
         Behavior on color {
-            ColorAnimation { duration: 200 }
+            ColorAnimation {
+                duration: 200
+            }
         }
 
         RowLayout {
@@ -117,16 +134,20 @@ Item {
                     }
 
                     onEditingFinished: {
-                        var newVal = parseFloat(text)
+                        var newVal = parseFloat(text);
                         if (!isNaN(newVal)) {
-                            value = Math.max(from, Math.min(to, newVal))
-                            valueModified()
+                            value = Math.max(from, Math.min(to, newVal));
+                            valueModified();
                         }
-                        text = Qt.binding(function() { return value.toFixed(decimals) })
+                        text = Qt.binding(function () {
+                            return value.toFixed(decimals);
+                        });
                     }
 
                     Behavior on color {
-                        ColorAnimation { duration: 200 }
+                        ColorAnimation {
+                            duration: 200
+                        }
                     }
                 }
             }
@@ -179,24 +200,28 @@ Item {
 
     function increase() {
         if (value + stepSize > to) {
-            if (wrap) value = from
+            if (wrap)
+                value = from;
         } else {
-            value += stepSize
+            value += stepSize;
         }
-        valueModified()
+        valueModified();
     }
 
     function decrease() {
         if (value - stepSize < from) {
-            if (wrap) value = to
+            if (wrap)
+                value = to;
         } else {
-            value -= stepSize
+            value -= stepSize;
         }
-        valueModified()
+        valueModified();
     }
 
-    Keys.onUpPressed: if (enabled) increase()
-    Keys.onDownPressed: if (enabled) decrease()
+    Keys.onUpPressed: if (enabled)
+        increase()
+    Keys.onDownPressed: if (enabled)
+        decrease()
 
     Accessible.role: Accessible.SpinBox
     Accessible.name: "Number input"

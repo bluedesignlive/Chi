@@ -10,20 +10,20 @@ T.SwipeDelegate {
     property string supportingText: ""
     property string leadingIcon: ""
     property string trailingText: ""
-    
+
     // Swipe Configuration
     property string startActionIcon: "archive"
     property color startActionColor: Theme.ChiTheme.colors.primaryContainer
     property string endActionIcon: "delete"
     property color endActionColor: Theme.ChiTheme.colors.errorContainer
-    
-    signal startActionTriggered()
-    signal endActionTriggered()
+
+    signal startActionTriggered
+    signal endActionTriggered
 
     property var colors: Theme.ChiTheme.colors
     readonly property string fontFamily: Theme.ChiTheme.fontFamily
     readonly property string iconFamily: Theme.ChiTheme.iconFamily
-    
+
     implicitWidth: 360
     implicitHeight: 72
 
@@ -31,20 +31,24 @@ T.SwipeDelegate {
     background: Rectangle {
         color: control.highlighted ? colors.surfaceContainerHighest : colors.surface
         radius: 12
-        
+
         Rectangle {
             anchors.fill: parent
             radius: 12
             color: colors.onSurface
             opacity: control.pressed ? 0.12 : (control.hovered ? 0.08 : 0)
-            Behavior on opacity { NumberAnimation { duration: 150 } }
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 150
+                }
+            }
         }
     }
 
     // Content
     contentItem: RowLayout {
         spacing: 16
-        
+
         Item {
             Layout.preferredWidth: 40
             Layout.preferredHeight: 40
@@ -91,7 +95,8 @@ T.SwipeDelegate {
 
     // Swipe Actions
     swipe.left: Rectangle {
-        width: parent.width; height: parent.height
+        width: parent.width
+        height: parent.height
         radius: 12
         color: control.startActionColor
         clip: true
@@ -100,13 +105,17 @@ T.SwipeDelegate {
             font.family: iconFamily
             font.pixelSize: 24
             color: colors.onPrimaryContainer
-            anchors.left: parent.left; anchors.leftMargin: 24; anchors.verticalCenter: parent.verticalCenter
+            anchors.left: parent.left
+            anchors.leftMargin: 24
+            anchors.verticalCenter: parent.verticalCenter
         }
-        onVisibleChanged: if(visible && control.swipe.position > 0.4) control.startActionTriggered()
+        onVisibleChanged: if (visible && control.swipe.position > 0.4)
+            control.startActionTriggered()
     }
 
     swipe.right: Rectangle {
-        width: parent.width; height: parent.height
+        width: parent.width
+        height: parent.height
         radius: 12
         color: control.endActionColor
         clip: true
@@ -115,8 +124,11 @@ T.SwipeDelegate {
             font.family: iconFamily
             font.pixelSize: 24
             color: colors.onErrorContainer
-            anchors.right: parent.right; anchors.rightMargin: 24; anchors.verticalCenter: parent.verticalCenter
+            anchors.right: parent.right
+            anchors.rightMargin: 24
+            anchors.verticalCenter: parent.verticalCenter
         }
-        onVisibleChanged: if(visible && control.swipe.position < -0.4) control.endActionTriggered()
+        onVisibleChanged: if (visible && control.swipe.position < -0.4)
+            control.endActionTriggered()
     }
 }

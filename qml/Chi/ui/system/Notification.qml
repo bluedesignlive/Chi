@@ -15,9 +15,9 @@ Item {
     property bool showProgress: false
     property real progress: 0
 
-    signal clicked()
-    signal actionClicked()
-    signal closed()
+    signal clicked
+    signal actionClicked
+    signal closed
 
     readonly property bool hasDismiss: timeout > 0 || urgency !== "critical"
     readonly property bool hasAction: actionText !== ""
@@ -26,12 +26,9 @@ Item {
     readonly property bool _isLow: urgency === "low"
 
     // Urgency-based colors cached once
-    readonly property color _urgencyBg: _isCritical ? colors.errorContainer :
-                                        (_isLow ? colors.surfaceContainerHighest : colors.primaryContainer)
-    readonly property color _urgencyFg: _isCritical ? colors.onErrorContainer :
-                                        (_isLow ? colors.onSurfaceVariant : colors.onPrimaryContainer)
-    readonly property color _urgencyStrip: _isCritical ? colors.error :
-                                           (_isLow ? colors.outline : colors.primary)
+    readonly property color _urgencyBg: _isCritical ? colors.errorContainer : (_isLow ? colors.surfaceContainerHighest : colors.primaryContainer)
+    readonly property color _urgencyFg: _isCritical ? colors.onErrorContainer : (_isLow ? colors.onSurfaceVariant : colors.onPrimaryContainer)
+    readonly property color _urgencyStrip: _isCritical ? colors.error : (_isLow ? colors.outline : colors.primary)
 
     implicitWidth: 360
     implicitHeight: contentColumn.implicitHeight + 24
@@ -46,7 +43,11 @@ Item {
         color: colors.surfaceContainerHigh
         clip: true
 
-        Behavior on color { ColorAnimation { duration: 200 } }
+        Behavior on color {
+            ColorAnimation {
+                duration: 200
+            }
+        }
 
         layer.enabled: root.visible
         layer.effect: MultiEffect {
@@ -65,7 +66,11 @@ Item {
             width: 4
             radius: 2
             color: root._urgencyStrip
-            Behavior on color { ColorAnimation { duration: 200 } }
+            Behavior on color {
+                ColorAnimation {
+                    duration: 200
+                }
+            }
         }
 
         ColumnLayout {
@@ -110,7 +115,11 @@ Item {
                         color: colors.onSurface
                         elide: Text.ElideRight
                         Layout.fillWidth: true
-                        Behavior on color { ColorAnimation { duration: 200 } }
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: 200
+                            }
+                        }
                     }
 
                     Text {
@@ -123,7 +132,11 @@ Item {
                         maximumLineCount: 3
                         elide: Text.ElideRight
                         Layout.fillWidth: true
-                        Behavior on color { ColorAnimation { duration: 200 } }
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: 200
+                            }
+                        }
                     }
                 }
 
@@ -173,7 +186,11 @@ Item {
                     width: parent.width * root.progress
                     radius: 2
                     color: colors.primary
-                    Behavior on width { NumberAnimation { duration: 100 } }
+                    Behavior on width {
+                        NumberAnimation {
+                            duration: 100
+                        }
+                    }
                 }
             }
 
@@ -241,9 +258,9 @@ Item {
 
         ScriptAction {
             script: {
-                root.visible = false
-                root.opacity = 1
-                root.closed()
+                root.visible = false;
+                root.opacity = 1;
+                root.closed();
             }
         }
     }

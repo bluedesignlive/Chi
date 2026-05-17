@@ -16,11 +16,23 @@ Item {
     property real strokeWidth: _spec.strokeWidth
 
     readonly property var _specs: ({
-        small:  { diameter: 24, strokeWidth: 2.5 },
-        medium: { diameter: 40, strokeWidth: 4   },
-        large:  { diameter: 56, strokeWidth: 5   },
-        xlarge: { diameter: 80, strokeWidth: 6   }
-    })
+            small: {
+                diameter: 24,
+                strokeWidth: 2.5
+            },
+            medium: {
+                diameter: 40,
+                strokeWidth: 4
+            },
+            large: {
+                diameter: 56,
+                strokeWidth: 5
+            },
+            xlarge: {
+                diameter: 80,
+                strokeWidth: 6
+            }
+        })
     readonly property var _spec: _specs[size] || _specs.medium
 
     readonly property real _cx: diameter / 2
@@ -33,7 +45,12 @@ Item {
 
     // Animated progress — Behavior handles the smooth transition
     property real _ap: _progress
-    Behavior on _ap { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+    Behavior on _ap {
+        NumberAnimation {
+            duration: 300
+            easing.type: Easing.OutCubic
+        }
+    }
 
     readonly property bool _z: _ap < 0.005
     readonly property bool _f: _ap > 0.995
@@ -66,8 +83,10 @@ Item {
             capStyle: ShapePath.RoundCap
 
             PathAngleArc {
-                centerX: _cx; centerY: _cy
-                radiusX: _radius; radiusY: _radius
+                centerX: _cx
+                centerY: _cy
+                radiusX: _radius
+                radiusY: _radius
                 startAngle: _z ? -90 : (_f ? 0 : _trackStart)
                 sweepAngle: _z ? 360 : (_f ? 0 : _trackSweep)
             }
@@ -81,8 +100,10 @@ Item {
             capStyle: ShapePath.RoundCap
 
             PathAngleArc {
-                centerX: _cx; centerY: _cy
-                radiusX: _radius; radiusY: _radius
+                centerX: _cx
+                centerY: _cy
+                radiusX: _radius
+                radiusY: _radius
                 startAngle: _activeStart
                 sweepAngle: _f ? 360 - 2 * _ga : _activeSweep
             }
@@ -101,7 +122,9 @@ Item {
         // Continuous base rotation
         property real _rot: 0
         NumberAnimation on _rot {
-            from: 0; to: 360; duration: 2400
+            from: 0
+            to: 360
+            duration: 2400
             loops: Animation.Infinite
             running: root.indeterminate && root.visible
         }
@@ -115,12 +138,40 @@ Item {
             loops: Animation.Infinite
 
             ParallelAnimation {
-                NumberAnimation { target: iFlat; property: "_head"; from: 8; to: 280; duration: 800; easing.type: Easing.InOutCubic }
-                NumberAnimation { target: iFlat; property: "_tail"; from: 0; to: 20; duration: 800; easing.type: Easing.InOutQuad }
+                NumberAnimation {
+                    target: iFlat
+                    property: "_head"
+                    from: 8
+                    to: 280
+                    duration: 800
+                    easing.type: Easing.InOutCubic
+                }
+                NumberAnimation {
+                    target: iFlat
+                    property: "_tail"
+                    from: 0
+                    to: 20
+                    duration: 800
+                    easing.type: Easing.InOutQuad
+                }
             }
             ParallelAnimation {
-                NumberAnimation { target: iFlat; property: "_head"; from: 280; to: 360; duration: 800; easing.type: Easing.InOutQuad }
-                NumberAnimation { target: iFlat; property: "_tail"; from: 20; to: 344; duration: 800; easing.type: Easing.InOutCubic }
+                NumberAnimation {
+                    target: iFlat
+                    property: "_head"
+                    from: 280
+                    to: 360
+                    duration: 800
+                    easing.type: Easing.InOutQuad
+                }
+                NumberAnimation {
+                    target: iFlat
+                    property: "_tail"
+                    from: 20
+                    to: 344
+                    duration: 800
+                    easing.type: Easing.InOutCubic
+                }
             }
         }
 
@@ -136,8 +187,10 @@ Item {
                 capStyle: ShapePath.RoundCap
 
                 PathAngleArc {
-                    centerX: _cx; centerY: _cy
-                    radiusX: _radius; radiusY: _radius
+                    centerX: _cx
+                    centerY: _cy
+                    radiusX: _radius
+                    radiusY: _radius
                     startAngle: -90 + iFlat._head
                     sweepAngle: 360 - iFlat._sw
                 }
@@ -151,8 +204,10 @@ Item {
                 capStyle: ShapePath.RoundCap
 
                 PathAngleArc {
-                    centerX: _cx; centerY: _cy
-                    radiusX: _radius; radiusY: _radius
+                    centerX: _cx
+                    centerY: _cy
+                    radiusX: _radius
+                    radiusY: _radius
                     startAngle: -90 + iFlat._tail
                     sweepAngle: iFlat._sw
                 }
@@ -178,11 +233,15 @@ Item {
 
     Accessible.role: Accessible.ProgressBar
     Accessible.name: root.indeterminate ? "Loading" : "Progress"
-    Accessible.description: root.indeterminate
-        ? "Loading in progress"
-        : "%1% complete".arg(Math.round(_progress * 100))
+    Accessible.description: root.indeterminate ? "Loading in progress" : "%1% complete".arg(Math.round(_progress * 100))
 
-    function setProgress(value) { progress = value }
-    function reset()            { progress = 0 }
-    function complete()         { progress = 1.0 }
+    function setProgress(value) {
+        progress = value;
+    }
+    function reset() {
+        progress = 0;
+    }
+    function complete() {
+        progress = 1.0;
+    }
 }

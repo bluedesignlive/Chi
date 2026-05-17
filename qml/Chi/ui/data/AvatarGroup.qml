@@ -13,8 +13,12 @@ Item {
     readonly property int displayCount: Math.min(avatars.length, maxDisplay)
     readonly property int extraCount: avatars.length - maxDisplay
     readonly property var sizeSpecs: ({
-        xsmall: 24, small: 32, medium: 40, large: 56, xlarge: 96
-    })
+            xsmall: 24,
+            small: 32,
+            medium: 40,
+            large: 56,
+            xlarge: 96
+        })
     readonly property real avatarSize: sizeSpecs[size] || 40
 
     implicitWidth: avatarSize + (displayCount - 1) * avatarSize * (1 - overlap) + (extraCount > 0 ? avatarSize * (1 - overlap) : 0)
@@ -42,7 +46,9 @@ Item {
                     color: colors.surface
 
                     Behavior on color {
-                        ColorAnimation { duration: 200 }
+                        ColorAnimation {
+                            duration: 200
+                        }
                     }
                 }
 
@@ -83,7 +89,9 @@ Item {
                     color: colors.onSurfaceVariant
 
                     Behavior on color {
-                        ColorAnimation { duration: 200 }
+                        ColorAnimation {
+                            duration: 200
+                        }
                     }
                 }
             }

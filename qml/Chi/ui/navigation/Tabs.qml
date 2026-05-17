@@ -1,11 +1,11 @@
 // Tabs.qml - Material 3 Tabs Container
 // Clean implementation following Dieter Rams principle #10 (As little design as possible)
 
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import "../../theme" as Theme
-
-pragma ComponentBehavior: Bound
 
 Rectangle {
     id: root
@@ -26,7 +26,11 @@ Rectangle {
     implicitWidth: parent ? parent.width : 400
 
     color: colors.surface
-    Behavior on color { ColorAnimation { duration: motion.durationMedium } }
+    Behavior on color {
+        ColorAnimation {
+            duration: motion.durationMedium
+        }
+    }
 
     // Bottom Divider
     Rectangle {
@@ -81,11 +85,17 @@ Rectangle {
 
                 Behavior on x {
                     enabled: activeIndicator.width > 0
-                    NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                    NumberAnimation {
+                        duration: 250
+                        easing.type: Easing.OutCubic
+                    }
                 }
                 Behavior on width {
                     enabled: activeIndicator.width > 0
-                    NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                    NumberAnimation {
+                        duration: 250
+                        easing.type: Easing.OutCubic
+                    }
                 }
             }
         }
@@ -93,8 +103,8 @@ Rectangle {
 
     // ─── Logic ──────────────────────────────────────────────────
     Component.onCompleted: {
-        updateTabs()
-        Qt.callLater(updateIndicator)
+        updateTabs();
+        Qt.callLater(updateIndicator);
     }
 
     onTabsChanged: updateTabs()
@@ -103,7 +113,7 @@ Rectangle {
     property Item activeFocusItem: Window.activeFocusItem
     onActiveFocusItemChanged: {
         if (activeFocusItem && activeFocusItem.parent === tabsRow) {
-            ensureVisible(activeFocusItem)
+            ensureVisible(activeFocusItem);
         }
     }
 
@@ -113,7 +123,8 @@ Rectangle {
         // Calculate max height
         for (var i = 0; i < tabsRow.children.length; i++) {
             var child = tabsRow.children[i];
-            if (child.implicitHeight > maxH) maxH = child.implicitHeight;
+            if (child.implicitHeight > maxH)
+                maxH = child.implicitHeight;
         }
         root.implicitHeight = maxH;
 
@@ -122,12 +133,16 @@ Rectangle {
             var tab = tabsRow.children[j];
             if (tab && typeof tab.text !== "undefined") {
                 tab.index = j;
-                tab.height = Qt.binding(function() { return tabsRow.height });
-                tab.selected = Qt.binding(function() { return root.currentIndex === this.index }.bind(tab));
+                tab.height = Qt.binding(function () {
+                    return tabsRow.height;
+                });
+                tab.selected = Qt.binding(function () {
+                    return root.currentIndex === this.index;
+                }.bind(tab));
 
                 if (tab.clicked) {
-                    tab.clicked.disconnect(handleTabClick)
-                    tab.clicked.connect(handleTabClick.bind(tab, j))
+                    tab.clicked.disconnect(handleTabClick);
+                    tab.clicked.connect(handleTabClick.bind(tab, j));
                 }
 
                 // Keyboard navigation
@@ -144,7 +159,7 @@ Rectangle {
                 }
             }
         }
-        updateIndicator()
+        updateIndicator();
     }
 
     function handleTabClick(index) {
@@ -154,7 +169,8 @@ Rectangle {
     }
 
     function updateIndicator() {
-        if (root.tabs.length === 0 || currentIndex < 0 || currentIndex >= root.tabs.length) return;
+        if (root.tabs.length === 0 || currentIndex < 0 || currentIndex >= root.tabs.length)
+            return;
 
         var currentTab = root.tabs[currentIndex];
 
@@ -176,12 +192,13 @@ Rectangle {
 
             ensureVisible(currentTab);
         } else {
-            Qt.callLater(updateIndicator)
+            Qt.callLater(updateIndicator);
         }
     }
 
     function ensureVisible(item) {
-        if (!scrollable) return;
+        if (!scrollable)
+            return;
 
         var itemLeft = tabsRow.x + item.x;
         var itemRight = itemLeft + item.width;

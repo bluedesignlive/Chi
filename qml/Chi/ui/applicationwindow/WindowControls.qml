@@ -47,7 +47,9 @@ Item {
         implicitWidth: macRow.implicitWidth + 12
         implicitHeight: 24
 
-        HoverHandler { id: macGroupHover }
+        HoverHandler {
+            id: macGroupHover
+        }
 
         // Hot state: after first tooltip shows, moving between buttons
         // skips the delay until the cursor leaves the group.
@@ -60,7 +62,7 @@ Item {
             target: macGroupHover
             function onHoveredChanged() {
                 if (!macGroupHover.hovered)
-                    macTooltipsHotTimer.restart()
+                    macTooltipsHotTimer.restart();
             }
         }
 
@@ -88,15 +90,14 @@ Item {
             TrafficLightButton {
                 visible: root.showMaximize
                 baseColor: "#28C840"
-                tooltipText: root.targetWindow?.visibility === Window.Maximized
-                             ? qsTr("Restore") : qsTr("Maximize")
+                tooltipText: root.targetWindow?.visibility === Window.Maximized ? qsTr("Restore") : qsTr("Maximize")
                 groupHovered: macGroupHover.hovered
                 onClicked: {
                     if (root.targetWindow) {
                         if (root.targetWindow.visibility === Window.Maximized)
-                            root.targetWindow.showNormal()
+                            root.targetWindow.showNormal();
                         else
-                            root.targetWindow.showMaximized()
+                            root.targetWindow.showMaximized();
                     }
                 }
             }
@@ -113,7 +114,9 @@ Item {
         anchors.centerIn: parent
         spacing: 2
 
-        HoverHandler { id: winGroupHover }
+        HoverHandler {
+            id: winGroupHover
+        }
 
         Timer {
             id: winTooltipsHotTimer
@@ -124,7 +127,7 @@ Item {
             target: winGroupHover
             function onHoveredChanged() {
                 if (!winGroupHover.hovered)
-                    winTooltipsHotTimer.restart()
+                    winTooltipsHotTimer.restart();
             }
         }
 
@@ -137,15 +140,14 @@ Item {
 
         WindowsButton {
             visible: root.showMaximize
-            tooltipText: root.targetWindow?.visibility === Window.Maximized
-                         ? qsTr("Restore") : qsTr("Maximize")
+            tooltipText: root.targetWindow?.visibility === Window.Maximized ? qsTr("Restore") : qsTr("Maximize")
             accentColor: root.colors.secondary
             onClicked: {
                 if (root.targetWindow) {
                     if (root.targetWindow.visibility === Window.Maximized)
-                        root.targetWindow.showNormal()
+                        root.targetWindow.showNormal();
                     else
-                        root.targetWindow.showMaximized()
+                        root.targetWindow.showMaximized();
                 }
             }
         }
@@ -172,7 +174,7 @@ Item {
         property string tooltipText: ""
         property bool groupHovered: false
 
-        signal clicked()
+        signal clicked
 
         width: 12
         height: 12
@@ -181,8 +183,7 @@ Item {
         Accessible.name: tooltipText
         Accessible.onPressAction: clicked
 
-        readonly property bool _windowActive: root.targetWindow
-                                              ? root.targetWindow.active : true
+        readonly property bool _windowActive: root.targetWindow ? root.targetWindow.active : true
         readonly property bool _showColor: groupHovered || _windowActive
 
         Rectangle {
@@ -192,18 +193,22 @@ Item {
 
             color: {
                 if (!tlBtn._showColor)
-                    return root.colors.outlineVariant
+                    return root.colors.outlineVariant;
                 if (tlMouse.pressed)
-                    return Qt.darker(tlBtn.baseColor, 1.3)
+                    return Qt.darker(tlBtn.baseColor, 1.3);
                 if (tlMouse.containsMouse)
-                    return Qt.lighter(tlBtn.baseColor, 1.15)
-                return tlBtn.baseColor
+                    return Qt.lighter(tlBtn.baseColor, 1.15);
+                return tlBtn.baseColor;
             }
 
             border.width: tlBtn._showColor ? 0.5 : 0
             border.color: Qt.darker(tlBtn.baseColor, 1.4)
 
-            Behavior on color { ColorAnimation { duration: 100 } }
+            Behavior on color {
+                ColorAnimation {
+                    duration: 100
+                }
+            }
         }
 
         MouseArea {
@@ -223,38 +228,44 @@ Item {
             delay: 500
             positionTarget: tlMouse
             onShown: {
-                root._macTooltipsHot = true
-                macTooltipsHotTimer.stop()
+                root._macTooltipsHot = true;
+                macTooltipsHotTimer.stop();
             }
         }
 
         function _clampTlTooltip() {
-            tlTooltip.x = (parent.width - tlTooltip.width) / 2
-            tlTooltip.y = parent.height + 8
+            tlTooltip.x = (parent.width - tlTooltip.width) / 2;
+            tlTooltip.y = parent.height + 8;
             if (root.targetWindow) {
-                var sx = tlTooltip.mapToItem(root.targetWindow.contentItem, 0, 0).x
-                if (sx < 4) tlTooltip.x += 4 - sx
+                var sx = tlTooltip.mapToItem(root.targetWindow.contentItem, 0, 0).x;
+                if (sx < 4)
+                    tlTooltip.x += 4 - sx;
                 if (sx + tlTooltip.width > root.targetWindow.width - 4)
-                    tlTooltip.x -= sx + tlTooltip.width - root.targetWindow.width + 4
+                    tlTooltip.x -= sx + tlTooltip.width - root.targetWindow.width + 4;
             }
-            tlTooltip._positionCaret()
+            tlTooltip._positionCaret();
         }
 
         Connections {
             target: tlMouse
             function onContainsMouseChanged() {
                 if (tlMouse.containsMouse && tlBtn.tooltipText !== "" && !root.menuOpen) {
-                    _clampTlTooltip()
-                    tlTooltip.show()
+                    _clampTlTooltip();
+                    tlTooltip.show();
                 } else {
-                    tlTooltip.hide()
+                    tlTooltip.hide();
                 }
             }
         }
 
         Connections {
             target: tlTooltip
-            function onWidthChanged() { if (tlTooltip.isVisible) { _clampTlTooltip(); tlTooltip._positionCaret() } }
+            function onWidthChanged() {
+                if (tlTooltip.isVisible) {
+                    _clampTlTooltip();
+                    tlTooltip._positionCaret();
+                }
+            }
         }
     }
 
@@ -271,7 +282,7 @@ Item {
         property string tooltipText: ""
         property color accentColor: root.colors.primary
 
-        signal clicked()
+        signal clicked
 
         width: 32
         height: 32
@@ -286,16 +297,17 @@ Item {
 
             color: {
                 if (winBtnMouse.pressed)
-                    return Qt.rgba(winBtn.accentColor.r, winBtn.accentColor.g,
-                                   winBtn.accentColor.b, 0.25)
+                    return Qt.rgba(winBtn.accentColor.r, winBtn.accentColor.g, winBtn.accentColor.b, 0.25);
                 if (winBtnMouse.containsMouse)
-                    return Qt.rgba(winBtn.accentColor.r, winBtn.accentColor.g,
-                                   winBtn.accentColor.b, 0.15)
-                return Qt.rgba(winBtn.accentColor.r, winBtn.accentColor.g,
-                               winBtn.accentColor.b, 0.05)
+                    return Qt.rgba(winBtn.accentColor.r, winBtn.accentColor.g, winBtn.accentColor.b, 0.15);
+                return Qt.rgba(winBtn.accentColor.r, winBtn.accentColor.g, winBtn.accentColor.b, 0.05);
             }
 
-            Behavior on color { ColorAnimation { duration: 100 } }
+            Behavior on color {
+                ColorAnimation {
+                    duration: 100
+                }
+            }
         }
 
         MouseArea {
@@ -314,38 +326,44 @@ Item {
             delay: 500
             positionTarget: winBtnMouse
             onShown: {
-                root._winTooltipsHot = true
-                winTooltipsHotTimer.stop()
+                root._winTooltipsHot = true;
+                winTooltipsHotTimer.stop();
             }
         }
 
         function _clampWinTooltip() {
-            winTooltip.x = (parent.width - winTooltip.width) / 2
-            winTooltip.y = parent.height + 8
+            winTooltip.x = (parent.width - winTooltip.width) / 2;
+            winTooltip.y = parent.height + 8;
             if (root.targetWindow) {
-                var sx = winTooltip.mapToItem(root.targetWindow.contentItem, 0, 0).x
-                if (sx < 4) winTooltip.x += 4 - sx
+                var sx = winTooltip.mapToItem(root.targetWindow.contentItem, 0, 0).x;
+                if (sx < 4)
+                    winTooltip.x += 4 - sx;
                 if (sx + winTooltip.width > root.targetWindow.width - 4)
-                    winTooltip.x -= sx + winTooltip.width - root.targetWindow.width + 4
+                    winTooltip.x -= sx + winTooltip.width - root.targetWindow.width + 4;
             }
-            winTooltip._positionCaret()
+            winTooltip._positionCaret();
         }
 
         Connections {
             target: winBtnMouse
             function onContainsMouseChanged() {
                 if (winBtnMouse.containsMouse && winBtn.tooltipText !== "" && !root.menuOpen) {
-                    _clampWinTooltip()
-                    winTooltip.show()
+                    _clampWinTooltip();
+                    winTooltip.show();
                 } else {
-                    winTooltip.hide()
+                    winTooltip.hide();
                 }
             }
         }
 
         Connections {
             target: winTooltip
-            function onWidthChanged() { if (winTooltip.isVisible) { _clampWinTooltip(); winTooltip._positionCaret() } }
+            function onWidthChanged() {
+                if (winTooltip.isVisible) {
+                    _clampWinTooltip();
+                    winTooltip._positionCaret();
+                }
+            }
         }
     }
 }

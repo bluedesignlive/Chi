@@ -39,35 +39,34 @@ Item {
     // ═══════════════════════════════════════════════════════════
 
     readonly property int _type: {
-        var s = source
-        if (s === "") return 0
+        var s = source;
+        if (s === "")
+            return 0;
 
         // Image: file extension check
-        var dot = s.lastIndexOf('.')
+        var dot = s.lastIndexOf('.');
         if (dot >= 0) {
-            var ext = s.substring(dot + 1).toLowerCase()
-            if (ext === "png" || ext === "svg" || ext === "jpg" ||
-                ext === "jpeg" || ext === "webp" || ext === "gif" ||
-                ext === "bmp" || ext === "ico") return 1
+            var ext = s.substring(dot + 1).toLowerCase();
+            if (ext === "png" || ext === "svg" || ext === "jpg" || ext === "jpeg" || ext === "webp" || ext === "gif" || ext === "bmp" || ext === "ico")
+                return 1;
         }
 
         // Image: URL/resource prefix check
-        if (s.startsWith("file://") || s.startsWith("qrc:") ||
-            s.startsWith(":/") ||
-            s.startsWith("http://") || s.startsWith("https://") ||
-            s.startsWith("image://") || s.startsWith("data:")) return 1
+        if (s.startsWith("file://") || s.startsWith("qrc:") || s.startsWith(":/") || s.startsWith("http://") || s.startsWith("https://") || s.startsWith("image://") || s.startsWith("data:"))
+            return 1;
 
         // Material Symbol: 2+ lowercase chars with underscores/digits
         // Covers: "play_arrow", "volume_up", "chevron_right", "3d_rotation"
-        if (/^[a-z0-9][a-z0-9_]*$/.test(s) && s.length >= 2) return 2
+        if (/^[a-z0-9][a-z0-9_]*$/.test(s) && s.length >= 2)
+            return 2;
 
         // Everything else: unicode emoji, symbols, single chars
-        return 3
+        return 3;
     }
 
-    readonly property bool isImageSource:  _type === 1
+    readonly property bool isImageSource: _type === 1
     readonly property bool isMaterialIcon: _type === 2
-    readonly property bool isUnicodeIcon:  _type === 3
+    readonly property bool isUnicodeIcon: _type === 3
 
     // ═══════════════════════════════════════════════════════════
     // IMAGE RENDERER
@@ -96,8 +95,8 @@ Item {
 
         onStatusChanged: {
             if (status === Image.Error && root.fallback !== "") {
-                root.source = root.fallback
-                root.fallback = ""
+                root.source = root.fallback;
+                root.fallback = "";
             }
         }
     }

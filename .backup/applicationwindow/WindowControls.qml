@@ -77,9 +77,9 @@ Item {
             onClicked: {
                 if (targetWindow) {
                     if (targetWindow.visibility === Window.Maximized)
-                        targetWindow.showNormal()
+                        targetWindow.showNormal();
                     else
-                        targetWindow.showMaximized()
+                        targetWindow.showMaximized();
                 }
             }
         }
@@ -106,9 +106,9 @@ Item {
             onClicked: {
                 if (targetWindow) {
                     if (targetWindow.visibility === Window.Maximized)
-                        targetWindow.showNormal()
+                        targetWindow.showNormal();
                     else
-                        targetWindow.showMaximized()
+                        targetWindow.showMaximized();
                 }
             }
         }
@@ -133,7 +133,7 @@ Item {
         property color baseColor: "#888"
         property string icon: ""
 
-        signal clicked()
+        signal clicked
 
         width: 12
         height: 12
@@ -144,12 +144,12 @@ Item {
 
             color: {
                 if (root.targetWindow && !root.targetWindow.active)
-                    return colors.outlineVariant
+                    return colors.outlineVariant;
                 if (tlMouse.pressed)
-                    return Qt.darker(baseColor, 1.25)
+                    return Qt.darker(baseColor, 1.25);
                 if (tlMouse.containsMouse)
-                    return Qt.lighter(baseColor, 1.1)
-                return baseColor
+                    return Qt.lighter(baseColor, 1.1);
+                return baseColor;
             }
 
             border.width: root.targetWindow && root.targetWindow.active ? 0.5 : 0
@@ -183,7 +183,7 @@ Item {
         property string icon: ""
         property color accentColor: colors.primary
 
-        signal clicked()
+        signal clicked
 
         width: 32
         height: 32
@@ -194,10 +194,10 @@ Item {
 
             color: {
                 if (winBtnMouse.pressed)
-                    return Qt.rgba(accentColor.r, accentColor.g, accentColor.b, 0.25)
+                    return Qt.rgba(accentColor.r, accentColor.g, accentColor.b, 0.25);
                 if (winBtnMouse.containsMouse)
-                    return Qt.rgba(accentColor.r, accentColor.g, accentColor.b, 0.15)
-                return Qt.rgba(accentColor.r, accentColor.g, accentColor.b, 0.05)
+                    return Qt.rgba(accentColor.r, accentColor.g, accentColor.b, 0.15);
+                return Qt.rgba(accentColor.r, accentColor.g, accentColor.b, 0.05);
             }
         }
 

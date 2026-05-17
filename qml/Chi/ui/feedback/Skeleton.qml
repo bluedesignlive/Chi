@@ -10,27 +10,36 @@ Rectangle {
 
     implicitWidth: variant === "circular" ? 40 : 200
     implicitHeight: {
-        if (variant === "circular") return width
-        if (aspectRatio > 0) return width / aspectRatio
-        if (variant === "text") return 16
-        return 100
+        if (variant === "circular")
+            return width;
+        if (aspectRatio > 0)
+            return width / aspectRatio;
+        if (variant === "text")
+            return 16;
+        return 100;
     }
 
     property var colors: Theme.ChiTheme.colors
 
     radius: {
         switch (variant) {
-        case "circular": return width / 2
-        case "rounded": return 8
-        case "text": return 4
-        default: return 4
+        case "circular":
+            return width / 2;
+        case "rounded":
+            return 8;
+        case "text":
+            return 4;
+        default:
+            return 4;
         }
     }
 
     color: colors.surfaceContainerHighest
 
     Behavior on color {
-        ColorAnimation { duration: 200 }
+        ColorAnimation {
+            duration: 200
+        }
     }
 
     // Shimmer effect
@@ -43,9 +52,18 @@ Rectangle {
 
         gradient: Gradient {
             orientation: Gradient.Horizontal
-            GradientStop { position: 0.0; color: "transparent" }
-            GradientStop { position: 0.5; color: Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.05) }
-            GradientStop { position: 1.0; color: "transparent" }
+            GradientStop {
+                position: 0.0
+                color: "transparent"
+            }
+            GradientStop {
+                position: 0.5
+                color: Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.05)
+            }
+            GradientStop {
+                position: 1.0
+                color: "transparent"
+            }
         }
 
         SequentialAnimation on x {

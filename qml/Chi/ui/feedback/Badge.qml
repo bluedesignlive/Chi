@@ -14,19 +14,38 @@ Item {
     readonly property bool hasText: text !== ""
     readonly property bool isNumber: !isNaN(parseInt(text))
     readonly property string displayText: {
-        if (!hasText) return ""
+        if (!hasText)
+            return "";
         if (isNumber) {
-            var num = parseInt(text)
-            return num > maxCount ? maxCount + "+" : text
+            var num = parseInt(text);
+            return num > maxCount ? maxCount + "+" : text;
         }
-        return text
+        return text;
     }
 
     readonly property var sizeSpecs: ({
-        small: { diameter: 6, fontSize: 0, minWidth: 6, height: 6, padding: 0 },
-        medium: { diameter: 16, fontSize: 11, minWidth: 16, height: 16, padding: 4 },
-        large: { diameter: 20, fontSize: 12, minWidth: 20, height: 20, padding: 6 }
-    })
+            small: {
+                diameter: 6,
+                fontSize: 0,
+                minWidth: 6,
+                height: 6,
+                padding: 0
+            },
+            medium: {
+                diameter: 16,
+                fontSize: 11,
+                minWidth: 16,
+                height: 16,
+                padding: 4
+            },
+            large: {
+                diameter: 20,
+                fontSize: 12,
+                minWidth: 20,
+                height: 20,
+                padding: 6
+            }
+        })
 
     readonly property var currentSize: sizeSpecs[size] || sizeSpecs.small
     readonly property bool isDot: size === "small" || !hasText
@@ -51,8 +70,7 @@ Item {
         anchors.topMargin: isDot ? 0 : -currentSize.height / 3
         anchors.rightMargin: isDot ? 0 : -badgeWidth / 3
 
-        property real badgeWidth: isDot ? currentSize.diameter :
-            Math.max(currentSize.minWidth, badgeLabel.implicitWidth + currentSize.padding * 2)
+        property real badgeWidth: isDot ? currentSize.diameter : Math.max(currentSize.minWidth, badgeLabel.implicitWidth + currentSize.padding * 2)
 
         width: badgeWidth
         height: currentSize.height
@@ -60,13 +78,18 @@ Item {
         color: colors.error
 
         Behavior on color {
-            ColorAnimation { duration: 200 }
+            ColorAnimation {
+                duration: 200
+            }
         }
 
         scale: showBadge ? 1 : 0
 
         Behavior on scale {
-            NumberAnimation { duration: 150; easing.type: Easing.OutBack }
+            NumberAnimation {
+                duration: 150
+                easing.type: Easing.OutBack
+            }
         }
 
         Text {
@@ -80,7 +103,9 @@ Item {
             color: colors.onError
 
             Behavior on color {
-                ColorAnimation { duration: 200 }
+                ColorAnimation {
+                    duration: 200
+                }
             }
         }
     }

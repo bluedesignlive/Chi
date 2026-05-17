@@ -34,7 +34,9 @@ Rectangle {
     border.color: colors.outlineVariant
 
     Behavior on color {
-        ColorAnimation { duration: 200 }
+        ColorAnimation {
+            duration: 200
+        }
     }
 
     clip: true
@@ -51,7 +53,9 @@ Rectangle {
             z: stickyHeader ? 1 : 0
 
             Behavior on color {
-                ColorAnimation { duration: 200 }
+                ColorAnimation {
+                    duration: 200
+                }
             }
 
             RowLayout {
@@ -99,13 +103,14 @@ Rectangle {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
                                 if (selectedRows.length === rows.length) {
-                                    selectedRows = []
+                                    selectedRows = [];
                                 } else {
-                                    var all = []
-                                    for (var i = 0; i < rows.length; i++) all.push(i)
-                                    selectedRows = all
+                                    var all = [];
+                                    for (var i = 0; i < rows.length; i++)
+                                        all.push(i);
+                                    selectedRows = all;
                                 }
-                                selectionChanged(selectedRows)
+                                selectionChanged(selectedRows);
                             }
                         }
                     }
@@ -137,11 +142,12 @@ Rectangle {
                                 font.pixelSize: 14
                                 font.weight: Font.Medium
                                 color: colors.onSurfaceVariant
-                                Layout.alignment: modelData.align === "center" ? Qt.AlignHCenter :
-                                    (modelData.align === "right" ? Qt.AlignRight : Qt.AlignLeft)
+                                Layout.alignment: modelData.align === "center" ? Qt.AlignHCenter : (modelData.align === "right" ? Qt.AlignRight : Qt.AlignLeft)
 
                                 Behavior on color {
-                                    ColorAnimation { duration: 200 }
+                                    ColorAnimation {
+                                        duration: 200
+                                    }
                                 }
                             }
 
@@ -164,12 +170,12 @@ Rectangle {
                             cursorShape: sortable ? Qt.PointingHandCursor : Qt.ArrowCursor
                             onClicked: {
                                 if (sortColumn === modelData.key) {
-                                    sortAscending = !sortAscending
+                                    sortAscending = !sortAscending;
                                 } else {
-                                    sortColumn = modelData.key
-                                    sortAscending = true
+                                    sortColumn = modelData.key;
+                                    sortAscending = true;
                                 }
-                                sortChanged(sortColumn, sortAscending)
+                                sortChanged(sortColumn, sortAscending);
                             }
                         }
                     }
@@ -208,13 +214,17 @@ Rectangle {
                         property bool isSelected: selectedRows.indexOf(index) !== -1
 
                         color: {
-                            if (isSelected) return colors.primaryContainer
-                            if (striped && index % 2 === 1) return colors.surfaceContainerLow
-                            return "transparent"
+                            if (isSelected)
+                                return colors.primaryContainer;
+                            if (striped && index % 2 === 1)
+                                return colors.surfaceContainerLow;
+                            return "transparent";
                         }
 
                         Behavior on color {
-                            ColorAnimation { duration: 150 }
+                            ColorAnimation {
+                                duration: 150
+                            }
                         }
 
                         // Hover state
@@ -224,7 +234,9 @@ Rectangle {
                             opacity: hoverable && rowMouse.containsMouse && !isSelected ? 0.08 : 0
 
                             Behavior on opacity {
-                                NumberAnimation { duration: 100 }
+                                NumberAnimation {
+                                    duration: 100
+                                }
                             }
                         }
 
@@ -263,15 +275,15 @@ Rectangle {
                                         anchors.margins: -8
                                         cursorShape: Qt.PointingHandCursor
                                         onClicked: {
-                                            var sel = selectedRows.slice()
-                                            var idx = sel.indexOf(index)
+                                            var sel = selectedRows.slice();
+                                            var idx = sel.indexOf(index);
                                             if (idx !== -1) {
-                                                sel.splice(idx, 1)
+                                                sel.splice(idx, 1);
                                             } else {
-                                                sel.push(index)
+                                                sel.push(index);
                                             }
-                                            selectedRows = sel
-                                            selectionChanged(selectedRows)
+                                            selectedRows = sel;
+                                            selectionChanged(selectedRows);
                                         }
                                     }
                                 }
@@ -296,11 +308,12 @@ Rectangle {
                                         color: colors.onSurface
                                         elide: Text.ElideRight
                                         verticalAlignment: Text.AlignVCenter
-                                        horizontalAlignment: modelData.align === "center" ? Text.AlignHCenter :
-                                            (modelData.align === "right" ? Text.AlignRight : Text.AlignLeft)
+                                        horizontalAlignment: modelData.align === "center" ? Text.AlignHCenter : (modelData.align === "right" ? Text.AlignRight : Text.AlignLeft)
 
                                         Behavior on color {
-                                            ColorAnimation { duration: 200 }
+                                            ColorAnimation {
+                                                duration: 200
+                                            }
                                         }
                                     }
                                 }

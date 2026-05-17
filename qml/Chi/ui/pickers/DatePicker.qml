@@ -18,22 +18,17 @@ Item {
     property int firstDayOfWeek: 0
 
     signal dateSelected(date selected)
-    signal cancelled()
+    signal cancelled
 
-    readonly property var _monthNames: [
-        "January","February","March","April","May","June",
-        "July","August","September","October","November","December"
-    ]
-    readonly property var _dayNames: firstDayOfWeek === 1
-        ? ["M","T","W","T","F","S","S"]
-        : ["S","M","T","W","T","F","S"]
+    readonly property var _monthNames: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    readonly property var _dayNames: firstDayOfWeek === 1 ? ["M", "T", "W", "T", "F", "S", "S"] : ["S", "M", "T", "W", "T", "F", "S"]
 
     implicitWidth: 328
     implicitHeight: _bg.height
 
-    readonly property var    _c:  Theme.ChiTheme.colors
-    readonly property var    _t:  Theme.ChiTheme.typography
-    readonly property var    _m:  Theme.ChiTheme.motion
+    readonly property var _c: Theme.ChiTheme.colors
+    readonly property var _t: Theme.ChiTheme.typography
+    readonly property var _m: Theme.ChiTheme.motion
     readonly property string _ff: Theme.ChiTheme.fontFamily
 
     // ─── Month index helpers ──────────────────────────────
@@ -41,11 +36,11 @@ Item {
     readonly property int _monthCount: (2101 - _baseYear) * 12
 
     function _monthToIndex(d) {
-        return (d.getFullYear() - _baseYear) * 12 + d.getMonth()
+        return (d.getFullYear() - _baseYear) * 12 + d.getMonth();
     }
 
     function _indexToDate(idx) {
-        return new Date(_baseYear + Math.floor(idx / 12), idx % 12, 1)
+        return new Date(_baseYear + Math.floor(idx / 12), idx % 12, 1);
     }
 
     // ─── State ────────────────────────────────────────────
@@ -73,7 +68,9 @@ Item {
         // Eat clicks so dialog scrim doesn't close
         MouseArea {
             anchors.fill: parent
-            onPressed: function(e) { e.accepted = true }
+            onPressed: function (e) {
+                e.accepted = true;
+            }
         }
 
         ColumnLayout {
@@ -138,9 +135,7 @@ Item {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 40
                     radius: 20
-                    color: _yearLabelMA.containsMouse
-                           ? Qt.rgba(_c.onSurface.r, _c.onSurface.g, _c.onSurface.b, 0.08)
-                           : "transparent"
+                    color: _yearLabelMA.containsMouse ? Qt.rgba(_c.onSurface.r, _c.onSurface.g, _c.onSurface.b, 0.08) : "transparent"
 
                     RowLayout {
                         anchors.left: parent.left
@@ -181,9 +176,7 @@ Item {
                         Layout.preferredWidth: 40
                         Layout.preferredHeight: 40
                         radius: 20
-                        color: _prevMA.containsMouse
-                               ? Qt.rgba(_c.onSurface.r, _c.onSurface.g, _c.onSurface.b, 0.08)
-                               : "transparent"
+                        color: _prevMA.containsMouse ? Qt.rgba(_c.onSurface.r, _c.onSurface.g, _c.onSurface.b, 0.08) : "transparent"
 
                         Common.Icon {
                             anchors.centerIn: parent
@@ -199,7 +192,7 @@ Item {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
                                 if (_monthView.currentIndex > 0)
-                                    _monthView.currentIndex--
+                                    _monthView.currentIndex--;
                             }
                         }
                     }
@@ -208,9 +201,7 @@ Item {
                         Layout.preferredWidth: 40
                         Layout.preferredHeight: 40
                         radius: 20
-                        color: _nextMA.containsMouse
-                               ? Qt.rgba(_c.onSurface.r, _c.onSurface.g, _c.onSurface.b, 0.08)
-                               : "transparent"
+                        color: _nextMA.containsMouse ? Qt.rgba(_c.onSurface.r, _c.onSurface.g, _c.onSurface.b, 0.08) : "transparent"
 
                         Common.Icon {
                             anchors.centerIn: parent
@@ -226,7 +217,7 @@ Item {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
                                 if (_monthView.currentIndex < _monthCount - 1)
-                                    _monthView.currentIndex++
+                                    _monthView.currentIndex++;
                             }
                         }
                     }
@@ -285,9 +276,9 @@ Item {
 
                     onCurrentIndexChanged: {
                         if (!root._syncing) {
-                            root._syncing = true
-                            root.currentMonth = root._indexToDate(currentIndex)
-                            root._syncing = false
+                            root._syncing = true;
+                            root.currentMonth = root._indexToDate(currentIndex);
+                            root._syncing = false;
                         }
                     }
 
@@ -301,8 +292,8 @@ Item {
                         property int month: index % 12
                         property int daysInMonth: new Date(year, month + 1, 0).getDate()
                         property int dayOffset: {
-                            var d = new Date(year, month, 1).getDay() - root.firstDayOfWeek
-                            return d < 0 ? d + 7 : d
+                            var d = new Date(year, month, 1).getDay() - root.firstDayOfWeek;
+                            return d < 0 ? d + 7 : d;
                         }
                         property int rowCount: Math.ceil((dayOffset + daysInMonth) / 7)
 
@@ -326,23 +317,18 @@ Item {
                                     property int thisYear: year
                                     property int thisMonth: month
 
-                                    property bool isSelected: inMonth
-                                        && dayNum === root.selectedDate.getDate()
-                                        && thisMonth === root.selectedDate.getMonth()
-                                        && thisYear === root.selectedDate.getFullYear()
+                                    property bool isSelected: inMonth && dayNum === root.selectedDate.getDate() && thisMonth === root.selectedDate.getMonth() && thisYear === root.selectedDate.getFullYear()
 
                                     property bool isToday: {
-                                        var t = new Date()
-                                        return inMonth
-                                            && dayNum === t.getDate()
-                                            && thisMonth === t.getMonth()
-                                            && thisYear === t.getFullYear()
+                                        var t = new Date();
+                                        return inMonth && dayNum === t.getDate() && thisMonth === t.getMonth() && thisYear === t.getFullYear();
                                     }
 
                                     property bool isDisabled: {
-                                        if (!inMonth) return true
-                                        var d = new Date(thisYear, thisMonth, dayNum)
-                                        return d < root.minDate || d > root.maxDate
+                                        if (!inMonth)
+                                            return true;
+                                        var d = new Date(thisYear, thisMonth, dayNum);
+                                        return d < root.minDate || d > root.maxDate;
                                     }
 
                                     // Selection circle
@@ -383,9 +369,9 @@ Item {
                                         cursorShape: !isDisabled ? Qt.PointingHandCursor : Qt.ArrowCursor
 
                                         onClicked: {
-                                            var d = new Date(thisYear, thisMonth, dayNum)
-                                            root.selectedDate = d
-                                            root.dateSelected(d)
+                                            var d = new Date(thisYear, thisMonth, dayNum);
+                                            root.selectedDate = d;
+                                            root.dateSelected(d);
                                         }
                                     }
                                 }
@@ -427,15 +413,15 @@ Item {
                     Component.onCompleted: _scrollToCurrent()
 
                     function _scrollToCurrent() {
-                        var idx = root.currentMonth.getFullYear() - root.minDate.getFullYear()
-                        positionViewAtIndex(Math.max(0, idx - 6), GridView.Beginning)
+                        var idx = root.currentMonth.getFullYear() - root.minDate.getFullYear();
+                        positionViewAtIndex(Math.max(0, idx - 6), GridView.Beginning);
                     }
 
                     Connections {
                         target: root
                         function on_YearPickerOpenChanged() {
                             if (root._yearPickerOpen)
-                                _yearGrid._scrollToCurrent()
+                                _yearGrid._scrollToCurrent();
                         }
                     }
 
@@ -454,8 +440,7 @@ Item {
                             width: 76
                             height: 40
                             radius: 20
-                            color: isSelectedYear ? _c.primary
-                                 : (isCurrent ? _c.primaryContainer : "transparent")
+                            color: isSelectedYear ? _c.primary : (isCurrent ? _c.primaryContainer : "transparent")
                             border.width: isCurrent && !isSelectedYear ? 1 : 0
                             border.color: _c.primary
                         }
@@ -475,8 +460,7 @@ Item {
                             font.family: _ff
                             font.pixelSize: _t.bodyLarge.size
                             font.weight: isSelectedYear || isCurrent ? Font.Medium : Font.Normal
-                            color: isSelectedYear ? _c.onPrimary
-                                 : (isCurrent ? _c.onPrimaryContainer : _c.onSurfaceVariant)
+                            color: isSelectedYear ? _c.onPrimary : (isCurrent ? _c.onPrimaryContainer : _c.onSurfaceVariant)
                         }
 
                         MouseArea {
@@ -485,15 +469,15 @@ Item {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                var m = root.currentMonth.getMonth()
-                                root.currentMonth = new Date(yearVal, m, 1)
+                                var m = root.currentMonth.getMonth();
+                                root.currentMonth = new Date(yearVal, m, 1);
                                 // Sync ListView without animation for large jumps
-                                root._syncing = true
-                                _monthView.highlightMoveDuration = 0
-                                _monthView.currentIndex = root._monthToIndex(root.currentMonth)
-                                _monthView.highlightMoveDuration = root._m.durationMedium
-                                root._syncing = false
-                                root._yearPickerOpen = false
+                                root._syncing = true;
+                                _monthView.highlightMoveDuration = 0;
+                                _monthView.currentIndex = root._monthToIndex(root.currentMonth);
+                                _monthView.highlightMoveDuration = root._m.durationMedium;
+                                root._syncing = false;
+                                root._yearPickerOpen = false;
                             }
                         }
                     }
@@ -509,15 +493,15 @@ Item {
                 Layout.rightMargin: 12
                 spacing: 8
 
-                Item { Layout.fillWidth: true }
+                Item {
+                    Layout.fillWidth: true
+                }
 
                 Rectangle {
                     Layout.preferredWidth: _cancelTxt.implicitWidth + 24
                     Layout.preferredHeight: 40
                     radius: 20
-                    color: _cancelMA.containsMouse
-                           ? Qt.rgba(_c.primary.r, _c.primary.g, _c.primary.b, 0.08)
-                           : "transparent"
+                    color: _cancelMA.containsMouse ? Qt.rgba(_c.primary.r, _c.primary.g, _c.primary.b, 0.08) : "transparent"
 
                     Text {
                         id: _cancelTxt
@@ -542,9 +526,7 @@ Item {
                     Layout.preferredWidth: _okTxt.implicitWidth + 24
                     Layout.preferredHeight: 40
                     radius: 20
-                    color: _okMA.containsMouse
-                           ? Qt.rgba(_c.primary.r, _c.primary.g, _c.primary.b, 0.08)
-                           : "transparent"
+                    color: _okMA.containsMouse ? Qt.rgba(_c.primary.r, _c.primary.g, _c.primary.b, 0.08) : "transparent"
 
                     Text {
                         id: _okTxt
@@ -570,14 +552,14 @@ Item {
 
     // ─── Public helpers ───────────────────────────────────
     function goToDate(d) {
-        currentMonth = new Date(d.getFullYear(), d.getMonth(), 1)
-        _syncing = true
-        _monthView.currentIndex = _monthToIndex(currentMonth)
-        _syncing = false
+        currentMonth = new Date(d.getFullYear(), d.getMonth(), 1);
+        _syncing = true;
+        _monthView.currentIndex = _monthToIndex(currentMonth);
+        _syncing = false;
     }
 
     function goToToday() {
-        goToDate(new Date())
+        goToDate(new Date());
     }
 
     Accessible.role: Accessible.Dialog

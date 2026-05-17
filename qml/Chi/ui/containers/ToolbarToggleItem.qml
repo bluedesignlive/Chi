@@ -12,16 +12,14 @@ Item {
     property bool enabled: true
     property string toolbarType: "standard"  // Set by parent Toolbar
 
-    signal toggled()
+    signal toggled
 
     readonly property bool hasLabel: label !== ""
     readonly property bool isVibrant: toolbarType === "vibrant"
     readonly property string displayIcon: selected && selectedIcon !== "" ? selectedIcon : icon
 
     // Cached content color — shared by icon and label
-    readonly property color _contentColor: !enabled ? colors.onSurface :
-        (selected ? colors.onSecondaryContainer :
-        (isVibrant ? colors.onPrimaryContainer : colors.onSurfaceVariant))
+    readonly property color _contentColor: !enabled ? colors.onSurface : (selected ? colors.onSecondaryContainer : (isVibrant ? colors.onPrimaryContainer : colors.onSurfaceVariant))
 
     implicitWidth: hasLabel ? contentRow.implicitWidth + 32 : 48
     implicitHeight: 48
@@ -39,26 +37,35 @@ Item {
         radius: mouseArea.pressed ? 8 : 100
 
         color: {
-            if (root.selected) return colors.secondaryContainer
+            if (root.selected)
+                return colors.secondaryContainer;
             if (!root.enabled)
-                return Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.1)
-            return root.hasLabel ? colors.surfaceContainer : "transparent"
+                return Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.1);
+            return root.hasLabel ? colors.surfaceContainer : "transparent";
         }
 
-        Behavior on color { ColorAnimation { duration: 150 } }
-        Behavior on radius { NumberAnimation { duration: 100 } }
+        Behavior on color {
+            ColorAnimation {
+                duration: 150
+            }
+        }
+        Behavior on radius {
+            NumberAnimation {
+                duration: 100
+            }
+        }
 
         // State layer
         Rectangle {
             anchors.fill: parent
             radius: parent.radius
-            color: root.selected ? colors.onSecondaryContainer :
-                   (root.isVibrant ? colors.onPrimaryContainer : colors.onSurfaceVariant)
-            opacity: !root.enabled ? 0 :
-                     (mouseArea.pressed ? 0.1 :
-                     (mouseArea.containsMouse ? 0.08 :
-                     (root.activeFocus ? 0.1 : 0)))
-            Behavior on opacity { NumberAnimation { duration: 100 } }
+            color: root.selected ? colors.onSecondaryContainer : (root.isVibrant ? colors.onPrimaryContainer : colors.onSurfaceVariant)
+            opacity: !root.enabled ? 0 : (mouseArea.pressed ? 0.1 : (mouseArea.containsMouse ? 0.08 : (root.activeFocus ? 0.1 : 0)))
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 100
+                }
+            }
         }
 
         // Elevation on hover
@@ -84,7 +91,11 @@ Item {
                 font.pixelSize: root.hasLabel ? 20 : 24
                 color: root._contentColor
                 anchors.verticalCenter: parent.verticalCenter
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 150
+                    }
+                }
             }
 
             // Label
@@ -97,7 +108,11 @@ Item {
                 font.letterSpacing: _typo.labelLarge.spacing
                 color: root._contentColor
                 anchors.verticalCenter: parent.verticalCenter
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 150
+                    }
+                }
             }
         }
 
@@ -107,7 +122,10 @@ Item {
             enabled: root.enabled
             hoverEnabled: true
             cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-            onClicked: { root.selected = !root.selected; root.toggled() }
+            onClicked: {
+                root.selected = !root.selected;
+                root.toggled();
+            }
         }
     }
 

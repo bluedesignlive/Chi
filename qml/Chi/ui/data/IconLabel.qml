@@ -16,10 +16,19 @@ Item {
     property int fontWeight: Font.Normal
 
     readonly property var sizeSpecs: ({
-        small: { iconSize: 16, fontSize: 12 },
-        medium: { iconSize: 20, fontSize: 14 },
-        large: { iconSize: 24, fontSize: 16 }
-    })
+            small: {
+                iconSize: 16,
+                fontSize: 12
+            },
+            medium: {
+                iconSize: 20,
+                fontSize: 14
+            },
+            large: {
+                iconSize: 24,
+                fontSize: 16
+            }
+        })
 
     readonly property var currentSize: sizeSpecs[size] || sizeSpecs.medium
 
@@ -44,7 +53,9 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
 
             Behavior on color {
-                ColorAnimation { duration: 150 }
+                ColorAnimation {
+                    duration: 150
+                }
             }
         }
 
@@ -58,7 +69,9 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
 
             Behavior on color {
-                ColorAnimation { duration: 150 }
+                ColorAnimation {
+                    duration: 150
+                }
             }
         }
     }
@@ -77,7 +90,9 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
 
             Behavior on color {
-                ColorAnimation { duration: 150 }
+                ColorAnimation {
+                    duration: 150
+                }
             }
         }
 
@@ -91,7 +106,9 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
 
             Behavior on color {
-                ColorAnimation { duration: 150 }
+                ColorAnimation {
+                    duration: 150
+                }
             }
         }
 
@@ -103,7 +120,9 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
 
             Behavior on color {
-                ColorAnimation { duration: 150 }
+                ColorAnimation {
+                    duration: 150
+                }
             }
         }
     }

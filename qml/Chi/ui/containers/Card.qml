@@ -13,15 +13,18 @@ Item {
 
     default property alias content: contentContainer.data
 
-    signal clicked()
-    signal pressAndHold()
+    signal clicked
+    signal pressAndHold
 
     implicitWidth: 320
     implicitHeight: contentContainer.implicitHeight + contentPadding * 2
 
     opacity: enabled ? 1.0 : 0.38
     Behavior on opacity {
-        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+        NumberAnimation {
+            duration: 150
+            easing.type: Easing.OutCubic
+        }
     }
 
     property var colors: Theme.ChiTheme.colors
@@ -32,21 +35,31 @@ Item {
         id: container
         anchors.fill: parent
         radius: cornerRadius
-        color: root._elevated ? colors.surfaceContainerLow :
-               variant === "filled" ? colors.surfaceContainerHighest : colors.surface
+        color: root._elevated ? colors.surfaceContainerLow : variant === "filled" ? colors.surfaceContainerHighest : colors.surface
         border.width: variant === "outlined" ? 1 : 0
         border.color: colors.outlineVariant
 
-        Behavior on color { ColorAnimation { duration: 200 } }
-        Behavior on border.color { ColorAnimation { duration: 200 } }
+        Behavior on color {
+            ColorAnimation {
+                duration: 200
+            }
+        }
+        Behavior on border.color {
+            ColorAnimation {
+                duration: 200
+            }
+        }
 
         Rectangle {
             anchors.fill: parent
             radius: parent.radius
             color: colors.onSurface
-            opacity: !root.clickable || !root.enabled ? 0 :
-                     (mouseArea.pressed ? 0.12 : (mouseArea.containsMouse ? 0.08 : 0))
-            Behavior on opacity { NumberAnimation { duration: 150 } }
+            opacity: !root.clickable || !root.enabled ? 0 : (mouseArea.pressed ? 0.12 : (mouseArea.containsMouse ? 0.08 : 0))
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 150
+                }
+            }
         }
 
         Item {
@@ -62,8 +75,16 @@ Item {
             shadowHorizontalOffset: 0
             shadowVerticalOffset: mouseArea.containsMouse && root.clickable ? 2 : 1
             shadowBlur: mouseArea.containsMouse && root.clickable ? 0.4 : 0.2
-            Behavior on shadowVerticalOffset { NumberAnimation { duration: 150 } }
-            Behavior on shadowBlur { NumberAnimation { duration: 150 } }
+            Behavior on shadowVerticalOffset {
+                NumberAnimation {
+                    duration: 150
+                }
+            }
+            Behavior on shadowBlur {
+                NumberAnimation {
+                    duration: 150
+                }
+            }
         }
     }
 

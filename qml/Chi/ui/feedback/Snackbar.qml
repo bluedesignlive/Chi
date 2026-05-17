@@ -14,8 +14,8 @@ Item {
     property bool multiLine: false
     property bool longerAction: false        // Action on separate line
 
-    signal actionClicked()
-    signal closed()
+    signal actionClicked
+    signal closed
 
     readonly property bool hasAction: actionText !== ""
     readonly property bool isShowing: state === "visible"
@@ -36,22 +36,40 @@ Item {
     states: [
         State {
             name: "hidden"
-            PropertyChanges { target: snackbarContainer; opacity: 0; y: position === "bottom" ? 20 : -20 }
+            PropertyChanges {
+                target: snackbarContainer
+                opacity: 0
+                y: position === "bottom" ? 20 : -20
+            }
         },
         State {
             name: "visible"
-            PropertyChanges { target: snackbarContainer; opacity: 1; y: 0 }
+            PropertyChanges {
+                target: snackbarContainer
+                opacity: 1
+                y: 0
+            }
         }
     ]
 
     transitions: [
         Transition {
-            from: "hidden"; to: "visible"
-            NumberAnimation { properties: "opacity,y"; duration: 250; easing.type: Easing.OutCubic }
+            from: "hidden"
+            to: "visible"
+            NumberAnimation {
+                properties: "opacity,y"
+                duration: 250
+                easing.type: Easing.OutCubic
+            }
         },
         Transition {
-            from: "visible"; to: "hidden"
-            NumberAnimation { properties: "opacity,y"; duration: 200; easing.type: Easing.InCubic }
+            from: "visible"
+            to: "hidden"
+            NumberAnimation {
+                properties: "opacity,y"
+                duration: 200
+                easing.type: Easing.InCubic
+            }
         }
     ]
 
@@ -70,7 +88,11 @@ Item {
             radius: 100
             color: colors.inversePrimary
             opacity: _actionMa.pressed ? 0.1 : (_actionMa.containsMouse ? 0.08 : 0)
-            Behavior on opacity { NumberAnimation { duration: 100 } }
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 100
+                }
+            }
         }
 
         Text {
@@ -82,7 +104,11 @@ Item {
             font.weight: Font.Medium
             font.letterSpacing: root._typo.labelLarge.spacing
             color: colors.inversePrimary
-            Behavior on color { ColorAnimation { duration: 200 } }
+            Behavior on color {
+                ColorAnimation {
+                    duration: 200
+                }
+            }
         }
 
         MouseArea {
@@ -90,7 +116,10 @@ Item {
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            onClicked: { root.actionClicked(); root.hide() }
+            onClicked: {
+                root.actionClicked();
+                root.hide();
+            }
         }
     }
 
@@ -102,10 +131,16 @@ Item {
 
         Rectangle {
             anchors.centerIn: parent
-            width: 40; height: 40; radius: 100
+            width: 40
+            height: 40
+            radius: 100
             color: colors.inverseOnSurface
             opacity: _closeMa.pressed ? 0.1 : (_closeMa.containsMouse ? 0.08 : 0)
-            Behavior on opacity { NumberAnimation { duration: 100 } }
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 100
+                }
+            }
         }
 
         Text {
@@ -113,7 +148,11 @@ Item {
             text: "✕"
             font.pixelSize: 24
             color: colors.inverseOnSurface
-            Behavior on color { ColorAnimation { duration: 200 } }
+            Behavior on color {
+                ColorAnimation {
+                    duration: 200
+                }
+            }
         }
 
         MouseArea {
@@ -135,7 +174,11 @@ Item {
         color: colors.inverseOnSurface
         elide: Text.ElideRight
         Layout.fillWidth: true
-        Behavior on color { ColorAnimation { duration: 200 } }
+        Behavior on color {
+            ColorAnimation {
+                duration: 200
+            }
+        }
     }
 
     Rectangle {
@@ -145,7 +188,11 @@ Item {
         radius: 4
         color: colors.inverseSurface
 
-        Behavior on color { ColorAnimation { duration: 200 } }
+        Behavior on color {
+            ColorAnimation {
+                duration: 200
+            }
+        }
 
         layer.enabled: root.isShowing
         layer.effect: MultiEffect {
@@ -235,7 +282,9 @@ Item {
                 Layout.bottomMargin: root.showClose ? 0 : 4
                 spacing: 0
 
-                Item { Layout.fillWidth: true }
+                Item {
+                    Layout.fillWidth: true
+                }
                 SnackAction {}
                 SnackClose {}
             }
@@ -250,17 +299,21 @@ Item {
     }
 
     function show(message, action, closeable) {
-        if (message !== undefined) text = message
-        if (action !== undefined) actionText = action
-        if (closeable !== undefined) showClose = closeable
-        state = "visible"
-        if (duration > 0) hideTimer.restart()
+        if (message !== undefined)
+            text = message;
+        if (action !== undefined)
+            actionText = action;
+        if (closeable !== undefined)
+            showClose = closeable;
+        state = "visible";
+        if (duration > 0)
+            hideTimer.restart();
     }
 
     function hide() {
-        hideTimer.stop()
-        state = "hidden"
-        closed()
+        hideTimer.stop();
+        state = "hidden";
+        closed();
     }
 
     Accessible.role: Accessible.AlertMessage

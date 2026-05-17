@@ -82,10 +82,10 @@ Window {
     // SIGNALS
     // ═══════════════════════════════════════════════════════════════
 
-    signal leadingActionTriggered()
+    signal leadingActionTriggered
     signal toolbarActionTriggered(int index)
     signal menuItemTriggered(string menuId, string itemId)
-    signal sidebarButtonClicked()
+    signal sidebarButtonClicked
     signal breakpointChanged(string breakpoint)
 
     // ═══════════════════════════════════════════════════════════════
@@ -95,38 +95,34 @@ Window {
     readonly property QtObject context: QtObject {
         id: ctx
 
-        readonly property bool isMacOS:   Qt.platform.os === "osx"
+        readonly property bool isMacOS: Qt.platform.os === "osx"
         readonly property bool isWindows: Qt.platform.os === "windows"
-        readonly property bool isLinux:   Qt.platform.os === "linux"
-        readonly property bool isMobile:  Qt.platform.os === "android" || Qt.platform.os === "ios"
-        readonly property bool isWeb:     Qt.platform.os === "wasm"
+        readonly property bool isLinux: Qt.platform.os === "linux"
+        readonly property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
+        readonly property bool isWeb: Qt.platform.os === "wasm"
         readonly property bool isDesktop: !isMobile && !isWeb
 
-        readonly property int windowWidth:  root.width
+        readonly property int windowWidth: root.width
         readonly property int windowHeight: root.height
 
         property string breakpoint: "expanded"
 
-        readonly property bool isCompact:  breakpoint === "compact"
-        readonly property bool isMedium:   breakpoint === "medium"
+        readonly property bool isCompact: breakpoint === "compact"
+        readonly property bool isMedium: breakpoint === "medium"
         readonly property bool isExpanded: breakpoint === "expanded"
-        readonly property bool isLarge:    breakpoint === "large"
-        readonly property bool isXLarge:   breakpoint === "xlarge"
+        readonly property bool isLarge: breakpoint === "large"
+        readonly property bool isXLarge: breakpoint === "xlarge"
 
         readonly property bool showWindowControls: isDesktop && !isWeb
-        readonly property bool useOverlaySidebar:  isCompact || isMedium
+        readonly property bool useOverlaySidebar: isCompact || isMedium
 
         onBreakpointChanged: root.breakpointChanged(breakpoint)
 
         function _recalcBreakpoint() {
-            var w = root.width
-            var bp = w < 600  ? "compact"
-                   : w < 840  ? "medium"
-                   : w < 1200 ? "expanded"
-                   : w < 1600 ? "large"
-                   : "xlarge"
+            var w = root.width;
+            var bp = w < 600 ? "compact" : w < 840 ? "medium" : w < 1200 ? "expanded" : w < 1600 ? "large" : "xlarge";
             if (breakpoint !== bp)
-                breakpoint = bp
+                breakpoint = bp;
         }
     }
 
@@ -143,26 +139,32 @@ Window {
     // INTERNAL STATE
     // ═══════════════════════════════════════════════════════════════
 
-    readonly property bool isMaximized:  visibility === Window.Maximized
+    readonly property bool isMaximized: visibility === Window.Maximized
     readonly property real windowRadius: isMaximized ? 0 : 24
 
     readonly property string _effectiveMenuStyle: {
-        if (!showMenu) return "none"
-        if (menuStyle === "collapsed") return "collapsed"
-        if (menuStyle === "traditional") return "traditional"
-        let minSpaceForMenu = _estimatedMenuWidth + _estimatedRightWidth + 60
-        if (root.width < minSpaceForMenu) return "collapsed"
-        return "traditional"
+        if (!showMenu)
+            return "none";
+        if (menuStyle === "collapsed")
+            return "collapsed";
+        if (menuStyle === "traditional")
+            return "traditional";
+        let minSpaceForMenu = _estimatedMenuWidth + _estimatedRightWidth + 60;
+        if (root.width < minSpaceForMenu)
+            return "collapsed";
+        return "traditional";
     }
 
-    readonly property real _estimatedMenuWidth:  showMenu ? _allMenus.length * 60 : 0
+    readonly property real _estimatedMenuWidth: showMenu ? _allMenus.length * 60 : 0
     readonly property real _estimatedRightWidth: (toolbarActions.length * 40) + (controlsOnLeft ? 0 : 110)
 
     property bool _toolbarAutoHidden: false
     readonly property bool _showToolbar: {
-        if (!toolbarVisible) return false
-        if (toolbarBehavior === "autoHide") return !_toolbarAutoHidden || toolbarHoverArea.containsMouse
-        return true
+        if (!toolbarVisible)
+            return false;
+        if (toolbarBehavior === "autoHide")
+            return !_toolbarAutoHidden || toolbarHoverArea.containsMouse;
+        return true;
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -171,57 +173,158 @@ Window {
 
     readonly property var _defaultMenus: showMenu ? [
         {
-            id: "file", title: "File",
+            id: "file",
+            title: "File",
             items: [
-                { id: "new", text: "New", shortcut: "Ctrl+N", icon: "add" },
-                { id: "open", text: "Open", shortcut: "Ctrl+O", icon: "folder_open" },
-                { type: "divider" },
-                { id: "save", text: "Save", shortcut: "Ctrl+S", icon: "save" },
-                { id: "saveAs", text: "Save As...", shortcut: "Ctrl+Shift+S" },
-                { type: "divider" },
-                { id: "exit", text: "Exit", shortcut: "Alt+F4", icon: "logout" }
+                {
+                    id: "new",
+                    text: "New",
+                    shortcut: "Ctrl+N",
+                    icon: "add"
+                },
+                {
+                    id: "open",
+                    text: "Open",
+                    shortcut: "Ctrl+O",
+                    icon: "folder_open"
+                },
+                {
+                    type: "divider"
+                },
+                {
+                    id: "save",
+                    text: "Save",
+                    shortcut: "Ctrl+S",
+                    icon: "save"
+                },
+                {
+                    id: "saveAs",
+                    text: "Save As...",
+                    shortcut: "Ctrl+Shift+S"
+                },
+                {
+                    type: "divider"
+                },
+                {
+                    id: "exit",
+                    text: "Exit",
+                    shortcut: "Alt+F4",
+                    icon: "logout"
+                }
             ]
         },
         {
-            id: "edit", title: "Edit",
+            id: "edit",
+            title: "Edit",
             items: [
-                { id: "undo", text: "Undo", shortcut: "Ctrl+Z", icon: "undo" },
-                { id: "redo", text: "Redo", shortcut: "Ctrl+Y", icon: "redo" },
-                { type: "divider" },
-                { id: "cut", text: "Cut", shortcut: "Ctrl+X", icon: "content_cut" },
-                { id: "copy", text: "Copy", shortcut: "Ctrl+C", icon: "content_copy" },
-                { id: "paste", text: "Paste", shortcut: "Ctrl+V", icon: "content_paste" }
+                {
+                    id: "undo",
+                    text: "Undo",
+                    shortcut: "Ctrl+Z",
+                    icon: "undo"
+                },
+                {
+                    id: "redo",
+                    text: "Redo",
+                    shortcut: "Ctrl+Y",
+                    icon: "redo"
+                },
+                {
+                    type: "divider"
+                },
+                {
+                    id: "cut",
+                    text: "Cut",
+                    shortcut: "Ctrl+X",
+                    icon: "content_cut"
+                },
+                {
+                    id: "copy",
+                    text: "Copy",
+                    shortcut: "Ctrl+C",
+                    icon: "content_copy"
+                },
+                {
+                    id: "paste",
+                    text: "Paste",
+                    shortcut: "Ctrl+V",
+                    icon: "content_paste"
+                }
             ]
         },
         {
-            id: "view", title: "View",
+            id: "view",
+            title: "View",
             items: [
-                { id: "sidebar", text: "Toggle Sidebar", shortcut: "Ctrl+B", icon: "view_sidebar" },
-                { type: "divider" },
-                { id: "menu_auto", text: "Auto Menu", icon: "tune" },
-                { id: "menu_traditional", text: "Traditional Menu", icon: "menu_open" },
-                { id: "menu_collapsed", text: "Collapsed Menu", icon: "menu" },
-                { type: "divider" },
-                { id: "icon_hamburger", text: "Hamburger Icon", icon: "menu" },
-                { id: "icon_dots", text: "Dots Icon", icon: "more_horiz" }
+                {
+                    id: "sidebar",
+                    text: "Toggle Sidebar",
+                    shortcut: "Ctrl+B",
+                    icon: "view_sidebar"
+                },
+                {
+                    type: "divider"
+                },
+                {
+                    id: "menu_auto",
+                    text: "Auto Menu",
+                    icon: "tune"
+                },
+                {
+                    id: "menu_traditional",
+                    text: "Traditional Menu",
+                    icon: "menu_open"
+                },
+                {
+                    id: "menu_collapsed",
+                    text: "Collapsed Menu",
+                    icon: "menu"
+                },
+                {
+                    type: "divider"
+                },
+                {
+                    id: "icon_hamburger",
+                    text: "Hamburger Icon",
+                    icon: "menu"
+                },
+                {
+                    id: "icon_dots",
+                    text: "Dots Icon",
+                    icon: "more_horiz"
+                }
             ]
         },
         {
-            id: "help", title: "Help",
+            id: "help",
+            title: "Help",
             items: [
-                { id: "docs", text: "Documentation", icon: "menu_book" },
-                { id: "shortcuts", text: "Keyboard Shortcuts", icon: "keyboard" },
-                { type: "divider" },
-                { id: "about", text: "About", icon: "info" }
+                {
+                    id: "docs",
+                    text: "Documentation",
+                    icon: "menu_book"
+                },
+                {
+                    id: "shortcuts",
+                    text: "Keyboard Shortcuts",
+                    icon: "keyboard"
+                },
+                {
+                    type: "divider"
+                },
+                {
+                    id: "about",
+                    text: "About",
+                    icon: "info"
+                }
             ]
         }
     ] : []
 
     readonly property var _allMenus: {
-        if (!showMenu) return []
-        return showDefaultMenus
-            ? _defaultMenus.concat(customMenus)
-            : customMenus
+        if (!showMenu)
+            return [];
+        return showDefaultMenus ? _defaultMenus.concat(customMenus) : customMenus;
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -266,8 +369,8 @@ Window {
             anchors.right: parent.right
             height: root.toolbarBehavior === "autoHide" && root._toolbarAutoHidden ? 12 : 0
             hoverEnabled: root.toolbarBehavior === "autoHide"
-            enabled:      root.toolbarBehavior === "autoHide"
-            visible:      root.toolbarBehavior === "autoHide"
+            enabled: root.toolbarBehavior === "autoHide"
+            visible: root.toolbarBehavior === "autoHide"
             z: 101
         }
 
@@ -288,7 +391,10 @@ Window {
             color: colors.surfaceContainer
 
             Behavior on height {
-                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                NumberAnimation {
+                    duration: 200
+                    easing.type: Easing.OutCubic
+                }
             }
 
             MouseArea {
@@ -296,8 +402,10 @@ Window {
                 z: -1
                 onPressed: root.startSystemMove()
                 onDoubleClicked: {
-                    if (root.isMaximized) root.showNormal()
-                    else root.showMaximized()
+                    if (root.isMaximized)
+                        root.showNormal();
+                    else
+                        root.showMaximized();
                 }
             }
 
@@ -331,9 +439,7 @@ Window {
                     // ═══ COLLAPSED MENU BUTTON ═══
                     // Only when showMenu is true AND style resolves to collapsed
                     ToolbarIconButton {
-                        visible: root.showMenu
-                                 && root.showMenuButton
-                                 && root._effectiveMenuStyle === "collapsed"
+                        visible: root.showMenu && root.showMenuButton && root._effectiveMenuStyle === "collapsed"
                         iconName: root.collapsedMenuIcon
                         onClicked: overflowMenu.open()
 
@@ -362,8 +468,7 @@ Window {
                     // Only when showMenu is true AND style resolves to traditional
                     Row {
                         id: traditionalMenuRow
-                        visible: root.showMenu
-                                 && root._effectiveMenuStyle === "traditional"
+                        visible: root.showMenu && root._effectiveMenuStyle === "traditional"
                         spacing: 0
                         anchors.verticalCenter: parent.verticalCenter
 
@@ -372,7 +477,7 @@ Window {
 
                             MenuBarButton {
                                 menuData: modelData
-                                onItemTriggered: (itemId) => root._handleMenuAction(modelData.id, itemId)
+                                onItemTriggered: itemId => root._handleMenuAction(modelData.id, itemId)
                             }
                         }
                     }
@@ -402,8 +507,9 @@ Window {
                             enabled: modelData.enabled !== false
 
                             onClicked: {
-                                if (modelData.triggered) modelData.triggered()
-                                root.toolbarActionTriggered(index)
+                                if (modelData.triggered)
+                                    modelData.triggered();
+                                root.toolbarActionTriggered(index);
                             }
                         }
                     }
@@ -443,14 +549,18 @@ Window {
                 readonly property real availableSpace: Math.max(0, rightEdge - leftEdge)
 
                 readonly property bool _titleTooCloseToMenu: {
-                    if (!root.autoHideTitle) return false
-                    if (availableSpace < 80) return true
+                    if (!root.autoHideTitle)
+                        return false;
+                    if (availableSpace < 80)
+                        return true;
                     if (root.centerTitle) {
-                        let centeredX = (toolbar.width - implicitWidth) / 2
-                        if (centeredX < leftEdge + 20) return true
-                        if (centeredX + implicitWidth > rightEdge - 20) return true
+                        let centeredX = (toolbar.width - implicitWidth) / 2;
+                        if (centeredX < leftEdge + 20)
+                            return true;
+                        if (centeredX + implicitWidth > rightEdge - 20)
+                            return true;
                     }
-                    return false
+                    return false;
                 }
 
                 width: Math.min(implicitWidth, availableSpace)
@@ -498,17 +608,89 @@ Window {
 
         sourceComponent: Item {
             id: resizeItem
-            property int edge:   6
+            property int edge: 6
             property int corner: 20
 
-            MouseArea { anchors { top: parent.top; left: parent.left; right: parent.right } height: resizeItem.edge; cursorShape: Qt.SizeVerCursor; onPressed: root.startSystemResize(Qt.TopEdge) }
-            MouseArea { anchors { bottom: parent.bottom; left: parent.left; right: parent.right } height: resizeItem.edge; cursorShape: Qt.SizeVerCursor; onPressed: root.startSystemResize(Qt.BottomEdge) }
-            MouseArea { anchors { left: parent.left; top: parent.top; bottom: parent.bottom } width: resizeItem.edge; cursorShape: Qt.SizeHorCursor; onPressed: root.startSystemResize(Qt.LeftEdge) }
-            MouseArea { anchors { right: parent.right; top: parent.top; bottom: parent.bottom } width: resizeItem.edge; cursorShape: Qt.SizeHorCursor; onPressed: root.startSystemResize(Qt.RightEdge) }
-            MouseArea { anchors { top: parent.top; left: parent.left } width: resizeItem.corner; height: resizeItem.corner; cursorShape: Qt.SizeFDiagCursor; onPressed: root.startSystemResize(Qt.TopEdge | Qt.LeftEdge) }
-            MouseArea { anchors { top: parent.top; right: parent.right } width: resizeItem.corner; height: resizeItem.corner; cursorShape: Qt.SizeBDiagCursor; onPressed: root.startSystemResize(Qt.TopEdge | Qt.RightEdge) }
-            MouseArea { anchors { bottom: parent.bottom; left: parent.left } width: resizeItem.corner; height: resizeItem.corner; cursorShape: Qt.SizeBDiagCursor; onPressed: root.startSystemResize(Qt.BottomEdge | Qt.LeftEdge) }
-            MouseArea { anchors { bottom: parent.bottom; right: parent.right } width: resizeItem.corner; height: resizeItem.corner; cursorShape: Qt.SizeFDiagCursor; onPressed: root.startSystemResize(Qt.BottomEdge | Qt.RightEdge) }
+            MouseArea {
+                anchors {
+                    top: parent.top
+                    left: parent.left
+                    right: parent.right
+                }
+                height: resizeItem.edge
+                cursorShape: Qt.SizeVerCursor
+                onPressed: root.startSystemResize(Qt.TopEdge)
+            }
+            MouseArea {
+                anchors {
+                    bottom: parent.bottom
+                    left: parent.left
+                    right: parent.right
+                }
+                height: resizeItem.edge
+                cursorShape: Qt.SizeVerCursor
+                onPressed: root.startSystemResize(Qt.BottomEdge)
+            }
+            MouseArea {
+                anchors {
+                    left: parent.left
+                    top: parent.top
+                    bottom: parent.bottom
+                }
+                width: resizeItem.edge
+                cursorShape: Qt.SizeHorCursor
+                onPressed: root.startSystemResize(Qt.LeftEdge)
+            }
+            MouseArea {
+                anchors {
+                    right: parent.right
+                    top: parent.top
+                    bottom: parent.bottom
+                }
+                width: resizeItem.edge
+                cursorShape: Qt.SizeHorCursor
+                onPressed: root.startSystemResize(Qt.RightEdge)
+            }
+            MouseArea {
+                anchors {
+                    top: parent.top
+                    left: parent.left
+                }
+                width: resizeItem.corner
+                height: resizeItem.corner
+                cursorShape: Qt.SizeFDiagCursor
+                onPressed: root.startSystemResize(Qt.TopEdge | Qt.LeftEdge)
+            }
+            MouseArea {
+                anchors {
+                    top: parent.top
+                    right: parent.right
+                }
+                width: resizeItem.corner
+                height: resizeItem.corner
+                cursorShape: Qt.SizeBDiagCursor
+                onPressed: root.startSystemResize(Qt.TopEdge | Qt.RightEdge)
+            }
+            MouseArea {
+                anchors {
+                    bottom: parent.bottom
+                    left: parent.left
+                }
+                width: resizeItem.corner
+                height: resizeItem.corner
+                cursorShape: Qt.SizeBDiagCursor
+                onPressed: root.startSystemResize(Qt.BottomEdge | Qt.LeftEdge)
+            }
+            MouseArea {
+                anchors {
+                    bottom: parent.bottom
+                    right: parent.right
+                }
+                width: resizeItem.corner
+                height: resizeItem.corner
+                cursorShape: Qt.SizeFDiagCursor
+                onPressed: root.startSystemResize(Qt.BottomEdge | Qt.RightEdge)
+            }
         }
     }
 
@@ -521,7 +703,7 @@ Window {
         property string iconName: ""
         property bool checked: false
         property alias enabled: toolBtnMouse.enabled
-        signal clicked()
+        signal clicked
 
         implicitWidth: 36
         implicitHeight: 36
@@ -533,10 +715,13 @@ Window {
             anchors.fill: parent
             radius: 10
             color: {
-                if (toolBtn.checked) return colors.secondaryContainer
-                if (toolBtnMouse.pressed) return Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.15)
-                if (toolBtnMouse.containsMouse) return Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.08)
-                return "transparent"
+                if (toolBtn.checked)
+                    return colors.secondaryContainer;
+                if (toolBtnMouse.pressed)
+                    return Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.15);
+                if (toolBtnMouse.containsMouse)
+                    return Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.08);
+                return "transparent";
             }
         }
 
@@ -593,9 +778,9 @@ Window {
             cursorShape: Qt.PointingHandCursor
             onClicked: {
                 if (dropdownMenu.open) {
-                    dropdownMenu.close()
+                    dropdownMenu.close();
                 } else {
-                    dropdownMenu.open()
+                    dropdownMenu.open();
                 }
             }
         }
@@ -604,7 +789,7 @@ Window {
             id: dropdownMenu
             y: parent.height + 4
             items: menuData.items || []
-            onItemClicked: (itemId) => menuBtn.itemTriggered(itemId)
+            onItemClicked: itemId => menuBtn.itemTriggered(itemId)
         }
     }
 
@@ -612,25 +797,47 @@ Window {
     // PUBLIC API
     // ═══════════════════════════════════════════════════════════════
 
-    function showToolbar()  { toolbarVisible = true; _toolbarAutoHidden = false }
-    function hideToolbar()  { if (toolbarBehavior === "autoHide") _toolbarAutoHidden = true; else toolbarVisible = false }
-    function toggleToolbar() { if (toolbarBehavior === "autoHide") _toolbarAutoHidden = !_toolbarAutoHidden; else toolbarVisible = !toolbarVisible }
-    function setMenuStyle(style) { if (showMenu) menuStyle = style }
+    function showToolbar() {
+        toolbarVisible = true;
+        _toolbarAutoHidden = false;
+    }
+    function hideToolbar() {
+        if (toolbarBehavior === "autoHide")
+            _toolbarAutoHidden = true;
+        else
+            toolbarVisible = false;
+    }
+    function toggleToolbar() {
+        if (toolbarBehavior === "autoHide")
+            _toolbarAutoHidden = !_toolbarAutoHidden;
+        else
+            toolbarVisible = !toolbarVisible;
+    }
+    function setMenuStyle(style) {
+        if (showMenu)
+            menuStyle = style;
+    }
 
     function _handleMenuAction(menuId, itemId) {
-        if (!showMenu) return
-
-        menuItemTriggered(menuId, itemId)
+        if (!showMenu)
+            return;
+        menuItemTriggered(menuId, itemId);
 
         if (menuId === "view") {
-            if (itemId === "sidebar") sidebarButtonClicked()
-            else if (itemId === "menu_auto") menuStyle = "auto"
-            else if (itemId === "menu_traditional") menuStyle = "traditional"
-            else if (itemId === "menu_collapsed") menuStyle = "collapsed"
-            else if (itemId === "icon_hamburger") collapsedMenuIcon = "menu"
-            else if (itemId === "icon_dots") collapsedMenuIcon = "more_horiz"
+            if (itemId === "sidebar")
+                sidebarButtonClicked();
+            else if (itemId === "menu_auto")
+                menuStyle = "auto";
+            else if (itemId === "menu_traditional")
+                menuStyle = "traditional";
+            else if (itemId === "menu_collapsed")
+                menuStyle = "collapsed";
+            else if (itemId === "icon_hamburger")
+                collapsedMenuIcon = "menu";
+            else if (itemId === "icon_dots")
+                collapsedMenuIcon = "more_horiz";
         } else if (menuId === "file" && itemId === "exit") {
-            root.close()
+            root.close();
         }
     }
 }

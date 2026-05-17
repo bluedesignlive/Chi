@@ -11,7 +11,7 @@ Item {
 
     signal notificationClicked(var notification, int index)
     signal notificationClosed(var notification, int index)
-    signal clearAll()
+    signal clearAll
 
     anchors.fill: parent
     visible: open
@@ -27,7 +27,9 @@ Item {
         opacity: open ? 0.32 : 0
 
         Behavior on opacity {
-            NumberAnimation { duration: 200 }
+            NumberAnimation {
+                duration: 200
+            }
         }
 
         MouseArea {
@@ -48,10 +50,15 @@ Item {
         x: open ? 0 : width
 
         Behavior on x {
-            NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+            NumberAnimation {
+                duration: 250
+                easing.type: Easing.OutCubic
+            }
         }
         Behavior on color {
-            ColorAnimation { duration: 200 }
+            ColorAnimation {
+                duration: 200
+            }
         }
 
         ColumnLayout {
@@ -75,7 +82,9 @@ Item {
                     Layout.fillWidth: true
 
                     Behavior on color {
-                        ColorAnimation { duration: 200 }
+                        ColorAnimation {
+                            duration: 200
+                        }
                     }
                 }
 
@@ -107,8 +116,8 @@ Item {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            notifications = []
-                            clearAll()
+                            notifications = [];
+                            clearAll();
                         }
                     }
                 }
@@ -149,10 +158,10 @@ Item {
                             onClicked: notificationClicked(modelData, index)
 
                             onClosed: {
-                                var notifs = notifications.slice()
-                                notifs.splice(index, 1)
-                                notifications = notifs
-                                notificationClosed(modelData, index)
+                                var notifs = notifications.slice();
+                                notifs.splice(index, 1);
+                                notifications = notifs;
+                                notificationClosed(modelData, index);
                             }
                         }
                     }
@@ -189,21 +198,21 @@ Item {
     }
 
     function show() {
-        open = true
+        open = true;
     }
 
     function close() {
-        open = false
+        open = false;
     }
 
     function toggle() {
-        open = !open
+        open = !open;
     }
 
     function addNotification(notification) {
-        var notifs = notifications.slice()
-        notifs.unshift(notification)
-        notifications = notifs
+        var notifs = notifications.slice();
+        notifs.unshift(notification);
+        notifications = notifs;
     }
 
     Accessible.role: Accessible.Pane

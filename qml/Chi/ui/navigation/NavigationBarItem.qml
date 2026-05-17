@@ -16,7 +16,7 @@ Item {
     property bool enabled: true
     property int navIndex: 0
 
-    signal clicked()
+    signal clicked
 
     // ─── Theme Tokens ───────────────────────────────────────
     readonly property var _c: Theme.ChiTheme.colors
@@ -58,10 +58,14 @@ Item {
                     }
                 }
                 Behavior on opacity {
-                    NumberAnimation { duration: _m.durationFast }
+                    NumberAnimation {
+                        duration: _m.durationFast
+                    }
                 }
                 Behavior on color {
-                    ColorAnimation { duration: _m.durationFast }
+                    ColorAnimation {
+                        duration: _m.durationFast
+                    }
                 }
             }
 
@@ -72,12 +76,12 @@ Item {
                 height: 32
                 radius: 16
                 color: root.selected ? _c.onSecondaryContainer : _c.onSurface
-                opacity: tapHandler.pressed ? 0.12
-                       : hoverHandler.hovered ? 0.08
-                       : 0
+                opacity: tapHandler.pressed ? 0.12 : hoverHandler.hovered ? 0.08 : 0
 
                 Behavior on opacity {
-                    NumberAnimation { duration: _m.durationFast }
+                    NumberAnimation {
+                        duration: _m.durationFast
+                    }
                 }
             }
 
@@ -90,7 +94,9 @@ Item {
                 color: root.selected ? _c.onSecondaryContainer : _c.onSurfaceVariant
 
                 Behavior on color {
-                    ColorAnimation { duration: _m.durationFast }
+                    ColorAnimation {
+                        duration: _m.durationFast
+                    }
                 }
             }
 
@@ -114,7 +120,9 @@ Item {
                     }
                 }
                 Behavior on color {
-                    ColorAnimation { duration: _m.durationFast }
+                    ColorAnimation {
+                        duration: _m.durationFast
+                    }
                 }
 
                 Text {
@@ -128,7 +136,9 @@ Item {
                     color: _c.onError
 
                     Behavior on color {
-                        ColorAnimation { duration: _m.durationFast }
+                        ColorAnimation {
+                            duration: _m.durationFast
+                        }
                     }
                 }
             }
@@ -146,7 +156,9 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
 
             Behavior on color {
-                ColorAnimation { duration: _m.durationFast }
+                ColorAnimation {
+                    duration: _m.durationFast
+                }
             }
         }
     }

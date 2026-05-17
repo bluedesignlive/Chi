@@ -12,7 +12,7 @@ Item {
     property bool enabled: true
 
     signal itemClicked(int index, var item)
-    signal homeClicked()
+    signal homeClicked
 
     implicitWidth: breadcrumbRow.implicitWidth
     implicitHeight: 32
@@ -106,7 +106,9 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
 
                             Behavior on color {
-                                ColorAnimation { duration: 150 }
+                                ColorAnimation {
+                                    duration: 150
+                                }
                             }
                         }
                     }

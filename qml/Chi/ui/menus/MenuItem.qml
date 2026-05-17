@@ -36,7 +36,7 @@ Item {
     // SIGNALS
     // ═══════════════════════════════════════════════════════════════════
 
-    signal clicked()
+    signal clicked
     signal submenuRequested(string title, var items)
 
     // ═══════════════════════════════════════════════════════════════════
@@ -47,8 +47,7 @@ Item {
     readonly property real _itemH: _compact ? 36 : 48
     readonly property real _supportH: _compact ? 52 : 64
     readonly property real _iconSize: _compact ? 20 : 24
-    readonly property real _radius: menuVariant === "expressive"
-        ? (_compact ? 8 : 12) : 0
+    readonly property real _radius: menuVariant === "expressive" ? (_compact ? 8 : 12) : 0
 
     // ═══════════════════════════════════════════════════════════════════
     // DERIVED STATE
@@ -58,12 +57,10 @@ Item {
     readonly property bool hasTrailingIcon: trailingIcon !== ""
     readonly property bool hasTrailingText: trailingText !== ""
     readonly property bool hasSupportingText: supportingText !== ""
-    readonly property bool hasSubmenu: submenu !== null && submenu !== undefined
-                                       && submenu.length > 0
+    readonly property bool hasSubmenu: submenu !== null && submenu !== undefined && submenu.length > 0
 
     implicitWidth: parent ? parent.width : 200
-    implicitHeight: (hasSupportingText ? _supportH : _itemH)
-                    + (showDivider ? 9 : 0)
+    implicitHeight: (hasSupportingText ? _supportH : _itemH) + (showDivider ? 9 : 0)
     opacity: enabled ? 1.0 : 0.38
 
     // ═══════════════════════════════════════════════════════════════════
@@ -79,15 +76,19 @@ Item {
     readonly property var _supportTypo: Theme.ChiTheme.typography.bodySmall
 
     readonly property color _textColor: {
-        if (destructive) return colors.error
-        if (selected) return _vibrant ? colors.onTertiary : colors.onTertiaryContainer
-        return _vibrant ? colors.onTertiaryContainer : colors.onSurface
+        if (destructive)
+            return colors.error;
+        if (selected)
+            return _vibrant ? colors.onTertiary : colors.onTertiaryContainer;
+        return _vibrant ? colors.onTertiaryContainer : colors.onSurface;
     }
 
     readonly property color _iconColor: {
-        if (destructive) return colors.error
-        if (selected) return _vibrant ? colors.onTertiary : colors.onTertiaryContainer
-        return _vibrant ? colors.onTertiaryContainer : colors.onSurfaceVariant
+        if (destructive)
+            return colors.error;
+        if (selected)
+            return _vibrant ? colors.onTertiary : colors.onTertiaryContainer;
+        return _vibrant ? colors.onTertiaryContainer : colors.onSurfaceVariant;
     }
 
     readonly property color _selectedBg: _vibrant ? colors.tertiary : colors.tertiaryContainer
@@ -106,12 +107,13 @@ Item {
             width: parent.width
             height: root.implicitHeight - (showDivider ? 9 : 0)
             radius: root._radius
-            color: selected ? root._selectedBg
-                 : (mouseArea.containsMouse && root.enabled)
-                   ? Qt.alpha(root._stateLayer, 0.08)
-                 : "transparent"
+            color: selected ? root._selectedBg : (mouseArea.containsMouse && root.enabled) ? Qt.alpha(root._stateLayer, 0.08) : "transparent"
 
-            Behavior on color { ColorAnimation { duration: 120 } }
+            Behavior on color {
+                ColorAnimation {
+                    duration: 120
+                }
+            }
 
             // Press overlay
             Rectangle {
@@ -119,7 +121,11 @@ Item {
                 radius: root._radius
                 color: destructive ? colors.error : root._stateLayer
                 opacity: mouseArea.pressed && root.enabled ? 0.12 : 0
-                Behavior on opacity { NumberAnimation { duration: 80 } }
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 80
+                    }
+                }
             }
 
             RowLayout {
@@ -161,8 +167,7 @@ Item {
                         font.pixelSize: root._supportTypo.size
                         font.weight: root._supportTypo.weight
                         font.letterSpacing: root._supportTypo.spacing || 0
-                        color: root._vibrant ? colors.onTertiaryContainer
-                                             : colors.onSurfaceVariant
+                        color: root._vibrant ? colors.onTertiaryContainer : colors.onSurfaceVariant
                         opacity: 0.8
                         elide: Text.ElideRight
                         Layout.fillWidth: true
@@ -177,8 +182,7 @@ Item {
                     font.pixelSize: root._labelTypo.size
                     font.weight: root._labelTypo.weight
                     font.letterSpacing: root._labelTypo.spacing || 0
-                    color: root._vibrant ? colors.onTertiaryContainer
-                                         : colors.onSurfaceVariant
+                    color: root._vibrant ? colors.onTertiaryContainer : colors.onSurfaceVariant
                     opacity: 0.7
                     Layout.alignment: Qt.AlignVCenter
                 }
@@ -202,9 +206,9 @@ Item {
 
                 onClicked: {
                     if (root.hasSubmenu)
-                        root.submenuRequested(root.text, root.submenu)
+                        root.submenuRequested(root.text, root.submenu);
                     else
-                        root.clicked()
+                        root.clicked();
                 }
             }
         }
@@ -212,11 +216,13 @@ Item {
         // Optional divider below
         Item {
             visible: root.showDivider
-            width: parent.width; height: 9
+            width: parent.width
+            height: 9
 
             Rectangle {
                 anchors.centerIn: parent
-                width: parent.width - 24; height: 1
+                width: parent.width - 24
+                height: 1
                 color: colors.outlineVariant
             }
         }
@@ -227,25 +233,25 @@ Item {
 
     Keys.onReturnPressed: {
         if (root.hasSubmenu)
-            root.submenuRequested(root.text, root.submenu)
+            root.submenuRequested(root.text, root.submenu);
         else
-            root.clicked()
+            root.clicked();
     }
     Keys.onEnterPressed: {
         if (root.hasSubmenu)
-            root.submenuRequested(root.text, root.submenu)
+            root.submenuRequested(root.text, root.submenu);
         else
-            root.clicked()
+            root.clicked();
     }
     Keys.onSpacePressed: {
         if (root.hasSubmenu)
-            root.submenuRequested(root.text, root.submenu)
+            root.submenuRequested(root.text, root.submenu);
         else
-            root.clicked()
+            root.clicked();
     }
     Keys.onRightPressed: {
         if (root.hasSubmenu)
-            root.submenuRequested(root.text, root.submenu)
+            root.submenuRequested(root.text, root.submenu);
     }
 
     // ═══════════════════════════════════════════════════════════════════

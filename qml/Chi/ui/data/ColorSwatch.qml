@@ -12,7 +12,7 @@ Item {
     property string size: "medium"           // "small", "medium", "large"
     property string shape: "circle"          // "circle", "square", "rounded"
 
-    signal clicked()
+    signal clicked
 
     readonly property int _dim: size === "small" ? 24 : (size === "large" ? 48 : 32)
     readonly property bool _isCircle: shape === "circle"
@@ -35,7 +35,11 @@ Item {
         color: "transparent"
         border.width: 2
         border.color: colors.primary
-        Behavior on border.color { ColorAnimation { duration: 150 } }
+        Behavior on border.color {
+            ColorAnimation {
+                duration: 150
+            }
+        }
     }
 
     // Checkerboard for transparency
@@ -44,12 +48,12 @@ Item {
         visible: root.color.a < 1
 
         onPaint: {
-            var ctx = getContext("2d")
-            var sz = 4
+            var ctx = getContext("2d");
+            var sz = 4;
             for (var x = 0; x < width; x += sz) {
                 for (var y = 0; y < height; y += sz) {
-                    ctx.fillStyle = ((x / sz + y / sz) % 2 === 0) ? "#ffffff" : "#cccccc"
-                    ctx.fillRect(x, y, sz, sz)
+                    ctx.fillStyle = ((x / sz + y / sz) % 2 === 0) ? "#ffffff" : "#cccccc";
+                    ctx.fillRect(x, y, sz, sz);
                 }
             }
         }
@@ -81,7 +85,11 @@ Item {
         radius: root._radius
         color: "#000000"
         opacity: mouseArea.containsMouse && root.enabled ? 0.1 : 0
-        Behavior on opacity { NumberAnimation { duration: 100 } }
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 100
+            }
+        }
     }
 
     MouseArea {

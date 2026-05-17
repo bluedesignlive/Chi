@@ -18,24 +18,23 @@ Item {
     property bool inputMode: false
 
     signal timeSelected(int hours, int minutes)
-    signal cancelled()
+    signal cancelled
 
     readonly property int _displayH: {
-        if (is24Hour) return hours
-        var h = hours % 12
-        return h === 0 ? 12 : h
+        if (is24Hour)
+            return hours;
+        var h = hours % 12;
+        return h === 0 ? 12 : h;
     }
 
-    readonly property string formattedTime:
-        (_displayH < 10 ? "0" : "") + _displayH + ":"
-        + (minutes < 10 ? "0" : "") + minutes
+    readonly property string formattedTime: (_displayH < 10 ? "0" : "") + _displayH + ":" + (minutes < 10 ? "0" : "") + minutes
 
     implicitWidth: 328
     implicitHeight: _bg.height
 
-    readonly property var    _c:  Theme.ChiTheme.colors
-    readonly property var    _t:  Theme.ChiTheme.typography
-    readonly property var    _m:  Theme.ChiTheme.motion
+    readonly property var _c: Theme.ChiTheme.colors
+    readonly property var _t: Theme.ChiTheme.typography
+    readonly property var _m: Theme.ChiTheme.motion
     readonly property string _ff: Theme.ChiTheme.fontFamily
 
     // ─── Clock geometry ───────────────────────────────────
@@ -49,10 +48,11 @@ Item {
     // ─── Hand angle ───────────────────────────────────────
     readonly property real _handAngle: {
         if (mode === "hours") {
-            if (is24Hour) return hours * 15
-            return _displayH * 30
+            if (is24Hour)
+                return hours * 15;
+            return _displayH * 30;
         }
-        return minutes * 6
+        return minutes * 6;
     }
 
     // ═══════════════════════════════════════════════════════
@@ -75,7 +75,9 @@ Item {
 
         MouseArea {
             anchors.fill: parent
-            onPressed: function(e) { e.accepted = true }
+            onPressed: function (e) {
+                e.accepted = true;
+            }
         }
 
         ColumnLayout {
@@ -117,9 +119,7 @@ Item {
                             Layout.preferredWidth: 56
                             Layout.preferredHeight: 48
                             radius: 12
-                            color: root.mode === "hours"
-                                   ? _c.primaryContainer
-                                   : _c.surfaceContainerHighest
+                            color: root.mode === "hours" ? _c.primaryContainer : _c.surfaceContainerHighest
 
                             TextInput {
                                 id: _hourInput
@@ -129,9 +129,7 @@ Item {
                                 font.family: _ff
                                 font.pixelSize: 28
                                 font.weight: Font.Medium
-                                color: root.mode === "hours"
-                                       ? _c.onPrimaryContainer
-                                       : _c.onSurface
+                                color: root.mode === "hours" ? _c.onPrimaryContainer : _c.onSurface
                                 selectionColor: _c.primary
                                 selectedTextColor: _c.onPrimary
                                 maximumLength: 2
@@ -144,32 +142,35 @@ Item {
                                 text: (root._displayH < 10 ? "0" : "") + root._displayH
 
                                 onTextChanged: {
-                                    if (!root.inputMode) return
+                                    if (!root.inputMode)
+                                        return;
                                     if (text.length === 2) {
-                                        var v = parseInt(text)
+                                        var v = parseInt(text);
                                         if (!isNaN(v)) {
                                             if (root.is24Hour)
-                                                root.hours = Math.max(0, Math.min(23, v))
+                                                root.hours = Math.max(0, Math.min(23, v));
                                             else
-                                                root._setHour12(v)
+                                                root._setHour12(v);
                                         }
-                                        root.mode = "minutes"
-                                        _minInput.forceActiveFocus()
-                                        _minInput.selectAll()
+                                        root.mode = "minutes";
+                                        _minInput.forceActiveFocus();
+                                        _minInput.selectAll();
                                     }
                                 }
 
                                 onEditingFinished: {
-                                    var v = parseInt(text)
-                                    if (isNaN(v)) return
+                                    var v = parseInt(text);
+                                    if (isNaN(v))
+                                        return;
                                     if (root.is24Hour)
-                                        root.hours = Math.max(0, Math.min(23, v))
+                                        root.hours = Math.max(0, Math.min(23, v));
                                     else
-                                        root._setHour12(v)
+                                        root._setHour12(v);
                                 }
 
                                 onActiveFocusChanged: {
-                                    if (activeFocus && root.inputMode) selectAll()
+                                    if (activeFocus && root.inputMode)
+                                        selectAll();
                                 }
 
                                 MouseArea {
@@ -195,9 +196,7 @@ Item {
                             Layout.preferredWidth: 56
                             Layout.preferredHeight: 48
                             radius: 12
-                            color: root.mode === "minutes"
-                                   ? _c.primaryContainer
-                                   : _c.surfaceContainerHighest
+                            color: root.mode === "minutes" ? _c.primaryContainer : _c.surfaceContainerHighest
 
                             TextInput {
                                 id: _minInput
@@ -207,34 +206,37 @@ Item {
                                 font.family: _ff
                                 font.pixelSize: 28
                                 font.weight: Font.Medium
-                                color: root.mode === "minutes"
-                                       ? _c.onPrimaryContainer
-                                       : _c.onSurface
+                                color: root.mode === "minutes" ? _c.onPrimaryContainer : _c.onSurface
                                 selectionColor: _c.primary
                                 selectedTextColor: _c.onPrimary
                                 maximumLength: 2
                                 readOnly: !root.inputMode
                                 inputMethodHints: Qt.ImhDigitsOnly
-                                validator: IntValidator { bottom: 0; top: 59 }
+                                validator: IntValidator {
+                                    bottom: 0
+                                    top: 59
+                                }
                                 text: (root.minutes < 10 ? "0" : "") + root.minutes
 
                                 onTextChanged: {
-                                    if (!root.inputMode) return
+                                    if (!root.inputMode)
+                                        return;
                                     if (text.length === 2) {
-                                        var v = parseInt(text)
+                                        var v = parseInt(text);
                                         if (!isNaN(v))
-                                            root.minutes = Math.max(0, Math.min(59, v))
+                                            root.minutes = Math.max(0, Math.min(59, v));
                                     }
                                 }
 
                                 onEditingFinished: {
-                                    var v = parseInt(text)
+                                    var v = parseInt(text);
                                     if (!isNaN(v))
-                                        root.minutes = Math.max(0, Math.min(59, v))
+                                        root.minutes = Math.max(0, Math.min(59, v));
                                 }
 
                                 onActiveFocusChanged: {
-                                    if (activeFocus && root.inputMode) selectAll()
+                                    if (activeFocus && root.inputMode)
+                                        selectAll();
                                 }
 
                                 MouseArea {
@@ -246,7 +248,9 @@ Item {
                             }
                         }
 
-                        Item { Layout.fillWidth: true }
+                        Item {
+                            Layout.fillWidth: true
+                        }
 
                         // AM/PM segmented selector (M3)
                         Rectangle {
@@ -425,32 +429,33 @@ Item {
                     // ── Number labels ─────────────────────
                     Repeater {
                         id: _labels
-                        model: root.mode === "hours"
-                               ? (root.is24Hour ? 24 : 12)
-                               : 12
+                        model: root.mode === "hours" ? (root.is24Hour ? 24 : 12) : 12
 
                         Item {
                             required property int index
 
                             property int value: {
-                                if (root.mode !== "hours") return index * 5
-                                if (root.is24Hour) return index
-                                return index === 0 ? 12 : index
+                                if (root.mode !== "hours")
+                                    return index * 5;
+                                if (root.is24Hour)
+                                    return index;
+                                return index === 0 ? 12 : index;
                             }
 
                             property bool isSelected: {
                                 if (root.mode === "hours") {
-                                    if (root.is24Hour) return root.hours === index
-                                    return root._displayH === value
+                                    if (root.is24Hour)
+                                        return root.hours === index;
+                                    return root._displayH === value;
                                 }
-                                return Math.floor(root.minutes / 5) === index
+                                return Math.floor(root.minutes / 5) === index;
                             }
 
                             // 0° = 12 o'clock, clockwise
                             property real deg: {
                                 if (root.mode === "hours")
-                                    return index * (root.is24Hour ? 15 : 30)
-                                return index * 30
+                                    return index * (root.is24Hour ? 15 : 30);
+                                return index * 30;
                             }
                             property real rad: deg * Math.PI / 180
 
@@ -470,9 +475,10 @@ Item {
                             Text {
                                 anchors.centerIn: parent
                                 text: {
-                                    var v = parent.value
-                                    if (root.mode === "hours") return String(v)
-                                    return (v < 10 ? "0" : "") + v
+                                    var v = parent.value;
+                                    if (root.mode === "hours")
+                                        return String(v);
+                                    return (v < 10 ? "0" : "") + v;
                                 }
                                 font.family: _ff
                                 font.pixelSize: _t.bodyLarge.size
@@ -497,28 +503,36 @@ Item {
                         preventStealing: true
 
                         function _handle(mx, my) {
-                            var dx = mx - width / 2
-                            var dy = my - height / 2
-                            var dist = Math.sqrt(dx * dx + dy * dy)
-                            if (dist < 20) return
+                            var dx = mx - width / 2;
+                            var dy = my - height / 2;
+                            var dist = Math.sqrt(dx * dx + dy * dy);
+                            if (dist < 20)
+                                return;
 
                             // Angle: 0 at 12 o'clock, clockwise
-                            var a = Math.atan2(dx, -dy) * 180 / Math.PI
-                            if (a < 0) a += 360
+                            var a = Math.atan2(dx, -dy) * 180 / Math.PI;
+                            if (a < 0)
+                                a += 360;
 
                             if (root.mode === "hours") {
-                                var steps = root.is24Hour ? 24 : 12
-                                var idx = Math.round(a / (360 / steps)) % steps
-                                root._setHourByIndex(idx)
+                                var steps = root.is24Hour ? 24 : 12;
+                                var idx = Math.round(a / (360 / steps)) % steps;
+                                root._setHourByIndex(idx);
                             } else {
-                                root.minutes = Math.round(a / 6) % 60
+                                root.minutes = Math.round(a / 6) % 60;
                             }
                         }
 
-                        onPressed: function(e) { _handle(e.x, e.y) }
-                        onPositionChanged: function(e) { if (pressed) _handle(e.x, e.y) }
+                        onPressed: function (e) {
+                            _handle(e.x, e.y);
+                        }
+                        onPositionChanged: function (e) {
+                            if (pressed)
+                                _handle(e.x, e.y);
+                        }
                         onReleased: {
-                            if (root.mode === "hours") root.mode = "minutes"
+                            if (root.mode === "hours")
+                                root.mode = "minutes";
                         }
                     }
                 }
@@ -570,9 +584,7 @@ Item {
                     Layout.preferredWidth: 40
                     Layout.preferredHeight: 40
                     radius: 20
-                    color: _toggleMA.containsMouse
-                           ? Qt.rgba(_c.onSurface.r, _c.onSurface.g, _c.onSurface.b, 0.08)
-                           : "transparent"
+                    color: _toggleMA.containsMouse ? Qt.rgba(_c.onSurface.r, _c.onSurface.g, _c.onSurface.b, 0.08) : "transparent"
 
                     Common.Icon {
                         anchors.centerIn: parent
@@ -587,18 +599,20 @@ Item {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            root.inputMode = !root.inputMode
+                            root.inputMode = !root.inputMode;
                             if (root.inputMode) {
                                 if (root.mode === "hours")
-                                    _hourInput.forceActiveFocus()
+                                    _hourInput.forceActiveFocus();
                                 else
-                                    _minInput.forceActiveFocus()
+                                    _minInput.forceActiveFocus();
                             }
                         }
                     }
                 }
 
-                Item { Layout.fillWidth: true }
+                Item {
+                    Layout.fillWidth: true
+                }
 
                 // Actions
                 Rectangle {
@@ -606,9 +620,7 @@ Item {
                     Layout.preferredWidth: _cancelTxt.implicitWidth + 24
                     Layout.preferredHeight: 40
                     radius: 20
-                    color: _cancelMA.containsMouse
-                           ? Qt.rgba(_c.primary.r, _c.primary.g, _c.primary.b, 0.08)
-                           : "transparent"
+                    color: _cancelMA.containsMouse ? Qt.rgba(_c.primary.r, _c.primary.g, _c.primary.b, 0.08) : "transparent"
 
                     Text {
                         id: _cancelTxt
@@ -634,9 +646,7 @@ Item {
                     Layout.preferredWidth: _okTxt.implicitWidth + 24
                     Layout.preferredHeight: 40
                     radius: 20
-                    color: _okMA.containsMouse
-                           ? Qt.rgba(_c.primary.r, _c.primary.g, _c.primary.b, 0.08)
-                           : "transparent"
+                    color: _okMA.containsMouse ? Qt.rgba(_c.primary.r, _c.primary.g, _c.primary.b, 0.08) : "transparent"
 
                     Text {
                         id: _okTxt
@@ -654,12 +664,14 @@ Item {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            var h = root.hours
+                            var h = root.hours;
                             if (!root.is24Hour) {
-                                if (root.isAM && h === 12) h = 0
-                                else if (!root.isAM && h !== 12) h += 12
+                                if (root.isAM && h === 12)
+                                    h = 0;
+                                else if (!root.isAM && h !== 12)
+                                    h += 12;
                             }
-                            root.timeSelected(h, root.minutes)
+                            root.timeSelected(h, root.minutes);
                         }
                     }
                 }
@@ -670,29 +682,33 @@ Item {
     // ─── Internal helpers ─────────────────────────────────
     function _selectByIndex(idx) {
         if (mode === "hours") {
-            _setHourByIndex(idx)
-            mode = "minutes"
+            _setHourByIndex(idx);
+            mode = "minutes";
         } else {
-            minutes = idx * 5
+            minutes = idx * 5;
         }
     }
 
     function _setHourByIndex(idx) {
         if (is24Hour) {
-            hours = idx
+            hours = idx;
         } else {
-            var h = idx === 0 ? 12 : idx
-            if (!isAM && h !== 12) h += 12
-            if (isAM && h === 12) h = 0
-            hours = h
+            var h = idx === 0 ? 12 : idx;
+            if (!isAM && h !== 12)
+                h += 12;
+            if (isAM && h === 12)
+                h = 0;
+            hours = h;
         }
     }
 
     function _setHour12(val) {
-        var h = Math.max(1, Math.min(12, val))
-        if (!isAM && h !== 12) h += 12
-        if (isAM && h === 12) h = 0
-        hours = h
+        var h = Math.max(1, Math.min(12, val));
+        if (!isAM && h !== 12)
+            h += 12;
+        if (isAM && h === 12)
+            h = 0;
+        hours = h;
     }
 
     Accessible.role: Accessible.Dialog

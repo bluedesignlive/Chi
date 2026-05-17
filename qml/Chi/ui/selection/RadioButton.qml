@@ -10,13 +10,28 @@ Item {
     property bool enabled: true
     property string size: "medium"
 
-    signal toggled()
+    signal toggled
 
     readonly property var sizeSpecs: ({
-        small: { outerSize: 16, innerSize: 8, fontSize: 13, gap: 8 },
-        medium: { outerSize: 20, innerSize: 10, fontSize: 14, gap: 12 },
-        large: { outerSize: 24, innerSize: 12, fontSize: 16, gap: 16 }
-    })
+            small: {
+                outerSize: 16,
+                innerSize: 8,
+                fontSize: 13,
+                gap: 8
+            },
+            medium: {
+                outerSize: 20,
+                innerSize: 10,
+                fontSize: 14,
+                gap: 12
+            },
+            large: {
+                outerSize: 24,
+                innerSize: 12,
+                fontSize: 16,
+                gap: 16
+            }
+        })
 
     readonly property var currentSize: sizeSpecs[size] || sizeSpecs.medium
     readonly property bool hasLabel: label !== ""
@@ -27,7 +42,10 @@ Item {
     opacity: enabled ? 1.0 : 0.38
 
     Behavior on opacity {
-        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+        NumberAnimation {
+            duration: 150
+            easing.type: Easing.OutCubic
+        }
     }
 
     property var colors: Theme.ChiTheme.colors
@@ -50,18 +68,26 @@ Item {
                 radius: 20
                 color: root.checked ? colors.primary : colors.onSurface
                 opacity: {
-                    if (!enabled) return 0
-                    if (mouseArea.pressed) return 0.12
-                    if (mouseArea.containsMouse) return 0.08
-                    if (root.activeFocus) return 0.12
-                    return 0
+                    if (!enabled)
+                        return 0;
+                    if (mouseArea.pressed)
+                        return 0.12;
+                    if (mouseArea.containsMouse)
+                        return 0.08;
+                    if (root.activeFocus)
+                        return 0.12;
+                    return 0;
                 }
 
                 Behavior on opacity {
-                    NumberAnimation { duration: 100 }
+                    NumberAnimation {
+                        duration: 100
+                    }
                 }
                 Behavior on color {
-                    ColorAnimation { duration: 150 }
+                    ColorAnimation {
+                        duration: 150
+                    }
                 }
             }
 
@@ -75,13 +101,17 @@ Item {
                 color: "transparent"
                 border.width: 2
                 border.color: {
-                    if (!enabled) return colors.onSurface
-                    if (root.checked) return colors.primary
-                    return colors.onSurfaceVariant
+                    if (!enabled)
+                        return colors.onSurface;
+                    if (root.checked)
+                        return colors.primary;
+                    return colors.onSurfaceVariant;
                 }
 
                 Behavior on border.color {
-                    ColorAnimation { duration: 150 }
+                    ColorAnimation {
+                        duration: 150
+                    }
                 }
 
                 // Inner dot
@@ -91,22 +121,31 @@ Item {
                     height: width
                     radius: width / 2
                     color: {
-                        if (!enabled) return colors.onSurface
-                        return colors.primary
+                        if (!enabled)
+                            return colors.onSurface;
+                        return colors.primary;
                     }
 
                     Behavior on width {
-                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        NumberAnimation {
+                            duration: 150
+                            easing.type: Easing.OutCubic
+                        }
                     }
                     Behavior on color {
-                        ColorAnimation { duration: 150 }
+                        ColorAnimation {
+                            duration: 150
+                        }
                     }
                 }
 
                 scale: mouseArea.pressed ? 0.9 : 1.0
 
                 Behavior on scale {
-                    NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+                    NumberAnimation {
+                        duration: 100
+                        easing.type: Easing.OutCubic
+                    }
                 }
             }
 
@@ -121,7 +160,7 @@ Item {
                     // Only trigger toggled if not already checked
                     // The group will handle setting checked state
                     if (!root.checked) {
-                        root.toggled()
+                        root.toggled();
                     }
                 }
             }
@@ -138,7 +177,9 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
 
             Behavior on color {
-                ColorAnimation { duration: 150 }
+                ColorAnimation {
+                    duration: 150
+                }
             }
 
             MouseArea {
@@ -147,15 +188,19 @@ Item {
                 cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
                 onClicked: {
                     if (!root.checked) {
-                        root.toggled()
+                        root.toggled();
                     }
                 }
             }
         }
     }
 
-    Keys.onSpacePressed: if (enabled && !root.checked) { root.toggled() }
-    Keys.onReturnPressed: if (enabled && !root.checked) { root.toggled() }
+    Keys.onSpacePressed: if (enabled && !root.checked) {
+        root.toggled();
+    }
+    Keys.onReturnPressed: if (enabled && !root.checked) {
+        root.toggled();
+    }
 
     Accessible.role: Accessible.RadioButton
     Accessible.name: label

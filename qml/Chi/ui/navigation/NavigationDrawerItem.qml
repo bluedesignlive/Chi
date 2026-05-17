@@ -14,7 +14,7 @@ Item {
     property string trailingText: ""
     property string density: "compact"       // "small" | "compact" | "standard"
 
-    signal clicked()
+    signal clicked
 
     // ─── Theme Tokens ───────────────────────────────────────
     readonly property var _c: Theme.ChiTheme.colors
@@ -71,12 +71,12 @@ Item {
             anchors.fill: parent
             radius: parent.radius
             color: root.selected ? _c.onSecondaryContainer : _c.onSurface
-            opacity: tapHandler.pressed ? 0.12
-                   : hoverHandler.hovered ? 0.08
-                   : 0
+            opacity: tapHandler.pressed ? 0.12 : hoverHandler.hovered ? 0.08 : 0
 
             Behavior on opacity {
-                NumberAnimation { duration: _m.durationFast }
+                NumberAnimation {
+                    duration: _m.durationFast
+                }
             }
         }
 

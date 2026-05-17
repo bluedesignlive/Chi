@@ -102,8 +102,6 @@
 // // // //     }
 // // // // }
 
-
-
 // // // import QtQuick
 // // // import QtQuick.Controls
 // // // import QtQuick.Layouts
@@ -266,11 +264,6 @@
 // // //     Keys.onSpacePressed: root.clicked()
 // // //     Keys.onReturnPressed: root.clicked()
 // // // }
-
-
-
-
-
 
 // // import QtQuick
 // // import QtQuick.Controls
@@ -509,9 +502,7 @@
 // //     }
 // // }
 
-
 // // ////// version 2
-
 
 // import QtQuick
 // import QtQuick.Controls
@@ -734,18 +725,15 @@
 //     }
 // }
 
-
-
 // ///////////////// version 3 -fix accesability
 
+pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../common" as Common
 import "../../theme" as Theme
-
-pragma ComponentBehavior: Bound
 
 Item {
     id: root
@@ -760,7 +748,7 @@ Item {
     property bool selected: false
     property int index: 0
 
-    signal clicked()
+    signal clicked
     property var colors: Theme.ChiTheme.colors
     readonly property string fontFamily: Theme.ChiTheme.fontFamily
 
@@ -785,11 +773,11 @@ Item {
     property bool _isKeyboardFocus: false
 
     // Handle Space/Enter for activation
-    Keys.onPressed: (event) => {
-        _isKeyboardFocus = true
+    Keys.onPressed: event => {
+        _isKeyboardFocus = true;
         if (event.key === Qt.Key_Space || event.key === Qt.Key_Return) {
-            root.clicked()
-            event.accepted = true
+            root.clicked();
+            event.accepted = true;
         }
     }
 
@@ -801,8 +789,8 @@ Item {
         cursorShape: Qt.PointingHandCursor
 
         onPressed: {
-            root._isKeyboardFocus = false
-            root.forceActiveFocus()
+            root._isKeyboardFocus = false;
+            root.forceActiveFocus();
         }
         onClicked: root.clicked()
     }
@@ -819,20 +807,37 @@ Item {
             State {
                 name: "pressed"
                 when: mouseArea.pressed
-                PropertyChanges { target: stateLayer; opacity: 0.12; color: root.selected ? root.colors.primary : root.colors.onSurface }
+                PropertyChanges {
+                    target: stateLayer
+                    opacity: 0.12
+                    color: root.selected ? root.colors.primary : root.colors.onSurface
+                }
             },
             State {
                 name: "hovered"
                 when: mouseArea.containsMouse && !mouseArea.pressed
-                PropertyChanges { target: stateLayer; opacity: 0.08; color: root.selected ? root.colors.primary : root.colors.onSurface }
+                PropertyChanges {
+                    target: stateLayer
+                    opacity: 0.08
+                    color: root.selected ? root.colors.primary : root.colors.onSurface
+                }
             },
             State {
                 name: "keyboard_focused"
                 when: root.activeFocus && root._isKeyboardFocus
-                PropertyChanges { target: stateLayer; opacity: 0.12; color: root.selected ? root.colors.primary : root.colors.onSurface }
+                PropertyChanges {
+                    target: stateLayer
+                    opacity: 0.12
+                    color: root.selected ? root.colors.primary : root.colors.onSurface
+                }
             }
         ]
-        transitions: Transition { NumberAnimation { property: "opacity"; duration: 100 } }
+        transitions: Transition {
+            NumberAnimation {
+                property: "opacity"
+                duration: 100
+            }
+        }
     }
 
     // --- Content ---
@@ -850,24 +855,39 @@ Item {
             Item {
                 visible: root.icon !== ""
                 Layout.alignment: Qt.AlignHCenter
-                Layout.preferredWidth: 24; Layout.preferredHeight: 24
+                Layout.preferredWidth: 24
+                Layout.preferredHeight: 24
                 Common.Icon {
                     anchors.centerIn: parent
                     source: root.icon
                     size: 24
                     color: root.selected ? root.colors.primary : root.colors.onSurfaceVariant
-                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 150
+                        }
+                    }
                 }
-                Loader { sourceComponent: badgeComponent; active: root.showBadge }
+                Loader {
+                    sourceComponent: badgeComponent
+                    active: root.showBadge
+                }
             }
             Text {
                 visible: root.text !== ""
                 text: root.text
                 Layout.alignment: Qt.AlignHCenter
-                font.family: fontFamily; font.pixelSize: 14; font.weight: Font.Medium; font.letterSpacing: 0.1
+                font.family: fontFamily
+                font.pixelSize: 14
+                font.weight: Font.Medium
+                font.letterSpacing: 0.1
                 color: root.selected ? root.colors.primary : root.colors.onSurfaceVariant
                 horizontalAlignment: Text.AlignHCenter
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 150
+                    }
+                }
             }
         }
     }
@@ -879,25 +899,41 @@ Item {
             Item {
                 visible: root.icon !== ""
                 Layout.alignment: Qt.AlignVCenter
-                Layout.preferredWidth: 24; Layout.preferredHeight: 24
+                Layout.preferredWidth: 24
+                Layout.preferredHeight: 24
                 Common.Icon {
                     anchors.centerIn: parent
                     source: root.icon
                     size: 24
                     color: root.selected ? root.colors.onSurface : root.colors.onSurfaceVariant
-                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 150
+                        }
+                    }
                 }
             }
             Text {
                 visible: root.text !== ""
                 text: root.text
                 Layout.alignment: Qt.AlignVCenter
-                font.family: fontFamily; font.pixelSize: 14; font.weight: Font.Medium; font.letterSpacing: 0.1
+                font.family: fontFamily
+                font.pixelSize: 14
+                font.weight: Font.Medium
+                font.letterSpacing: 0.1
                 color: root.selected ? root.colors.onSurface : root.colors.onSurfaceVariant
                 horizontalAlignment: Text.AlignHCenter
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 150
+                    }
+                }
             }
-            Loader { sourceComponent: badgeComponent; active: root.showBadge; Layout.alignment: Qt.AlignTop }
+            Loader {
+                sourceComponent: badgeComponent
+                active: root.showBadge
+                Layout.alignment: Qt.AlignTop
+            }
         }
     }
 
@@ -908,13 +944,16 @@ Item {
             height: root.badgeText === "" ? 6 : 16
             radius: height / 2
             color: root.colors.error
-            x: 14; y: -2
+            x: 14
+            y: -2
             Text {
                 id: badgeLabel
                 visible: root.badgeText !== ""
                 anchors.centerIn: parent
                 text: root.badgeText
-                font.family: fontFamily; font.pixelSize: 11; font.weight: Font.Medium
+                font.family: fontFamily
+                font.pixelSize: 11
+                font.weight: Font.Medium
                 color: root.colors.onError
             }
         }

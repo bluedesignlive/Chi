@@ -25,11 +25,11 @@ Item {
     property bool selected: false
     property string size: "medium"
 
-    signal clicked()
+    signal clicked
     signal checkboxToggled(bool checked)
     signal switchToggled(bool checked)
-    signal radioToggled()
-    signal trailingClicked()
+    signal radioToggled
+    signal trailingClicked
 
     readonly property bool hasSecondaryText: secondaryText !== ""
     readonly property bool hasTertiaryText: tertiaryText !== ""
@@ -37,10 +37,28 @@ Item {
     readonly property bool hasTrailing: trailingIcon !== "" || trailingText !== "" || showSwitch
 
     readonly property var sizeSpecs: ({
-        small:  { height: 48, avatarSize: 32, iconSize: 20, fontSize: 14, secondarySize: 12 },
-        medium: { height: hasSecondaryText ? 72 : 56, avatarSize: 40, iconSize: 24, fontSize: 16, secondarySize: 14 },
-        large:  { height: hasTertiaryText ? 88 : 72, avatarSize: 48, iconSize: 24, fontSize: 16, secondarySize: 14 }
-    })
+            small: {
+                height: 48,
+                avatarSize: 32,
+                iconSize: 20,
+                fontSize: 14,
+                secondarySize: 12
+            },
+            medium: {
+                height: hasSecondaryText ? 72 : 56,
+                avatarSize: 40,
+                iconSize: 24,
+                fontSize: 16,
+                secondarySize: 14
+            },
+            large: {
+                height: hasTertiaryText ? 88 : 72,
+                avatarSize: 48,
+                iconSize: 24,
+                fontSize: 16,
+                secondarySize: 14
+            }
+        })
 
     readonly property var cs: sizeSpecs[size] || sizeSpecs.medium
     readonly property bool _hasAvSrc: avatarSource !== ""
@@ -56,15 +74,22 @@ Item {
     Rectangle {
         anchors.fill: parent
         color: root.selected ? colors.secondaryContainer : "transparent"
-        Behavior on color { ColorAnimation { duration: 150 } }
+        Behavior on color {
+            ColorAnimation {
+                duration: 150
+            }
+        }
 
         // State layer
         Rectangle {
             anchors.fill: parent
             color: colors.onSurface
-            opacity: !root.enabled ? 0 :
-                     (mouseArea.pressed ? 0.12 : (mouseArea.containsMouse ? 0.08 : 0))
-            Behavior on opacity { NumberAnimation { duration: 100 } }
+            opacity: !root.enabled ? 0 : (mouseArea.pressed ? 0.12 : (mouseArea.containsMouse ? 0.08 : 0))
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 100
+                }
+            }
         }
 
         RowLayout {
@@ -84,7 +109,9 @@ Item {
                 Rectangle {
                     visible: root.showCheckbox
                     anchors.centerIn: parent
-                    width: 20; height: 20; radius: 2
+                    width: 20
+                    height: 20
+                    radius: 2
                     color: root.checked ? colors.primary : "transparent"
                     border.width: root.checked ? 0 : 2
                     border.color: colors.onSurfaceVariant
@@ -102,7 +129,10 @@ Item {
                         anchors.fill: parent
                         anchors.margins: -8
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: { root.checked = !root.checked; root.checkboxToggled(root.checked) }
+                        onClicked: {
+                            root.checked = !root.checked;
+                            root.checkboxToggled(root.checked);
+                        }
                     }
                 }
 
@@ -110,7 +140,9 @@ Item {
                 Rectangle {
                     visible: root.showRadio
                     anchors.centerIn: parent
-                    width: 20; height: 20; radius: 10
+                    width: 20
+                    height: 20
+                    radius: 10
                     color: "transparent"
                     border.width: 2
                     border.color: root.radioChecked ? colors.primary : colors.onSurfaceVariant
@@ -121,14 +153,21 @@ Item {
                         height: width
                         radius: width * 0.5
                         color: colors.primary
-                        Behavior on width { NumberAnimation { duration: 150 } }
+                        Behavior on width {
+                            NumberAnimation {
+                                duration: 150
+                            }
+                        }
                     }
 
                     MouseArea {
                         anchors.fill: parent
                         anchors.margins: -8
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: { root.radioChecked = true; root.radioToggled() }
+                        onClicked: {
+                            root.radioChecked = true;
+                            root.radioToggled();
+                        }
                     }
                 }
 
@@ -177,7 +216,11 @@ Item {
                     font.family: Theme.ChiTheme.iconFamily
                     font.pixelSize: cs.iconSize
                     color: colors.onSurfaceVariant
-                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 150
+                        }
+                    }
                 }
             }
 
@@ -194,7 +237,11 @@ Item {
                     color: colors.onSurface
                     elide: Text.ElideRight
                     Layout.fillWidth: true
-                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 150
+                        }
+                    }
                 }
 
                 Text {
@@ -205,7 +252,11 @@ Item {
                     color: colors.onSurfaceVariant
                     elide: Text.ElideRight
                     Layout.fillWidth: true
-                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 150
+                        }
+                    }
                 }
 
                 Text {
@@ -216,15 +267,18 @@ Item {
                     color: colors.onSurfaceVariant
                     elide: Text.ElideRight
                     Layout.fillWidth: true
-                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 150
+                        }
+                    }
                 }
             }
 
             // ─── Trailing content ───
             Item {
                 visible: root.hasTrailing
-                Layout.preferredWidth: root.showSwitch ? 52 :
-                    (root.trailingText !== "" ? trailingLabel.implicitWidth : cs.iconSize)
+                Layout.preferredWidth: root.showSwitch ? 52 : (root.trailingText !== "" ? trailingLabel.implicitWidth : cs.iconSize)
                 Layout.preferredHeight: root.showSwitch ? 32 : cs.iconSize
                 Layout.alignment: Qt.AlignVCenter
 
@@ -235,7 +289,9 @@ Item {
 
                     Rectangle {
                         anchors.centerIn: parent
-                        width: 52; height: 32; radius: 16
+                        width: 52
+                        height: 32
+                        radius: 16
                         color: root.switchChecked ? colors.primary : colors.surfaceContainerHighest
                         border.width: root.switchChecked ? 0 : 2
                         border.color: colors.outline
@@ -247,15 +303,27 @@ Item {
                             height: width
                             radius: width * 0.5
                             color: root.switchChecked ? colors.onPrimary : colors.outline
-                            Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-                            Behavior on width { NumberAnimation { duration: 150 } }
+                            Behavior on x {
+                                NumberAnimation {
+                                    duration: 150
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
+                            Behavior on width {
+                                NumberAnimation {
+                                    duration: 150
+                                }
+                            }
                         }
                     }
 
                     MouseArea {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: { root.switchChecked = !root.switchChecked; root.switchToggled(root.switchChecked) }
+                        onClicked: {
+                            root.switchChecked = !root.switchChecked;
+                            root.switchToggled(root.switchChecked);
+                        }
                     }
                 }
 
@@ -268,7 +336,11 @@ Item {
                     font.family: Theme.ChiTheme.fontFamily
                     font.pixelSize: cs.secondarySize
                     color: colors.onSurfaceVariant
-                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 150
+                        }
+                    }
                 }
 
                 // Trailing icon
@@ -279,7 +351,11 @@ Item {
                     font.family: Theme.ChiTheme.iconFamily
                     font.pixelSize: cs.iconSize
                     color: colors.onSurfaceVariant
-                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 150
+                        }
+                    }
 
                     MouseArea {
                         anchors.fill: parent

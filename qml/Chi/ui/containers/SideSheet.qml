@@ -19,9 +19,9 @@ Item {
     default property alias content: contentContainer.data
     property alias actions: actionsContainer.data
 
-    signal closed()
-    signal primaryAction()
-    signal secondaryAction()
+    signal closed
+    signal primaryAction
+    signal secondaryAction
 
     anchors.fill: parent
     visible: open || closeAnimation.running
@@ -62,14 +62,20 @@ Item {
         height: parent.height
         anchors.top: parent.top
         anchors.bottom: parent.bottom
-        x: root._left ? (root.open ? 0 : -width) :
-                         (root.open ? parent.width - width : parent.width)
+        x: root._left ? (root.open ? 0 : -width) : (root.open ? parent.width - width : parent.width)
         color: colors.surface
 
         Behavior on x {
-            NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+            NumberAnimation {
+                duration: 250
+                easing.type: Easing.OutCubic
+            }
         }
-        Behavior on color { ColorAnimation { duration: 200 } }
+        Behavior on color {
+            ColorAnimation {
+                duration: 200
+            }
+        }
 
         Rectangle {
             visible: root.showDivider
@@ -78,7 +84,11 @@ Item {
             anchors.bottom: parent.bottom
             x: root._left ? parent.width - 1 : 0
             color: colors.outlineVariant
-            Behavior on color { ColorAnimation { duration: 200 } }
+            Behavior on color {
+                ColorAnimation {
+                    duration: 200
+                }
+            }
         }
 
         layer.enabled: root._modal && root.open
@@ -119,7 +129,11 @@ Item {
                             font.pixelSize: 22
                             font.weight: Font.Normal
                             color: colors.onSurfaceVariant
-                            Behavior on color { ColorAnimation { duration: 200 } }
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 200
+                                }
+                            }
                         }
                     }
 
@@ -135,7 +149,11 @@ Item {
                             radius: 20
                             color: colors.onSurfaceVariant
                             opacity: closeMouse.containsMouse ? 0.08 : 0
-                            Behavior on opacity { NumberAnimation { duration: 100 } }
+                            Behavior on opacity {
+                                NumberAnimation {
+                                    duration: 100
+                                }
+                            }
                         }
 
                         Text {
@@ -143,7 +161,11 @@ Item {
                             text: "✕"
                             font.pixelSize: 24
                             color: colors.onSurfaceVariant
-                            Behavior on color { ColorAnimation { duration: 200 } }
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 200
+                                }
+                            }
                         }
 
                         MouseArea {
@@ -175,7 +197,11 @@ Item {
                     anchors.right: parent.right
                     height: 1
                     color: colors.outlineVariant
-                    Behavior on color { ColorAnimation { duration: 200 } }
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 200
+                        }
+                    }
                 }
 
                 RowLayout {
@@ -190,11 +216,22 @@ Item {
         }
     }
 
-    Keys.onEscapePressed: if (open) close()
+    Keys.onEscapePressed: if (open)
+        close()
 
-    function show() { open = true }
-    function close() { open = false; closed() }
-    function toggle() { if (open) close(); else show() }
+    function show() {
+        open = true;
+    }
+    function close() {
+        open = false;
+        closed();
+    }
+    function toggle() {
+        if (open)
+            close();
+        else
+            show();
+    }
 
     Accessible.role: Accessible.Pane
     Accessible.name: title || "Side sheet"

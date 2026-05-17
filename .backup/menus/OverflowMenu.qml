@@ -46,8 +46,7 @@ Popup {
         boundsBehavior: Flickable.StopAtBounds
 
         ScrollBar.vertical: ScrollBar {
-            policy: flickable.contentHeight > flickable.height
-                ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff
+            policy: flickable.contentHeight > flickable.height ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff
             width: 6
         }
 
@@ -68,9 +67,9 @@ Popup {
                     required property var modelData
                     required property int index
 
-                    readonly property string menuId:    modelData.id || ""
-                    readonly property string menuTitle:  modelData.title || ""
-                    readonly property var    menuItems:  modelData.items || []
+                    readonly property string menuId: modelData.id || ""
+                    readonly property string menuTitle: modelData.title || ""
+                    readonly property var menuItems: modelData.items || []
 
                     // Menu header
                     Item {
@@ -99,13 +98,13 @@ Popup {
                             required property var modelData
                             required property int index
 
-                            readonly property string itemId:       modelData.id || ""
-                            readonly property string itemText:     modelData.text || ""
-                            readonly property string itemIcon:     modelData.icon || ""
+                            readonly property string itemId: modelData.id || ""
+                            readonly property string itemText: modelData.text || ""
+                            readonly property string itemIcon: modelData.icon || ""
                             readonly property string itemShortcut: modelData.shortcut || ""
-                            readonly property bool   isDivider:    modelData.type === "divider"
-                            readonly property var    subItems:     modelData.items || []
-                            readonly property bool   hasSubmenu:   subItems.length > 0
+                            readonly property bool isDivider: modelData.type === "divider"
+                            readonly property var subItems: modelData.items || []
+                            readonly property bool hasSubmenu: subItems.length > 0
 
                             // Divider
                             Rectangle {
@@ -123,10 +122,7 @@ Popup {
                                 anchors.fill: parent
                                 anchors.margins: 2
                                 radius: Theme.SmartTheme.shape.medium
-                                color: menuItemMouse.containsMouse
-                                    ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b,
-                                               Theme.SmartTheme.stateLayer.hover)
-                                    : "transparent"
+                                color: menuItemMouse.containsMouse ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, Theme.SmartTheme.stateLayer.hover) : "transparent"
 
                                 Row {
                                     anchors.left: parent.left
@@ -181,10 +177,10 @@ Popup {
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
                                         if (hasSubmenu) {
-                                            submenuPopup.open()
+                                            submenuPopup.open();
                                         } else {
-                                            root.itemTriggered(menuId, itemId)
-                                            root.close()
+                                            root.itemTriggered(menuId, itemId);
+                                            root.close();
                                         }
                                     }
                                 }
@@ -230,11 +226,7 @@ Popup {
                                                     anchors.fill: parent
                                                     anchors.margins: 2
                                                     radius: Theme.SmartTheme.shape.medium
-                                                    color: subItemMouse.containsMouse
-                                                        ? Qt.rgba(colors.onSurface.r, colors.onSurface.g,
-                                                                   colors.onSurface.b,
-                                                                   Theme.SmartTheme.stateLayer.hover)
-                                                        : "transparent"
+                                                    color: subItemMouse.containsMouse ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, Theme.SmartTheme.stateLayer.hover) : "transparent"
 
                                                     Text {
                                                         anchors.left: parent.left
@@ -251,9 +243,9 @@ Popup {
                                                         hoverEnabled: true
                                                         cursorShape: Qt.PointingHandCursor
                                                         onClicked: {
-                                                            root.itemTriggered(menuId, modelData.id)
-                                                            submenuPopup.close()
-                                                            root.close()
+                                                            root.itemTriggered(menuId, modelData.id);
+                                                            submenuPopup.close();
+                                                            root.close();
                                                         }
                                                     }
                                                 }

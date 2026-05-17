@@ -10,10 +10,25 @@ Row {
     property string size: "medium"           // "small", "medium", "large"
 
     readonly property var sizeSpecs: ({
-        small: { height: 20, fontSize: 11, padding: 4, radius: 3 },
-        medium: { height: 24, fontSize: 12, padding: 6, radius: 4 },
-        large: { height: 28, fontSize: 14, padding: 8, radius: 5 }
-    })
+            small: {
+                height: 20,
+                fontSize: 11,
+                padding: 4,
+                radius: 3
+            },
+            medium: {
+                height: 24,
+                fontSize: 12,
+                padding: 6,
+                radius: 4
+            },
+            large: {
+                height: 28,
+                fontSize: 14,
+                padding: 8,
+                radius: 5
+            }
+        })
 
     readonly property var currentSize: sizeSpecs[size] || sizeSpecs.medium
 
@@ -37,7 +52,9 @@ Row {
                 border.color: colors.outlineVariant
 
                 Behavior on color {
-                    ColorAnimation { duration: 200 }
+                    ColorAnimation {
+                        duration: 200
+                    }
                 }
 
                 Text {
@@ -50,7 +67,9 @@ Row {
                     color: colors.onSurface
 
                     Behavior on color {
-                        ColorAnimation { duration: 200 }
+                        ColorAnimation {
+                            duration: 200
+                        }
                     }
                 }
             }

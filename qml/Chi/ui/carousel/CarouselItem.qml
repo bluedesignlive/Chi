@@ -12,15 +12,16 @@ Item {
     property int radius: 28
 
     property string imageSource: {
-        if (!itemData) return ""
-        return String(itemData.source || itemData.image || itemData.imageUrl || "")
+        if (!itemData)
+            return "";
+        return String(itemData.source || itemData.image || itemData.imageUrl || "");
     }
     property string title: itemData ? String(itemData.title || "") : ""
     property string subtitle: itemData ? String(itemData.subtitle || itemData.description || "") : ""
     property string label: itemData ? String(itemData.label || "") : ""
 
-    signal clicked()
-    signal pressAndHold()
+    signal clicked
+    signal pressAndHold
 
     Rectangle {
         id: mask
@@ -33,7 +34,7 @@ Item {
     Item {
         id: content
         anchors.fill: parent
-        
+
         layer.enabled: true
         layer.samples: 4
         layer.effect: MultiEffect {
@@ -54,14 +55,17 @@ Item {
             height: parent.height + 40
             x: -30 + (root.parallaxOffset * -60)
             y: -20
-            
+
             source: root.imageSource
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
             cache: true
 
             Behavior on x {
-                NumberAnimation { duration: 100; easing.type: Easing.OutQuad }
+                NumberAnimation {
+                    duration: 100
+                    easing.type: Easing.OutQuad
+                }
             }
         }
 
@@ -123,9 +127,18 @@ Item {
             visible: root.itemSize !== "small" && (root.title.length > 0 || root.subtitle.length > 0)
 
             gradient: Gradient {
-                GradientStop { position: 0.0; color: "transparent" }
-                GradientStop { position: 0.45; color: Qt.rgba(0, 0, 0, 0.2) }
-                GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.7) }
+                GradientStop {
+                    position: 0.0
+                    color: "transparent"
+                }
+                GradientStop {
+                    position: 0.45
+                    color: Qt.rgba(0, 0, 0, 0.2)
+                }
+                GradientStop {
+                    position: 1.0
+                    color: Qt.rgba(0, 0, 0, 0.7)
+                }
             }
         }
 
@@ -141,11 +154,17 @@ Item {
             transformOrigin: Item.BottomLeft
             visible: opacity > 0
 
-            Behavior on opacity { 
-                NumberAnimation { duration: 200; easing.type: Easing.OutQuad } 
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 200
+                    easing.type: Easing.OutQuad
+                }
             }
-            Behavior on scale { 
-                NumberAnimation { duration: 200; easing.type: Easing.OutQuad } 
+            Behavior on scale {
+                NumberAnimation {
+                    duration: 200
+                    easing.type: Easing.OutQuad
+                }
             }
 
             Text {
@@ -171,8 +190,10 @@ Item {
                 wrapMode: Text.Wrap
                 visible: root.title.length > 0
 
-                Behavior on font.pixelSize { 
-                    NumberAnimation { duration: 150 } 
+                Behavior on font.pixelSize {
+                    NumberAnimation {
+                        duration: 150
+                    }
                 }
             }
 
@@ -191,18 +212,20 @@ Item {
             anchors.fill: parent
             color: ChiTheme.colors.onSurface
             opacity: mouseArea.containsMouse && !mouseArea.pressed ? 0.08 : 0
-            
-            Behavior on opacity { 
-                NumberAnimation { duration: 100 } 
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 100
+                }
             }
         }
 
         Rectangle {
             id: ripple
-            
+
             property real centerX: mouseArea.pressX
             property real centerY: mouseArea.pressY
-            
+
             x: centerX - width / 2
             y: centerY - height / 2
             width: mouseArea.pressed ? Math.max(parent.width, parent.height) * 2.5 : 0
@@ -212,10 +235,15 @@ Item {
             opacity: mouseArea.pressed ? 0.1 : 0
 
             Behavior on width {
-                NumberAnimation { duration: 400; easing.type: Easing.OutCubic }
+                NumberAnimation {
+                    duration: 400
+                    easing.type: Easing.OutCubic
+                }
             }
             Behavior on opacity {
-                NumberAnimation { duration: mouseArea.pressed ? 50 : 250 }
+                NumberAnimation {
+                    duration: mouseArea.pressed ? 50 : 250
+                }
             }
         }
     }
@@ -224,34 +252,34 @@ Item {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
-        
+
         property real pressX: 0
         property real pressY: 0
         property real startX: 0
         property bool dragged: false
 
-        onPressed: function(mouse) {
-            pressX = mouse.x
-            pressY = mouse.y
-            startX = mouse.x
-            dragged = false
+        onPressed: function (mouse) {
+            pressX = mouse.x;
+            pressY = mouse.y;
+            startX = mouse.x;
+            dragged = false;
         }
-        
-        onPositionChanged: function(mouse) {
+
+        onPositionChanged: function (mouse) {
             if (Math.abs(mouse.x - startX) > 10) {
-                dragged = true
+                dragged = true;
             }
         }
 
         onReleased: {
             if (!dragged) {
-                root.clicked()
+                root.clicked();
             }
         }
-        
+
         onPressAndHold: {
             if (!dragged) {
-                root.pressAndHold()
+                root.pressAndHold();
             }
         }
     }

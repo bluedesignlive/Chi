@@ -11,13 +11,28 @@ Item {
     property bool enabled: true
     property string size: "medium"           // "small", "medium", "large"
 
-    signal toggled()
+    signal toggled
 
     readonly property var sizeSpecs: ({
-        small: { boxSize: 16, iconSize: 14, fontSize: 13, gap: 8 },
-        medium: { boxSize: 20, iconSize: 18, fontSize: 14, gap: 12 },
-        large: { boxSize: 24, iconSize: 22, fontSize: 16, gap: 16 }
-    })
+            small: {
+                boxSize: 16,
+                iconSize: 14,
+                fontSize: 13,
+                gap: 8
+            },
+            medium: {
+                boxSize: 20,
+                iconSize: 18,
+                fontSize: 14,
+                gap: 12
+            },
+            large: {
+                boxSize: 24,
+                iconSize: 22,
+                fontSize: 16,
+                gap: 16
+            }
+        })
 
     readonly property var currentSize: sizeSpecs[size] || sizeSpecs.medium
     readonly property bool hasLabel: label !== ""
@@ -28,7 +43,10 @@ Item {
     opacity: enabled ? 1.0 : 0.38
 
     Behavior on opacity {
-        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+        NumberAnimation {
+            duration: 150
+            easing.type: Easing.OutCubic
+        }
     }
 
     property var colors: Theme.ChiTheme.colors
@@ -50,22 +68,31 @@ Item {
                 height: 40
                 radius: 20
                 color: {
-                    if (checked || indeterminate) return colors.primary
-                    return colors.onSurface
+                    if (checked || indeterminate)
+                        return colors.primary;
+                    return colors.onSurface;
                 }
                 opacity: {
-                    if (!enabled) return 0
-                    if (mouseArea.pressed) return 0.12
-                    if (mouseArea.containsMouse) return 0.08
-                    if (root.activeFocus) return 0.12
-                    return 0
+                    if (!enabled)
+                        return 0;
+                    if (mouseArea.pressed)
+                        return 0.12;
+                    if (mouseArea.containsMouse)
+                        return 0.08;
+                    if (root.activeFocus)
+                        return 0.12;
+                    return 0;
                 }
 
                 Behavior on opacity {
-                    NumberAnimation { duration: 100 }
+                    NumberAnimation {
+                        duration: 100
+                    }
                 }
                 Behavior on color {
-                    ColorAnimation { duration: 150 }
+                    ColorAnimation {
+                        duration: 150
+                    }
                 }
             }
 
@@ -79,26 +106,34 @@ Item {
 
                 color: {
                     if (!enabled) {
-                        return (checked || indeterminate) ? colors.onSurface : "transparent"
+                        return (checked || indeterminate) ? colors.onSurface : "transparent";
                     }
-                    return (checked || indeterminate) ? colors.primary : "transparent"
+                    return (checked || indeterminate) ? colors.primary : "transparent";
                 }
 
                 border.width: (checked || indeterminate) ? 0 : 2
                 border.color: {
-                    if (!enabled) return colors.onSurface
-                    if (root.activeFocus) return colors.primary
-                    return colors.onSurfaceVariant
+                    if (!enabled)
+                        return colors.onSurface;
+                    if (root.activeFocus)
+                        return colors.primary;
+                    return colors.onSurfaceVariant;
                 }
 
                 Behavior on color {
-                    ColorAnimation { duration: 150 }
+                    ColorAnimation {
+                        duration: 150
+                    }
                 }
                 Behavior on border.color {
-                    ColorAnimation { duration: 150 }
+                    ColorAnimation {
+                        duration: 150
+                    }
                 }
                 Behavior on border.width {
-                    NumberAnimation { duration: 100 }
+                    NumberAnimation {
+                        duration: 100
+                    }
                 }
 
                 // Check mark
@@ -113,7 +148,9 @@ Item {
                     opacity: (checked || indeterminate) ? 1 : 0
 
                     Behavior on opacity {
-                        NumberAnimation { duration: 100 }
+                        NumberAnimation {
+                            duration: 100
+                        }
                     }
                 }
 
@@ -121,7 +158,10 @@ Item {
                 scale: mouseArea.pressed ? 0.9 : 1.0
 
                 Behavior on scale {
-                    NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+                    NumberAnimation {
+                        duration: 100
+                        easing.type: Easing.OutCubic
+                    }
                 }
             }
 
@@ -134,12 +174,12 @@ Item {
 
                 onClicked: {
                     if (indeterminate) {
-                        indeterminate = false
-                        checked = true
+                        indeterminate = false;
+                        checked = true;
                     } else {
-                        checked = !checked
+                        checked = !checked;
                     }
-                    root.toggled()
+                    root.toggled();
                 }
             }
         }
@@ -155,7 +195,9 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
 
             Behavior on color {
-                ColorAnimation { duration: 150 }
+                ColorAnimation {
+                    duration: 150
+                }
             }
 
             MouseArea {
@@ -164,19 +206,25 @@ Item {
                 cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
                 onClicked: {
                     if (indeterminate) {
-                        indeterminate = false
-                        checked = true
+                        indeterminate = false;
+                        checked = true;
                     } else {
-                        checked = !checked
+                        checked = !checked;
                     }
-                    root.toggled()
+                    root.toggled();
                 }
             }
         }
     }
 
-    Keys.onSpacePressed: if (enabled) { checked = !checked; toggled() }
-    Keys.onReturnPressed: if (enabled) { checked = !checked; toggled() }
+    Keys.onSpacePressed: if (enabled) {
+        checked = !checked;
+        toggled();
+    }
+    Keys.onReturnPressed: if (enabled) {
+        checked = !checked;
+        toggled();
+    }
 
     Accessible.role: Accessible.CheckBox
     Accessible.name: label

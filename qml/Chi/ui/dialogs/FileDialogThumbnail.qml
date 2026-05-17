@@ -14,15 +14,14 @@ Item {
     property var colors: Theme.ChiTheme.colors
 
     readonly property string _mime: fileMimeType || ""
-    readonly property bool _isMedia: _mime.indexOf("image/") === 0
-                                  || _mime.indexOf("video/") === 0
-                                  || _mime.indexOf("audio/") === 0
+    readonly property bool _isMedia: _mime.indexOf("image/") === 0 || _mime.indexOf("video/") === 0 || _mime.indexOf("audio/") === 0
     readonly property real _radius: Math.max(4, thumbnailSize * 0.11)
 
     // ── Icon: always visible as base layer ───────────────────
 
     Icon {
-        anchors.centerIn: parent; z: 0
+        anchors.centerIn: parent
+        z: 0
         source: isDir ? "folder" : fileIcon
         size: thumbnailSize * 0.55
         color: isDir ? colors.primary : colors.onSurfaceVariant
@@ -32,8 +31,10 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: _radius; clip: true
-        color: "transparent"; z: 1
+        radius: _radius
+        clip: true
+        color: "transparent"
+        z: 1
         visible: showThumbnails && _isMedia && thumbImg.status === Image.Ready
 
         Image {

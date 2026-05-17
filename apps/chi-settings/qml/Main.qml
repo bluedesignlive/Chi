@@ -20,9 +20,21 @@ ChiApplicationWindow {
     // ═══════════════════════════════════════════════════════
 
     readonly property var navModel: [
-        { label: "Appearance", icon: "\uE40A", iconFilled: "\uE40A" },
-        { label: "Sound",      icon: "\uE050", iconFilled: "\uE050" },
-        { label: "About",      icon: "\uE88E", iconFilled: "\uE88E" }
+        {
+            label: "Appearance",
+            icon: "\uE40A",
+            iconFilled: "\uE40A"
+        },
+        {
+            label: "Sound",
+            icon: "\uE050",
+            iconFilled: "\uE050"
+        },
+        {
+            label: "About",
+            icon: "\uE88E",
+            iconFilled: "\uE88E"
+        }
     ]
 
     // ═══════════════════════════════════════════════════════
@@ -65,7 +77,9 @@ ChiApplicationWindow {
                     Layout.rightMargin: 16
                 }
 
-                Item { Layout.preferredHeight: 8 }
+                Item {
+                    Layout.preferredHeight: 8
+                }
 
                 // Nav items
                 Repeater {
@@ -87,10 +101,8 @@ ChiApplicationWindow {
                             width: active ? 56 : (navItemMa.containsMouse ? 48 : 0)
                             height: 32
                             radius: 16
-                            color: active ? colors.secondaryContainer
-                                         : colors.onSurface
-                            opacity: active ? 1.0
-                                           : (navItemMa.containsMouse ? 0.08 : 0)
+                            color: active ? colors.secondaryContainer : colors.onSurface
+                            opacity: active ? 1.0 : (navItemMa.containsMouse ? 0.08 : 0)
 
                             Behavior on width {
                                 NumberAnimation {
@@ -113,11 +125,12 @@ ChiApplicationWindow {
                             text: modelData.icon
                             font.family: ChiTheme.iconFamily
                             font.pixelSize: 24
-                            color: active ? colors.onSecondaryContainer
-                                         : colors.onSurfaceVariant
+                            color: active ? colors.onSecondaryContainer : colors.onSurfaceVariant
 
                             Behavior on color {
-                                ColorAnimation { duration: 200 }
+                                ColorAnimation {
+                                    duration: 200
+                                }
                             }
                         }
 
@@ -129,11 +142,12 @@ ChiApplicationWindow {
                             font.family: ChiTheme.fontFamily
                             font.pixelSize: 12
                             font.weight: active ? Font.DemiBold : Font.Medium
-                            color: active ? colors.onSurface
-                                         : colors.onSurfaceVariant
+                            color: active ? colors.onSurface : colors.onSurfaceVariant
 
                             Behavior on color {
-                                ColorAnimation { duration: 200 }
+                                ColorAnimation {
+                                    duration: 200
+                                }
                             }
                         }
 
@@ -147,7 +161,9 @@ ChiApplicationWindow {
                     }
                 }
 
-                Item { Layout.fillHeight: true }
+                Item {
+                    Layout.fillHeight: true
+                }
 
                 // Dark mode quick-toggle at rail bottom
                 Item {
@@ -206,7 +222,9 @@ ChiApplicationWindow {
                     }
                 }
 
-                Divider { Layout.fillWidth: true }
+                Divider {
+                    Layout.fillWidth: true
+                }
 
                 // ── Page stack ──────────────────────────────
                 StackLayout {

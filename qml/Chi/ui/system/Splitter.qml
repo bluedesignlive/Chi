@@ -35,10 +35,14 @@ Item {
         opacity: handleMouse.containsMouse || handleMouse.pressed ? 1 : 0.5
 
         Behavior on color {
-            ColorAnimation { duration: 150 }
+            ColorAnimation {
+                duration: 150
+            }
         }
         Behavior on opacity {
-            NumberAnimation { duration: 150 }
+            NumberAnimation {
+                duration: 150
+            }
         }
 
         x: isHorizontal ? parent.width * position - handleSize / 2 : 0
@@ -70,13 +74,13 @@ Item {
 
         onXChanged: {
             if (handleMouse.pressed && isHorizontal) {
-                position = Math.max(minPosition, Math.min(maxPosition, x / root.width))
+                position = Math.max(minPosition, Math.min(maxPosition, x / root.width));
             }
         }
 
         onYChanged: {
             if (handleMouse.pressed && !isHorizontal) {
-                position = Math.max(minPosition, Math.min(maxPosition, y / root.height))
+                position = Math.max(minPosition, Math.min(maxPosition, y / root.height));
             }
         }
     }

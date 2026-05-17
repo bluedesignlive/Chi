@@ -14,7 +14,8 @@ Item {
     property bool enabled: true
 
     function trigger() {
-        if (enabled) rippleAnimation.restart()
+        if (enabled)
+            rippleAnimation.restart();
     }
 
     // ─── Implementation ───────────────────────────────────────
@@ -31,8 +32,19 @@ Item {
         SequentialAnimation on opacity {
             id: rippleAnimation
             running: false
-            NumberAnimation { from: 0; to: Theme.ChiMotion.stateLayer.pressed; duration: Theme.ChiMotion.press.duration; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.ChiMotion.press.curve }
-            NumberAnimation { to: 0; duration: Theme.ChiMotion.release.duration; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.ChiMotion.release.curve }
+            NumberAnimation {
+                from: 0
+                to: Theme.ChiMotion.stateLayer.pressed
+                duration: Theme.ChiMotion.press.duration
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Theme.ChiMotion.press.curve
+            }
+            NumberAnimation {
+                to: 0
+                duration: Theme.ChiMotion.release.duration
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Theme.ChiMotion.release.curve
+            }
         }
     }
 }
