@@ -157,7 +157,7 @@ Popup {
                                     }
                                 } else {
                                     _cascadeTimer.stop()
-                                }
+                                    }
                             }
                         }
                     }
@@ -322,4 +322,5 @@ Popup {
             }
         }
     }
+}
 }
