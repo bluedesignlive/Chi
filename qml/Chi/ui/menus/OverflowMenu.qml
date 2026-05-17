@@ -171,26 +171,9 @@ Popup {
         root._cascadeMenuId = menuId
         root._cascadeTargetIndex = index
 
-        // Position aligned to the hovered item
-        var cascW = _cascadePopup.width
-        var cascY = root.y + 8 + index * 36 - _flick.contentY
-        var cascX = root.x + root.width
-
-        // Boundary: flip to left if too close to right edge
-        var maxX = root.parent ? root.parent.width : Screen.width
-        if (cascX + cascW > maxX - 8)
-            cascX = root.x - cascW
-
-        // Boundary: clamp Y so cascade doesn't clip top/bottom
-        var cascH = _cascadePopup._contentH + 12
-        var maxY = root.parent ? root.parent.height : Screen.height
-        if (cascY + cascH > maxY - 8)
-            cascY = Math.max(8, maxY - cascH - 8)
-        if (cascY < 8)
-            cascY = 8
-
-        _cascadePopup.x = cascX
-        _cascadePopup.y = cascY
+        // Position to the right, aligned with hovered item Y
+        _cascadePopup.x = root.x + root.width
+        _cascadePopup.y = root.y + 8 + index * 36 - _flick.contentY
 
         if (!_cascadePopup.opened)
             _cascadePopup.open()
