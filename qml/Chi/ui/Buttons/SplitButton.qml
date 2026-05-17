@@ -24,7 +24,7 @@ Item {
 
     // ─── Theme Tokens ───────────────────────────────────────────
     readonly property var colors: Theme.ChiTheme.colors
-    readonly property var motion: Theme.ChiTheme.motion
+    readonly property int _animDur: Theme.ChiMotion.duration.short4
     readonly property var typography: Theme.ChiTheme.typography
     readonly property string fontFamily: Theme.ChiTheme.fontFamily
     readonly property string iconFamily: Theme.ChiTheme.iconFamily
@@ -63,7 +63,7 @@ Item {
     implicitHeight: spec.height
 
     opacity: enabled ? 1.0 : 0.38
-    Behavior on opacity { NumberAnimation { duration: motion.durationMedium } }
+    Behavior on opacity { NumberAnimation { _animDur } }
 
     Row {
         spacing: spec.buttonGap
@@ -111,7 +111,7 @@ Item {
                          (leadingMouseArea.containsMouse ? 0.08 : 0)))
 
                 Behavior on opacity {
-                    NumberAnimation { duration: leadingMouseArea.pressed ? 50 : 150; easing.type: Easing.OutCubic }
+                    NumberAnimation { duration: leadingMouseArea.pressed ? Theme.ChiMotion.duration.short1 : Theme.ChiMotion.duration.short4; easing.type: Easing.BezierSpline }
                 }
             }
 
@@ -128,8 +128,8 @@ Item {
                 SequentialAnimation on opacity {
                     id: leadingRippleAnimation
                     running: false
-                    NumberAnimation { from: 0; to: 0.16; duration: 90; easing.type: Easing.OutCubic }
-                    NumberAnimation { to: 0; duration: 210; easing.type: Easing.OutCubic }
+                    NumberAnimation { from: 0; to: 0.16; duration: 90; easing.type: Easing.BezierSpline }
+                    NumberAnimation { to: 0; duration: 210; easing.type: Easing.BezierSpline }
                 }
             }
 
@@ -187,8 +187,8 @@ Item {
             topRightRadius: spec.fullRadius
             bottomRightRadius: spec.fullRadius
 
-            Behavior on topLeftRadius { NumberAnimation { duration: motion.durationFast } }
-            Behavior on bottomLeftRadius { NumberAnimation { duration: motion.durationFast } }
+            Behavior on topLeftRadius { NumberAnimation { duration: Theme.ChiMotion.duration.short2 } }
+            Behavior on bottomLeftRadius { NumberAnimation { duration: Theme.ChiMotion.duration.short2 } }
 
             color: splitButton._containerColor
             border.width: splitButton._outlined ? 1 : 0
@@ -209,7 +209,7 @@ Item {
                          (trailingMouseArea.containsMouse ? 0.08 : 0)))
 
                 Behavior on opacity {
-                    NumberAnimation { duration: trailingMouseArea.pressed ? 50 : 150; easing.type: Easing.OutCubic }
+                    NumberAnimation { duration: trailingMouseArea.pressed ? Theme.ChiMotion.duration.short1 : Theme.ChiMotion.duration.short4; easing.type: Easing.BezierSpline }
                 }
             }
 
@@ -226,8 +226,8 @@ Item {
                 SequentialAnimation on opacity {
                     id: trailingRippleAnimation
                     running: false
-                    NumberAnimation { from: 0; to: 0.16; duration: 90; easing.type: Easing.OutCubic }
-                    NumberAnimation { to: 0; duration: 210; easing.type: Easing.OutCubic }
+                    NumberAnimation { from: 0; to: 0.16; duration: 90; easing.type: Easing.BezierSpline }
+                    NumberAnimation { to: 0; duration: 210; easing.type: Easing.BezierSpline }
                 }
             }
 
@@ -237,7 +237,7 @@ Item {
                 size: spec.trailingIconSize
                 color: splitButton._labelColor
                 rotation: splitButton.trailingSelected ? 180 : 0
-                Behavior on rotation { NumberAnimation { duration: motion.durationMedium } }
+                Behavior on rotation { NumberAnimation { _animDur } }
             }
 
             // Focus indicator
@@ -270,9 +270,9 @@ Item {
     layer.enabled: _elevated && enabled
     layer.effect: MultiEffect {
         shadowEnabled: true
-        shadowColor: Qt.rgba(0, 0, 0, 0.3)
+        shadowColor: Theme.ChiElevation.shadowColor(Theme.ChiElevation.level1)
         shadowHorizontalOffset: 0
-        shadowVerticalOffset: 1
-        shadowBlur: 0.2
+        shadowVerticalOffset: Theme.ChiElevation.verticalOffset(Theme.ChiElevation.level1)
+        shadowBlur: Theme.ChiElevation.blurRadius(Theme.ChiElevation.level1)
     }
 }

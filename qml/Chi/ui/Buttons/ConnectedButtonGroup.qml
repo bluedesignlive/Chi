@@ -1,11 +1,16 @@
+// ConnectedButtonGroup.qml - M3 Connected Button Group (Segmented)
+// All animation tokens from ChiMotion — no hardcoded values
+
+import QtQuick.Effects
 import QtQuick
 import "../../theme" as Theme
+import "../common" as Common
 
 Item {
     id: root
 
     property string size: "small"
-    property string shape: "round"      // "round" or "square"
+    property string shape: "round"          // "round" or "square"
     property string selectionMode: "single" // "single", "multi", "required"
     property bool enabled: true
 
@@ -16,33 +21,91 @@ Item {
     signal selectionChanged(var indices)
     signal itemClicked(int index)
 
-    // M3 Expressive Specs
-    readonly property var sizeSpecs: ({
-        xsmall: { height: 32, iconSize: 20, fontSize: 14, minWidth: 48, padding: 12, gap: 4, radius: 16, innerRadius: 4 },
-        small:  { height: 40, iconSize: 20, fontSize: 14, minWidth: 48, padding: 16, gap: 8, radius: 20, innerRadius: 8 },
-        medium: { height: 56, iconSize: 24, fontSize: 16, minWidth: 56, padding: 24, gap: 8, radius: 28, innerRadius: 8 },
-        large:  { height: 96, iconSize: 32, fontSize: 24, minWidth: 96, padding: 48, gap: 12, radius: 48, innerRadius: 16 },
-        xlarge: { height: 136, iconSize: 40, fontSize: 32, minWidth: 136, padding: 64, gap: 16, radius: 68, innerRadius: 20 }
-    })
+    readonly property var spec: Theme.SizeSpecs.getSpec(Theme.SizeSpecs.connectedButtonGroup, size)
+    readonly property var colors: Theme.ChiTheme.colors
+    readonly property int animDur: Theme.ChiMotion.spring.fast.effects.duration
 
-    readonly property var cs: sizeSpecs[size] || sizeSpecs.small
     readonly property bool _isMulti: selectionMode === "multi"
-    property var colors: Theme.ChiTheme.colors
 
     implicitWidth: container.implicitWidth
-    implicitHeight: cs.height
+    implicitHeight: spec.height
 
     opacity: enabled ? 1.0 : 0.38
-    Behavior on opacity { NumberAnimation { duration: 200 } }
+    Behavior on opacity {
+        enabled: Theme.ChiMotion.animationsEnabled
+        NumberAnimation {
+            duration: Theme.ChiMotion.duration.medium2
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Theme.ChiMotion.easing.standard
+        }
+    }
+
+    function _isItemSelected(idx) {
+        return selectedIndices.indexOf(idx) !== -1;
+    }
+
+    function _deselectAll() {
+        var old = selectedIndices.slice();
+        selectedIndices = [];
+        for (var i = 0; i < old.length; i++) {
+            if (root["__item" + old[i]]) {
+                root["__item" + old[i]]._selected = false;
+            }
+        }
+    }
+
+    function _selectOne(idx) {
+        _deselectAll();
+        selectedIndices = [idx];
+        selectedIndex = idx;
+        if (root["__item" + idx]) {
+            root["__item" + idx]._selected = true;
+        }
+        selectionChanged(selectedIndices);
+    }
+
+    function _toggleItem(idx) {
+        var sel = _isItemSelected(idx);
+        if (selectionMode === "single") {
+            _selectOne(idx);
+        } else if (selectionMode === "required") {
+            if (sel && selectedIndices.length === 1)
+                // prevent zero
+                return;
+            _selectOne(idx);
+        } else { // multi
+            if (sel) {
+                selectedIndices = selectedIndices.filter(function (x) {
+                    return x !== idx;
+                });
+            } else {
+                selectedIndices.push(idx);
+            }
+            if (root["__item" + idx]) {
+                root["__item" + idx]._selected = !sel;
+            }
+            selectionChanged(selectedIndices);
+        }
+    }
 
     Rectangle {
         id: container
         color: colors.surfaceContainerLow
-        radius: shape === "round" ? cs.radius : cs.innerRadius
-        width: segmentRow.implicitWidth + 4
-        height: cs.height
+        radius: shape === "round" ? spec.radius : spec.innerRadius
+        width: segmentRow.implicitWidth + spec.innerPadding * 2
+        height: spec.height
 
-        // 2px padding for the row inside
+        // Elevation shadow — token-based
+        layer.enabled: enabled
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowColor: Theme.ChiElevation.shadowColor(Theme.ChiElevation.level0)
+            shadowOpacity: Theme.ChiElevation.shadowOpacity(Theme.ChiElevation.level0)
+            shadowHorizontalOffset: 0
+            shadowVerticalOffset: Theme.ChiElevation.verticalOffset(Theme.ChiElevation.level0)
+            shadowBlur: Theme.ChiElevation.blurRadius(Theme.ChiElevation.level0)
+        }
+
         Row {
             id: segmentRow
             anchors.centerIn: parent
@@ -53,47 +116,73 @@ Item {
 
                 delegate: Item {
                     id: wrapper
-
-                    // Logic states
-                    property bool isSelected: root.selectedIndices.indexOf(index) !== -1
+                    property bool _selected: root._isItemSelected(index)
                     property bool isFirst: index === 0
                     property bool isLast: index === root.items.length - 1
 
-                    // Dimensions
-                    width: Math.max(cs.minWidth, content.implicitWidth + cs.padding * 2)
-                    height: cs.height - 4 // 2px margin from container top/bottom
+                    width: Math.max(spec.minWidth, content.implicitWidth + spec.padding * 2)
+                    height: spec.height - 4
 
-                    // Data extraction
-                    property string label: (typeof modelData === "string") ? modelData : (modelData.text || "")
-                    property string iconCode: (typeof modelData === "object" && modelData.icon) ? modelData.icon : ""
+                    property string _label: (typeof modelData === "string") ? modelData : (modelData.text || "")
+                    property string _iconCode: (typeof modelData === "object" && modelData.icon) ? modelData.icon : ""
 
-                    // Cached delegate color
-                    readonly property color _segColor: isSelected ? colors.onSecondary : colors.onSecondaryContainer
+                    readonly property color _segColor: _selected ? colors.onSecondary : colors.onSecondaryContainer
 
                     Rectangle {
                         id: bg
                         anchors.fill: parent
 
-                        // --- Shape Logic ---
-                        property real fullR: shape === "round" ? cs.radius : cs.innerRadius
-                        property real smallR: cs.innerRadius
+                        property real _fullR: shape === "round" ? spec.radius : spec.innerRadius
 
-                        // Selected → fully rounded; Unselected → sharp inside, rounded outside
-                        topLeftRadius: isSelected ? fullR : (isFirst ? fullR : smallR)
-                        bottomLeftRadius: isSelected ? fullR : (isFirst ? fullR : smallR)
-                        topRightRadius: isSelected ? fullR : (isLast ? fullR : smallR)
-                        bottomRightRadius: isSelected ? fullR : (isLast ? fullR : smallR)
+                        topLeftRadius: isFirst ? _fullR : (wrapper._selected ? _fullR : spec.innerRadius)
+                        bottomLeftRadius: isFirst ? _fullR : (wrapper._selected ? _fullR : spec.innerRadius)
+                        topRightRadius: isLast ? _fullR : (wrapper._selected ? _fullR : spec.innerRadius)
+                        bottomRightRadius: isLast ? _fullR : (wrapper._selected ? _fullR : spec.innerRadius)
 
-                        // Smooth morphing
-                        Behavior on topLeftRadius { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-                        Behavior on bottomLeftRadius { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-                        Behavior on topRightRadius { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-                        Behavior on bottomRightRadius { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                        Behavior on topLeftRadius {
+                            enabled: Theme.ChiMotion.animationsEnabled
+                            NumberAnimation {
+                                duration: animDur
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Theme.ChiMotion.easing.emphasizedDecelerate
+                            }
+                        }
+                        Behavior on bottomLeftRadius {
+                            enabled: Theme.ChiMotion.animationsEnabled
+                            NumberAnimation {
+                                duration: animDur
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Theme.ChiMotion.easing.emphasizedDecelerate
+                            }
+                        }
+                        Behavior on topRightRadius {
+                            enabled: Theme.ChiMotion.animationsEnabled
+                            NumberAnimation {
+                                duration: animDur
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Theme.ChiMotion.easing.emphasizedDecelerate
+                            }
+                        }
+                        Behavior on bottomRightRadius {
+                            enabled: Theme.ChiMotion.animationsEnabled
+                            NumberAnimation {
+                                duration: animDur
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Theme.ChiMotion.easing.emphasizedDecelerate
+                            }
+                        }
 
-                        color: isSelected ? colors.secondary : colors.secondaryContainer
-                        Behavior on color { ColorAnimation { duration: 200 } }
+                        color: wrapper._selected ? colors.secondary : colors.secondaryContainer
+                        Behavior on color {
+                            enabled: Theme.ChiMotion.animationsEnabled
+                            ColorAnimation {
+                                duration: Theme.ChiMotion.duration.medium2
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Theme.ChiMotion.easing.standard
+                            }
+                        }
 
-                        // State layer (hover/press) — radii must match parent for proper corners
+                        // State layer
                         Rectangle {
                             anchors.fill: parent
                             topLeftRadius: parent.topLeftRadius
@@ -101,85 +190,61 @@ Item {
                             bottomLeftRadius: parent.bottomLeftRadius
                             bottomRightRadius: parent.bottomRightRadius
                             color: wrapper._segColor
-                            opacity: ma.pressed ? 0.12 : (ma.containsMouse ? 0.08 : 0)
-                            Behavior on opacity { NumberAnimation { duration: 100 } }
+                            opacity: wrapperMouse.pressed ? 0.10 : (wrapperMouse.containsMouse ? 0.08 : 0)
+                            Behavior on opacity {
+                                enabled: Theme.ChiMotion.animationsEnabled
+                                NumberAnimation {
+                                    duration: Theme.ChiMotion.spring.fast.effects.duration
+                                    easing.type: Easing.BezierSpline
+                                    easing.bezierCurve: Theme.ChiMotion.easing.standard
+                                }
+                            }
                         }
 
                         // Content
                         Row {
                             id: content
                             anchors.centerIn: parent
-                            spacing: cs.gap
+                            spacing: spec.gap
 
-                            // Check mark for multi-select
                             Text {
-                                visible: isSelected && root._isMulti
-                                text: "\ue876"
-                                font.family: Theme.ChiTheme.iconFamily
-                                font.pixelSize: cs.iconSize
+                                visible: wrapper._selected && root._isMulti
+                                text: "\u2713" // checkmark
+                                font.family: Theme.ChiTheme.typography.labelMedium.family
+                                font.pixelSize: spec.iconSize
                                 color: colors.onSecondary
+                                anchors.verticalCenter: parent.verticalCenter
                             }
 
-                            // Leading icon
                             Text {
-                                visible: wrapper.iconCode !== "" && !(isSelected && root._isMulti)
-                                text: wrapper.iconCode
+                                visible: _iconCode !== "" && !(wrapper._selected && root._isMulti)
+                                text: _iconCode
                                 font.family: Theme.ChiTheme.iconFamily
-                                font.pixelSize: cs.iconSize
+                                font.pixelSize: spec.iconSize
                                 color: wrapper._segColor
+                                anchors.verticalCenter: parent.verticalCenter
                             }
 
-                            // Label text
                             Text {
-                                visible: wrapper.label !== ""
-                                text: wrapper.label
-                                font.family: Theme.ChiTheme.fontFamily
-                                font.pixelSize: cs.fontSize
-                                font.weight: Font.Medium
+                                visible: _label !== ""
+                                text: _label
+                                font.family: Theme.ChiTheme.typography[spec.typo] ? Theme.ChiTheme.typography[spec.typo].family : Theme.ChiTheme.fontFamily
+                                font.pixelSize: spec.fontSize
                                 color: wrapper._segColor
+                                anchors.verticalCenter: parent.verticalCenter
                             }
                         }
                     }
 
                     MouseArea {
-                        id: ma
+                        id: wrapperMouse
                         anchors.fill: parent
+                        enabled: root.enabled
                         hoverEnabled: true
-                        onClicked: root.handleClick(index)
+                        onClicked: root._toggleItem(index)
                     }
                 }
             }
-        }
-    }
-
-    function handleClick(idx) {
-        itemClicked(idx)
-        var newIndices = selectedIndices.slice()
-
-        if (selectionMode === "single") {
-            newIndices = [idx]
-        } else if (_isMulti) {
-            var i = newIndices.indexOf(idx)
-            if (i !== -1) newIndices.splice(i, 1)
-            else newIndices.push(idx)
-        } else if (selectionMode === "required") {
-            var i2 = newIndices.indexOf(idx)
-            if (i2 !== -1) {
-                if (newIndices.length > 1) newIndices.splice(i2, 1)
-            } else {
-                newIndices = [idx]
-            }
-        }
-
-        selectedIndices = newIndices
-        selectedIndex = newIndices.length > 0 ? newIndices[0] : -1
-        selectionChanged(newIndices)
-    }
-
-    Component.onCompleted: {
-        if (selectionMode === "required" && selectedIndices.length === 0 && items.length > 0) {
-            selectedIndices = [0]
-            selectedIndex = 0
         }
     }
 }

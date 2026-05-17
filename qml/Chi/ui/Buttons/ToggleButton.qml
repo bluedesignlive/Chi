@@ -1,5 +1,5 @@
 // ToggleButton.qml - Material 3 Toggle Button
-// Uses shared components (Icon, Ripple, StateLayer) following Dieter Rams principles
+// All sizes and tokens per M3 Expressive spec
 
 import QtQuick
 import QtQuick.Effects
@@ -24,21 +24,13 @@ Item {
 
     // ─── Theme Tokens ───────────────────────────────────────────
     readonly property var colors: Theme.ChiTheme.colors
-    readonly property var motion: Theme.ChiTheme.motion
-    readonly property var typography: Theme.ChiTheme.typography
-    readonly property string fontFamily: Theme.ChiTheme.fontFamily
-    readonly property string iconFamily: Theme.ChiTheme.iconFamily
+    readonly property var motion: Theme.ChiMotion
+    readonly property var typo: Theme.ChiTheme.typography
+    readonly property int animDur: Theme.ChiMotion.duration.short4
 
     // ─── Size Specifications ────────────────────────────────────
-    readonly property var sizeSpecs: ({
-        xsmall: { height: 36, padding: 6, horizontalPadding: 14, gap: 4, iconSize: 18, fontSize: 12, fontWeight: Font.Medium, letterSpacing: 0.1, squareRadius: 10, borderWidth: 1 },
-        small:  { height: 44, padding: 10, horizontalPadding: 18, gap: 6, iconSize: 20, fontSize: 14, fontWeight: Font.Medium, letterSpacing: 0.1, squareRadius: 12, borderWidth: 1 },
-        medium: { height: 56, padding: 16, horizontalPadding: 26, gap: 8, iconSize: 24, fontSize: 16, fontWeight: Font.Medium, letterSpacing: 0.15, squareRadius: 16, borderWidth: 1 },
-        large:  { height: 72, padding: 24, horizontalPadding: 36, gap: 10, iconSize: 28, fontSize: 18, fontWeight: Font.Normal, letterSpacing: 0, squareRadius: 20, borderWidth: 2 },
-        xlarge: { height: 96, padding: 32, horizontalPadding: 48, gap: 12, iconSize: 36, fontSize: 22, fontWeight: Font.Normal, letterSpacing: 0, squareRadius: 28, borderWidth: 2 }
-    })
-
-    readonly property var spec: sizeSpecs[size] || sizeSpecs.small
+    readonly property var spec: Theme.SizeSpecs.getSpec(Theme.SizeSpecs.button, size)
+    readonly property var typeStyle: typo[spec.typo] ?? typo.labelLarge
 
     // ─── Variant Flags ──────────────────────────────────────────
     readonly property bool _filled: variant === "filled"
@@ -48,48 +40,75 @@ Item {
 
     readonly property string currentIcon: selected && selectedIcon !== "" ? selectedIcon : icon
 
-    // ─── Colors ─────────────────────────────────────────────────
+    // ─── Colors from semantic tokens ─────────────────────────────
     readonly property color _interactColor: {
         if (!selected) {
-            if (_filled)   return colors.onSurfaceVariant
-            if (_elevated) return colors.primary
-            if (_tonal)    return colors.onSurfaceVariant
-            if (_outlined) return colors.onSecondaryContainer
-            return colors.primary
+            if (_filled)
+                return colors.onSurfaceVariant;
+            if (_elevated)
+                return colors.primary;
+            if (_tonal)
+                return colors.onSurfaceVariant;
+            if (_outlined)
+                return colors.onSecondaryContainer;
+            return colors.primary;
         }
-        if (_filled || _elevated) return colors.onPrimary
-        if (_tonal)    return colors.inverseOnSurface
-        if (_outlined) return colors.onSecondary
-        return colors.onPrimary
+        if (_filled || _elevated)
+            return colors.onPrimary;
+        if (_tonal)
+            return colors.inverseOnSurface;
+        if (_outlined)
+            return colors.onSecondary;
+        return colors.onPrimary;
     }
 
     readonly property color _labelColor: enabled ? _interactColor : colors.onSurface
+
+    readonly property color _containerColor: {
+        if (!enabled)
+            return "transparent";
+        if (_filled)
+            return selected ? colors.primary : colors.surfaceContainerLow;
+        if (_elevated)
+            return selected ? colors.primary : colors.surfaceContainerLow;
+        if (_tonal)
+            return selected ? colors.inverseSurface : "transparent";
+        if (_outlined)
+            return selected ? colors.secondaryContainer : "transparent";
+        return colors.primary;
+    }
+
+    readonly property color _outlineColor: {
+        if (!_outlined)
+            return "transparent";
+        if (selected)
+            return colors.secondary;
+        return colors.outline;
+    }
 
     // ─── Geometry ───────────────────────────────────────────────
     implicitWidth: buttonContent.implicitWidth
     implicitHeight: spec.height
 
     opacity: enabled ? 1.0 : 0.38
-    Behavior on opacity { NumberAnimation { duration: motion.durationMedium } }
+
+    Behavior on opacity {
+        enabled: Theme.ChiMotion.animationsEnabled
+        NumberAnimation {
+            duration: animDur
+        }
+    }
 
     // ─── Visual Container ───────────────────────────────────────
     Rectangle {
         id: container
         anchors.fill: parent
-        radius: shape === "round" ? 100 : spec.squareRadius
+        radius: shape === "round" ? height / 2 : spec.squareRadius
         clip: true
 
-        color: {
-            if (!toggleButton.enabled) return "transparent"
-            if (toggleButton._filled)   return toggleButton.selected ? colors.primary : colors.surfaceContainer
-            if (toggleButton._elevated) return toggleButton.selected ? colors.primary : colors.surfaceContainerLow
-            if (toggleButton._tonal)    return toggleButton.selected ? colors.inverseSurface : "transparent"
-            if (toggleButton._outlined) return toggleButton.selected ? colors.secondary : colors.secondaryContainer
-            return colors.primary
-        }
-
-        border.width: (!toggleButton.selected && toggleButton._tonal) ? spec.borderWidth : 0
-        border.color: (!toggleButton.selected && toggleButton._tonal) ? colors.outlineVariant : "transparent"
+        color: toggleButton._containerColor
+        border.width: (!toggleButton.selected && toggleButton._tonal) ? 1 : toggleButton._outlined ? 1 : 0
+        border.color: toggleButton._outlineColor
 
         // Disabled overlay
         Rectangle {
@@ -98,6 +117,29 @@ Item {
             visible: !toggleButton.enabled
             color: colors.onSurface
             opacity: 0.12
+        }
+
+        // Shape morph on press
+        Behavior on radius {
+            enabled: Theme.ChiMotion.animationsEnabled
+            SpringAnimation {
+                spring: Theme.ChiMotion.fastStiffness
+                damping: Theme.ChiMotion.fastDamping
+                duration: animDur
+            }
+        }
+
+        Behavior on color {
+            enabled: Theme.ChiMotion.animationsEnabled
+            ColorAnimation {
+                duration: animDur
+            }
+        }
+        Behavior on border.color {
+            enabled: Theme.ChiMotion.animationsEnabled
+            ColorAnimation {
+                duration: animDur
+            }
         }
 
         // State Layer
@@ -122,7 +164,8 @@ Item {
             id: buttonContent
             anchors.centerIn: parent
             spacing: spec.gap
-            padding: spec.padding
+            topPadding: spec.verticalPadding
+            bottomPadding: spec.verticalPadding
             leftPadding: spec.horizontalPadding
             rightPadding: spec.horizontalPadding
 
@@ -137,29 +180,31 @@ Item {
             Text {
                 id: labelText
                 text: toggleButton.text
-                font.family: fontFamily
-                font.weight: spec.fontWeight
-                font.pixelSize: spec.fontSize
-                font.letterSpacing: spec.letterSpacing
+                font.family: typeStyle.family
+                font.weight: typeStyle.weight
+                font.pixelSize: typeStyle.size
+                font.letterSpacing: typeStyle.spacing
                 verticalAlignment: Text.AlignVCenter
                 color: toggleButton._labelColor
                 anchors.verticalCenter: parent.verticalCenter
-                Behavior on color { ColorAnimation { duration: motion.durationMedium } }
+                Behavior on color {
+                    enabled: Theme.ChiMotion.animationsEnabled
+                    ColorAnimation {
+                        duration: animDur
+                    }
+                }
             }
         }
 
         // Elevation for elevated variant
-        layer.enabled: toggleButton._elevated && toggleButton.enabled
+        layer.enabled: toggleButton._elevated && toggleButton.enabled && !mouseArea.pressed
         layer.effect: MultiEffect {
             shadowEnabled: true
-            shadowColor: Qt.rgba(0, 0, 0, 0.3)
+            shadowColor: Theme.ChiElevation.shadowColor(Theme.ChiElevation.level1)
             shadowHorizontalOffset: 0
-            shadowVerticalOffset: 1
-            shadowBlur: 0.15
+            shadowVerticalOffset: Theme.ChiElevation.verticalOffset(Theme.ChiElevation.level1)
+            shadowBlur: Theme.ChiElevation.blurRadius(Theme.ChiElevation.level1)
         }
-
-        Behavior on color { ColorAnimation { duration: motion.durationMedium } }
-        Behavior on border.color { ColorAnimation { duration: motion.durationMedium } }
     }
 
     // ─── Input ──────────────────────────────────────────────────
@@ -170,18 +215,21 @@ Item {
         hoverEnabled: true
         cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
         onClicked: {
-            toggleButton.selected = !toggleButton.selected
-            toggleButton.toggled(toggleButton.selected)
+            toggleButton.selected = !toggleButton.selected;
+            toggleButton.toggled(toggleButton.selected);
         }
     }
 
     // ─── Keyboard Support ───────────────────────────────────────
-    Keys.onSpacePressed:  if (enabled) activate()
-    Keys.onEnterPressed:  if (enabled) activate()
-    Keys.onReturnPressed: if (enabled) activate()
+    Keys.onSpacePressed: if (enabled)
+        activate()
+    Keys.onEnterPressed: if (enabled)
+        activate()
+    Keys.onReturnPressed: if (enabled)
+        activate()
 
     function activate() {
-        selected = !selected
-        toggled(selected)
+        selected = !selected;
+        toggled(selected);
     }
 }

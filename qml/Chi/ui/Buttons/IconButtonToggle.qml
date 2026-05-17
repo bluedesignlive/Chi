@@ -21,9 +21,9 @@ Item {
     Behavior on opacity {
         enabled: Theme.ChiMotion.animationsEnabled
         NumberAnimation {
-            duration: Theme.ChiMotion.colorChange.duration
+            duration: Theme.ChiMotion.duration.medium1
             easing.type: Easing.BezierSpline
-            easing.bezierCurve: Theme.ChiMotion.colorChange.curve
+            easing.bezierCurve: Theme.ChiMotion.easing.standard
         }
     }
 
@@ -31,13 +31,14 @@ Item {
     readonly property var cs: sizeSpecs[size] || sizeSpecs.small
 
     readonly property int containerWidth: {
-        if (widthMode === "narrow") return cs.narrowWidth
-        if (widthMode === "wide") return cs.wideWidth
-        return cs.defaultWidth
+        if (widthMode === "narrow")
+            return cs.narrowWidth;
+        if (widthMode === "wide")
+            return cs.wideWidth;
+        return cs.defaultWidth;
     }
 
-    readonly property string effectiveIcon:
-        selected && selectedIcon !== "" ? selectedIcon : icon
+    readonly property string effectiveIcon: selected && selectedIcon !== "" ? selectedIcon : icon
 
     property var colors: Theme.ChiTheme.colors
 
@@ -55,24 +56,22 @@ Item {
         clip: true
         radius: root.selected ? cs.squareRadius : height / 2
 
-        color: !root.enabled
-            ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.12)
-            : (root.selected ? colors.primary : colors.surfaceContainer)
+        color: !root.enabled ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.12) : (root.selected ? colors.primary : colors.surfaceContainer)
 
         Behavior on radius {
             enabled: Theme.ChiMotion.animationsEnabled
             NumberAnimation {
-                duration: 250
+                duration: Theme.ChiMotion.duration.medium1
                 easing.type: Easing.BezierSpline
-                easing.bezierCurve: Theme.ChiMotion.spring.fast.effects.curve
+                easing.bezierCurve: Theme.ChiMotion.easing.standard
             }
         }
         Behavior on color {
             enabled: Theme.ChiMotion.animationsEnabled
             ColorAnimation {
-                duration: Theme.ChiMotion.colorChange.duration
+                duration: Theme.ChiMotion.duration.medium1
                 easing.type: Easing.BezierSpline
-                easing.bezierCurve: Theme.ChiMotion.colorChange.curve
+                easing.bezierCurve: Theme.ChiMotion.easing.standard
             }
         }
 
@@ -86,8 +85,19 @@ Item {
             SequentialAnimation on opacity {
                 id: rippleAnimation
                 running: false
-                NumberAnimation { from: 0; to: 0.16; duration: Theme.ChiMotion.press.duration; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.ChiMotion.press.curve }
-                NumberAnimation { to: 0; duration: Theme.ChiMotion.release.duration; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.ChiMotion.release.curve }
+                NumberAnimation {
+                    from: 0
+                    to: 0.16
+                    duration: Theme.ChiMotion.duration.short1
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Theme.ChiMotion.easing.standard
+                }
+                NumberAnimation {
+                    to: 0
+                    duration: Theme.ChiMotion.duration.medium1
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Theme.ChiMotion.easing.standard
+                }
             }
         }
 
@@ -96,18 +106,14 @@ Item {
             anchors.fill: parent
             radius: parent.radius
             color: root._interactColor
-            opacity: !root.enabled ? 0
-                : mouseArea.pressed ? Theme.ChiMotion.stateLayer.pressed
-                : root.activeFocus ? Theme.ChiMotion.stateLayer.focus
-                : mouseArea.containsMouse ? Theme.ChiMotion.stateLayer.hover
-                : 0
+            opacity: !root.enabled ? 0 : mouseArea.pressed ? Theme.ChiMotion.stateLayer.pressed : root.activeFocus ? Theme.ChiMotion.stateLayer.focus : mouseArea.containsMouse ? Theme.ChiMotion.stateLayer.hover : 0
 
             Behavior on opacity {
                 enabled: Theme.ChiMotion.animationsEnabled
                 NumberAnimation {
-                    duration: mouseArea.pressed ? Theme.ChiMotion.press.duration : Theme.ChiMotion.hoverState.duration
+                    duration: mouseArea.pressed ? Theme.ChiMotion.duration.short1 : Theme.ChiMotion.duration.short2
                     easing.type: Easing.BezierSpline
-                    easing.bezierCurve: mouseArea.pressed ? Theme.ChiMotion.press.curve : Theme.ChiMotion.hoverState.curve
+                    easing.bezierCurve: Theme.ChiMotion.easing.standard
                 }
             }
         }
@@ -140,8 +146,8 @@ Item {
         cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
         onPressed: rippleAnimation.restart()
         onClicked: {
-            root.selected = !root.selected
-            root.toggled(root.selected)
+            root.selected = !root.selected;
+            root.toggled(root.selected);
         }
     }
 
@@ -151,13 +157,16 @@ Item {
         delay: 500
     }
 
-    Keys.onSpacePressed: if (enabled) _activate()
-    Keys.onEnterPressed: if (enabled) _activate()
-    Keys.onReturnPressed: if (enabled) _activate()
+    Keys.onSpacePressed: if (enabled)
+        _activate()
+    Keys.onEnterPressed: if (enabled)
+        _activate()
+    Keys.onReturnPressed: if (enabled)
+        _activate()
 
     function _activate() {
-        rippleAnimation.restart()
-        selected = !selected
-        toggled(selected)
+        rippleAnimation.restart();
+        selected = !selected;
+        toggled(selected);
     }
 }

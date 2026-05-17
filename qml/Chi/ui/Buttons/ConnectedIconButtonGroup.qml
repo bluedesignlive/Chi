@@ -1,4 +1,6 @@
-// Icon-only Connected Button Group
+// ConnectedIconButtonGroup.qml — Icon-only Connected Button Group
+// All animation tokens from ChiMotion — no hardcoded values
+
 import QtQuick
 import QtQuick.Effects
 import "../../theme" as Theme
@@ -20,24 +22,30 @@ Item {
     signal selectionChanged(var indices)
     signal itemClicked(int index)
 
-    readonly property var sizeSpecs: ({
-        xsmall: { height: 32, width: 32, innerPadding: 2, innerRadius: 4, outerRadius: 16, squareRadius: 4, iconSize: 18, minWidth: 48 },
-        small:  { height: 40, width: 40, innerPadding: 2, innerRadius: 8, outerRadius: 20, squareRadius: 8, iconSize: 20, minWidth: 48 },
-        medium: { height: 56, width: 56, innerPadding: 2, innerRadius: 8, outerRadius: 28, squareRadius: 8, iconSize: 24, minWidth: 56 },
-        large:  { height: 96, width: 96, innerPadding: 2, innerRadius: 16, outerRadius: 48, squareRadius: 16, iconSize: 32, minWidth: 96 },
-        xlarge: { height: 136, width: 136, innerPadding: 2, innerRadius: 20, outerRadius: 68, squareRadius: 20, iconSize: 40, minWidth: 136 }
-    })
+    readonly property var sizeSpecs: Theme.SizeSpecs.getSpec(Theme.SizeSpecs.connectedButtonGroup, size)
+    readonly property var cs: sizeSpecs
 
-    readonly property var cs: sizeSpecs[size] || sizeSpecs.small
     readonly property bool _isRound: shape === "round"
-    readonly property int _dur: Theme.ChiTheme.motion.durationMedium
-    property var colors: Theme.ChiTheme.colors
+    readonly property var colors: Theme.ChiTheme.colors
+
+    readonly property int _dur: Theme.ChiMotion.duration.medium2
+    readonly property int _stateLayerShow: Theme.ChiMotion.spring.fast.effects.duration
+    readonly property int _stateLayerHover: Theme.ChiMotion.duration.medium2
+    readonly property int _rippleFadeIn: Theme.ChiMotion.spring.fast.effects.duration
+    readonly property int _rippleFadeOut: Theme.ChiMotion.duration.long2
 
     implicitWidth: container.implicitWidth
     implicitHeight: cs.height
 
     opacity: enabled ? 1.0 : 0.38
-    Behavior on opacity { NumberAnimation { duration: 200 } }
+    Behavior on opacity {
+        enabled: Theme.ChiMotion.animationsEnabled
+        NumberAnimation {
+            duration: _dur
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Theme.ChiMotion.easing.standard
+        }
+    }
 
     Rectangle {
         id: container
@@ -49,13 +57,15 @@ Item {
         implicitWidth: iconRow.implicitWidth + cs.innerPadding * 2
         implicitHeight: cs.height
 
+        // Elevation shadow — token-based
         layer.enabled: iconGroup.elevated && iconGroup.enabled
         layer.effect: MultiEffect {
             shadowEnabled: true
-            shadowColor: Qt.rgba(0, 0, 0, 0.25)
+            shadowColor: Theme.ChiElevation.shadowColor(Theme.ChiElevation.level1)
+            shadowOpacity: Theme.ChiElevation.shadowOpacity(Theme.ChiElevation.level1)
             shadowHorizontalOffset: 0
-            shadowVerticalOffset: 1
-            shadowBlur: 0.2
+            shadowVerticalOffset: Theme.ChiElevation.verticalOffset(Theme.ChiElevation.level1)
+            shadowBlur: Theme.ChiElevation.blurRadius(Theme.ChiElevation.level1)
         }
 
         Row {
@@ -73,7 +83,6 @@ Item {
                     property bool isPressed: iconMouse.pressed
                     property bool isHovered: iconMouse.containsMouse
 
-                    // Cached per-segment interactive color
                     readonly property color _stateColor: isSelected ? colors.onSecondaryContainer : colors.onSurfaceVariant
 
                     width: Math.max(cs.minWidth, cs.width)
@@ -87,16 +96,51 @@ Item {
                     topRightRadius: (isSelected || isPressed) ? cs.innerRadius : baseRight
                     bottomRightRadius: (isSelected || isPressed) ? cs.innerRadius : baseRight
 
-                    Behavior on topLeftRadius { NumberAnimation { duration: iconGroup._dur; easing.type: Easing.OutCubic } }
-                    Behavior on bottomLeftRadius { NumberAnimation { duration: iconGroup._dur; easing.type: Easing.OutCubic } }
-                    Behavior on topRightRadius { NumberAnimation { duration: iconGroup._dur; easing.type: Easing.OutCubic } }
-                    Behavior on bottomRightRadius { NumberAnimation { duration: iconGroup._dur; easing.type: Easing.OutCubic } }
+                    Behavior on topLeftRadius {
+                        enabled: Theme.ChiMotion.animationsEnabled
+                        NumberAnimation {
+                            duration: _dur
+                            easing.type: Theme.ChiMotion.easing.emphasized
+                            easing.bezierCurve: Theme.ChiMotion.easing.emphasizedInControlPoints
+                        }
+                    }
+                    Behavior on bottomLeftRadius {
+                        enabled: Theme.ChiMotion.animationsEnabled
+                        NumberAnimation {
+                            duration: _dur
+                            easing.type: Theme.ChiMotion.easing.emphasized
+                            easing.bezierCurve: Theme.ChiMotion.easing.emphasizedInControlPoints
+                        }
+                    }
+                    Behavior on topRightRadius {
+                        enabled: Theme.ChiMotion.animationsEnabled
+                        NumberAnimation {
+                            duration: _dur
+                            easing.type: Theme.ChiMotion.easing.emphasized
+                            easing.bezierCurve: Theme.ChiMotion.easing.emphasizedInControlPoints
+                        }
+                    }
+                    Behavior on bottomRightRadius {
+                        enabled: Theme.ChiMotion.animationsEnabled
+                        NumberAnimation {
+                            duration: _dur
+                            easing.type: Theme.ChiMotion.easing.emphasized
+                            easing.bezierCurve: Theme.ChiMotion.easing.emphasizedInControlPoints
+                        }
+                    }
 
                     color: isSelected ? colors.secondaryContainer : colors.surfaceContainerLow
-                    Behavior on color { ColorAnimation { duration: iconGroup._dur } }
+                    Behavior on color {
+                        enabled: Theme.ChiMotion.animationsEnabled
+                        ColorAnimation {
+                            duration: _dur
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Theme.ChiMotion.easing.standard
+                        }
+                    }
                     clip: true
 
-                    // Ripple
+                    // Ripple — using Common.Ripple
                     Rectangle {
                         anchors.fill: parent
                         topLeftRadius: parent.topLeftRadius
@@ -109,8 +153,19 @@ Item {
                         SequentialAnimation on opacity {
                             id: iconRipple
                             running: false
-                            NumberAnimation { from: 0; to: 0.16; duration: 90 }
-                            NumberAnimation { to: 0; duration: 210 }
+                            NumberAnimation {
+                                from: 0
+                                to: 0.16
+                                duration: _rippleFadeIn
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Theme.ChiMotion.easing.standard
+                            }
+                            NumberAnimation {
+                                to: 0
+                                duration: _rippleFadeOut
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Theme.ChiMotion.easing.standard
+                            }
                         }
                     }
 
@@ -123,7 +178,14 @@ Item {
                         bottomRightRadius: parent.bottomRightRadius
                         color: parent._stateColor
                         opacity: isPressed ? 0.12 : (isHovered ? 0.08 : 0)
-                        Behavior on opacity { NumberAnimation { duration: 150 } }
+                        Behavior on opacity {
+                            enabled: Theme.ChiMotion.animationsEnabled
+                            NumberAnimation {
+                                duration: isPressed ? _stateLayerShow : _stateLayerHover
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Theme.ChiMotion.easing.standard
+                            }
+                        }
                     }
 
                     // Icon
@@ -133,7 +195,14 @@ Item {
                         font.family: iconGroup.iconFont
                         font.pixelSize: cs.iconSize
                         color: parent._stateColor
-                        Behavior on color { ColorAnimation { duration: iconGroup._dur } }
+                        Behavior on color {
+                            enabled: Theme.ChiMotion.animationsEnabled
+                            ColorAnimation {
+                                duration: _dur
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Theme.ChiMotion.easing.standard
+                            }
+                        }
                     }
 
                     MouseArea {
@@ -151,31 +220,37 @@ Item {
     }
 
     function handleClick(index) {
-        itemClicked(index)
-        var newIndices = selectedIndices.slice()
+        itemClicked(index);
+        var newIndices = selectedIndices.slice();
 
         if (selectionMode === "single") {
-            newIndices = [index]
-            selectedIndex = index
+            newIndices = [index];
+            selectedIndex = index;
         } else if (selectionMode === "multi") {
-            var idx = newIndices.indexOf(index)
-            if (idx !== -1) newIndices.splice(idx, 1)
-            else { newIndices.push(index); newIndices.sort() }
+            var idx = newIndices.indexOf(index);
+            if (idx !== -1)
+                newIndices.splice(idx, 1);
+            else {
+                newIndices.push(index);
+                newIndices.sort();
+            }
         } else if (selectionMode === "required") {
-            var idx2 = newIndices.indexOf(index)
-            if (idx2 !== -1 && newIndices.length > 1) newIndices.splice(idx2, 1)
-            else if (idx2 === -1) newIndices = [index]
-            selectedIndex = newIndices[0] !== undefined ? newIndices[0] : -1
+            var idx2 = newIndices.indexOf(index);
+            if (idx2 !== -1 && newIndices.length > 1)
+                newIndices.splice(idx2, 1);
+            else if (idx2 === -1)
+                newIndices = [index];
+            selectedIndex = newIndices[0] !== undefined ? newIndices[0] : -1;
         }
 
-        selectedIndices = newIndices
-        selectionChanged(selectedIndices)
+        selectedIndices = newIndices;
+        selectionChanged(selectedIndices);
     }
 
     Component.onCompleted: {
         if (selectionMode === "required" && selectedIndices.length === 0 && icons.length > 0) {
-            selectedIndex = 0
-            selectedIndices = [0]
+            selectedIndex = 0;
+            selectedIndices = [0];
         }
     }
 }

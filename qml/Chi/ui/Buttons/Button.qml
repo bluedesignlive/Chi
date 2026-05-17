@@ -36,7 +36,7 @@ Item {
     // ─── Theme Tokens ───────────────────────────────────────────
     readonly property var colors: Theme.ChiTheme.colors
     readonly property var typography: Theme.ChiTheme.typography
-    readonly property var motion: Theme.ChiTheme.motion
+    readonly property int _animDur: Theme.ChiMotion.duration.short4
     readonly property string fontFamily: Theme.ChiTheme.fontFamily
     readonly property string iconFamily: Theme.ChiTheme.iconFamily
 
@@ -88,8 +88,9 @@ Item {
 
     Behavior on opacity {
         NumberAnimation {
-            duration: motion.durationMedium
-            easing.type: motion.easeStandard
+            _animDur
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Theme.ChiMotion.easing.standard
         }
     }
 
@@ -187,22 +188,24 @@ Item {
         autoPaddingEnabled: true
 
         shadowEnabled: true
-        shadowColor: colors.shadow
-        shadowOpacity: 0.3
+        shadowColor: Theme.ChiElevation.shadowColor(Theme.ChiElevation.level1)
+        shadowOpacity: Theme.ChiElevation.shadowOpacity(Theme.ChiElevation.level1)
         shadowHorizontalOffset: 0
-        shadowVerticalOffset:   root.state === "hovered" ? 2 : 1
-        shadowBlur:             root.state === "hovered" ? 0.4 : 0.2
+        shadowVerticalOffset: root.state === "hovered" ? Theme.ChiElevation.verticalOffset(Theme.ChiElevation.level2) : Theme.ChiElevation.verticalOffset(Theme.ChiElevation.level1)
+        shadowBlur: root.state === "hovered" ? Theme.ChiElevation.blurRadius(Theme.ChiElevation.level2) : Theme.ChiElevation.blurRadius(Theme.ChiElevation.level1)
 
         Behavior on shadowVerticalOffset {
             NumberAnimation {
-                duration: motion.durationMedium
-                easing.type: motion.easeStandard
+                _animDur
+                easing.type: Easing.BezierSpline
+            easing.bezierCurve: Theme.ChiMotion.easing.standard
             }
         }
         Behavior on shadowBlur {
             NumberAnimation {
-                duration: motion.durationMedium
-                easing.type: motion.easeStandard
+                _animDur
+                easing.type: Easing.BezierSpline
+            easing.bezierCurve: Theme.ChiMotion.easing.standard
             }
         }
     }
