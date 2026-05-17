@@ -1,4 +1,5 @@
-// WindowControls.qml
+// WindowControls.qml — macOS traffic lights + Windows rounded-rect buttons
+// Windows buttons use colored Rectangle hover states only (no icon glyphs)
 import QtQuick
 import QtQuick.Window
 import "../../theme" as Theme
@@ -9,12 +10,6 @@ Item {
 
     property var targetWindow: null
     property var colors: Theme.ChiTheme.colors
-
-    // Material icon names — Windows style only (16px renders fine)
-    property string minimizeIcon: "remove"
-    property string maximizeIcon: "crop_square"
-    property string restoreIcon: "filter_none"
-    property string closeIcon: "close"
 
     property bool showMinimize: true
     property bool showMaximize: true
@@ -35,15 +30,13 @@ Item {
     // macOS TRAFFIC LIGHTS
     //
     // HoverHandler on the group container: hovering ANY dot reveals
-    // icons on ALL dots — matching native macOS behaviour.
-    // HoverHandler is non-blocking so child MouseAreas retain
-    // individual press/hover states and click handling.
+    // all colored dots — matching native macOS behaviour.
+    // No icon glyphs drawn inside the circles.
     //
-    // States (matching real macOS):
-    //   inactive + not hovered  → grey dots, no icons
-    //   inactive + group hover  → coloured dots, icons visible
-    //   active   + not hovered  → coloured dots, no icons
-    //   active   + group hover  → coloured dots, icons visible
+    // States:
+    //   inactive + not hovered  → grey dots
+    //   inactive + group hover  → coloured dots
+    //   active   + not hovered  → coloured dots
     // ═══════════════════════════════════════════════════════════════
 
     Item {
@@ -78,7 +71,6 @@ Item {
             TrafficLightButton {
                 visible: root.showClose
                 baseColor: "#FF5F57"
-                iconType: "close"
                 tooltipText: qsTr("Close  Alt+F4")
                 groupHovered: macGroupHover.hovered
                 onClicked: root.targetWindow?.close()
@@ -87,7 +79,6 @@ Item {
             TrafficLightButton {
                 visible: root.showMinimize
                 baseColor: "#FEBC2E"
-                iconType: "minimize"
                 tooltipText: qsTr("Minimize")
                 groupHovered: macGroupHover.hovered
                 onClicked: root.targetWindow?.showMinimized()
@@ -96,8 +87,6 @@ Item {
             TrafficLightButton {
                 visible: root.showMaximize
                 baseColor: "#28C840"
-                iconType: root.targetWindow?.visibility === Window.Maximized
-                          ? "restore" : "maximize"
                 tooltipText: root.targetWindow?.visibility === Window.Maximized
                              ? qsTr("Restore") : qsTr("Maximize")
                 groupHovered: macGroupHover.hovered
@@ -171,18 +160,14 @@ Item {
     // ═══════════════════════════════════════════════════════════════
     // TRAFFIC LIGHT BUTTON
     //
-    // 12px coloured circle with Canvas-drawn icon glyphs.
-    // Canvas gives pixel-perfect 1.5px strokes at small sizes
-    // where Material Icons font becomes illegible sub-pixel mush.
-    // Scales cleanly with device pixel ratio (Qt6 Canvas handles
-    // DPR automatically — logical coords map to physical pixels).
+    // 12px coloured circle — no icon glyphs, just color.
+    // Three states: inactive grey, active color, pressed darker.
     // ═══════════════════════════════════════════════════════════════
 
     component TrafficLightButton: Item {
         id: tlBtn
 
         property color baseColor: "#888"
-        property string iconType: "close"
         property string tooltipText: ""
         property bool groupHovered: false
 
@@ -194,8 +179,6 @@ Item {
         Accessible.role: Accessible.Button
         Accessible.name: tooltipText
         Accessible.onPressAction: clicked
-
-        onIconTypeChanged: iconCanvas.requestPaint()
 
         readonly property bool _windowActive: root.targetWindow
                                               ? root.targetWindow.active : true
@@ -220,79 +203,6 @@ Item {
             border.color: Qt.darker(tlBtn.baseColor, 1.4)
 
             Behavior on color { ColorAnimation { duration: 100 } }
-
-            Canvas {
-                id: iconCanvas
-                anchors.centerIn: parent
-                width: 8
-                height: 8
-                opacity: tlBtn.groupHovered ? 1.0 : 0.0
-                visible: opacity > 0
-
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: 120
-                        easing.type: Easing.OutCubic
-                    }
-                }
-
-                onPaint: {
-                    var ctx = getContext("2d")
-                    ctx.clearRect(0, 0, width, height)
-
-                    ctx.strokeStyle = Qt.darker(tlBtn.baseColor, 2.8).toString()
-                    ctx.lineWidth = 1.5
-                    ctx.lineCap = "round"
-                    ctx.lineJoin = "round"
-
-                    switch (tlBtn.iconType) {
-
-                    case "close":
-                        ctx.beginPath()
-                        ctx.moveTo(1, 1)
-                        ctx.lineTo(7, 7)
-                        ctx.moveTo(7, 1)
-                        ctx.lineTo(1, 7)
-                        ctx.stroke()
-                        break
-
-                    case "minimize":
-                        ctx.beginPath()
-                        ctx.moveTo(1, 4)
-                        ctx.lineTo(7, 4)
-                        ctx.stroke()
-                        break
-
-                    case "maximize":
-                        ctx.beginPath()
-                        ctx.moveTo(4, 1)
-                        ctx.lineTo(7, 1)
-                        ctx.lineTo(7, 4)
-                        ctx.stroke()
-                        ctx.beginPath()
-                        ctx.moveTo(4, 7)
-                        ctx.lineTo(1, 7)
-                        ctx.lineTo(1, 4)
-                        ctx.stroke()
-                        break
-
-                    case "restore":
-                        ctx.beginPath()
-                        ctx.moveTo(7, 3)
-                        ctx.lineTo(5, 3)
-                        ctx.lineTo(5, 1)
-                        ctx.stroke()
-                        ctx.beginPath()
-                        ctx.moveTo(1, 5)
-                        ctx.lineTo(3, 5)
-                        ctx.lineTo(3, 7)
-                        ctx.stroke()
-                        break
-                    }
-                }
-
-                Component.onCompleted: requestPaint()
-            }
         }
 
         MouseArea {
@@ -307,7 +217,6 @@ Item {
         // Tooltip
         Item {
             id: tlTooltip
-            anchors.horizontalCenter: parent.horizontalCenter
             y: tlTooltipShown ? parent.height + 8 : parent.height + 2
             width: tlTooltipLabel.implicitWidth + 16
             height: 24
@@ -327,9 +236,23 @@ Item {
                 }
             }
 
+            // Clamp to window edges
+            onWidthChanged: _clampX()
+            onVisibleChanged: if (visible) _clampX()
+            function _clampX() {
+                var cx = parent.width / 2 - width / 2
+                if (root.targetWindow) {
+                    var sx = mapToItem(root.targetWindow.contentItem, 0, 0).x
+                    if (sx < 4) cx += -sx + 4
+                    if (sx + width > root.targetWindow.width - 4)
+                        cx += root.targetWindow.width - 4 - sx - width
+                }
+                x = cx
+            }
+
             Timer {
                 id: tlTooltipDelay
-                interval: 700
+                interval: 500
                 onTriggered: tlTooltip.tlTooltipReady = true
             }
 
@@ -350,22 +273,21 @@ Item {
                 }
             }
 
-            scale: tlTooltipShown ? 1.0 : 0.85
+            scale: tlTooltipShown ? 1.0 : 0.92
             opacity: tlTooltipShown ? 1.0 : 0
             visible: opacity > 0
             transformOrigin: Item.Top
 
             Behavior on opacity {
                 NumberAnimation {
-                    duration: tlTooltip.tlTooltipShown ? 200 : 120
-                    easing.type: tlTooltip.tlTooltipShown ? Easing.OutQuart : Easing.InQuart
+                    duration: tlTooltip.tlTooltipShown ? 200 : 100
+                    easing.type: Easing.OutCubic
                 }
             }
             Behavior on scale {
                 NumberAnimation {
-                    duration: tlTooltip.tlTooltipShown ? 250 : 120
-                    easing.type: tlTooltip.tlTooltipShown ? Easing.OutBack : Easing.InQuart
-                    easing.overshoot: 1.2
+                    duration: tlTooltip.tlTooltipShown ? 250 : 100
+                    easing.type: Easing.OutCubic
                 }
             }
 
@@ -373,6 +295,15 @@ Item {
                 anchors.fill: parent
                 radius: 4
                 color: root.colors.inverseSurface
+            }
+
+            // Caret arrow
+            Rectangle {
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: -4
+                width: 8; height: 8
+                color: root.colors.inverseSurface
+                transform: Rotation { origin.x: 4; origin.y: 4; angle: 45 }
             }
 
             Text {
@@ -389,8 +320,8 @@ Item {
     // ═══════════════════════════════════════════════════════════════
     // WINDOWS BUTTON
     //
-    // 32px rounded-rect with colored hover/press state.
-    // No text icon — the colored fill + hover animation is the visual cue.
+    // 32px rounded-rect with colored hover/press/accent state.
+    // No icon glyphs — colored fill + hover animation is the visual cue.
     // ═══════════════════════════════════════════════════════════════
 
     component WindowsButton: Item {
@@ -437,7 +368,6 @@ Item {
         // Tooltip
         Item {
             id: winTooltip
-            anchors.horizontalCenter: parent.horizontalCenter
             y: winTooltipShown ? parent.height + 6 : parent.height + 2
             width: winTooltipLabel.implicitWidth + 16
             height: 24
@@ -457,9 +387,22 @@ Item {
                 }
             }
 
+            onWidthChanged: _clampX()
+            onVisibleChanged: if (visible) _clampX()
+            function _clampX() {
+                var cx = parent.width / 2 - width / 2
+                if (root.targetWindow) {
+                    var sx = mapToItem(root.targetWindow.contentItem, 0, 0).x
+                    if (sx < 4) cx += -sx + 4
+                    if (sx + width > root.targetWindow.width - 4)
+                        cx += root.targetWindow.width - 4 - sx - width
+                }
+                x = cx
+            }
+
             Timer {
                 id: winTooltipDelay
-                interval: 700
+                interval: 500
                 onTriggered: winTooltip.winTooltipReady = true
             }
 
@@ -480,22 +423,21 @@ Item {
                 }
             }
 
-            scale: winTooltipShown ? 1.0 : 0.85
+            scale: winTooltipShown ? 1.0 : 0.92
             opacity: winTooltipShown ? 1.0 : 0
             visible: opacity > 0
             transformOrigin: Item.Top
 
             Behavior on opacity {
                 NumberAnimation {
-                    duration: winTooltip.winTooltipShown ? 200 : 120
-                    easing.type: winTooltip.winTooltipShown ? Easing.OutQuart : Easing.InQuart
+                    duration: winTooltip.winTooltipShown ? 200 : 100
+                    easing.type: Easing.OutCubic
                 }
             }
             Behavior on scale {
                 NumberAnimation {
-                    duration: winTooltip.winTooltipShown ? 250 : 120
-                    easing.type: winTooltip.winTooltipShown ? Easing.OutBack : Easing.InQuart
-                    easing.overshoot: 1.2
+                    duration: winTooltip.winTooltipShown ? 250 : 100
+                    easing.type: Easing.OutCubic
                 }
             }
 
@@ -503,6 +445,15 @@ Item {
                 anchors.fill: parent
                 radius: 4
                 color: root.colors.inverseSurface
+            }
+
+            // Caret arrow
+            Rectangle {
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: -4
+                width: 8; height: 8
+                color: root.colors.inverseSurface
+                transform: Rotation { origin.x: 4; origin.y: 4; angle: 45 }
             }
 
             Text {

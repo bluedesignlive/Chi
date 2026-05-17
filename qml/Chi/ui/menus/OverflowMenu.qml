@@ -1,5 +1,6 @@
 // qml/smartui/ui/menus/OverflowMenu.qml
-// M3 overflow menu — grouped model-driven, in-place submenu navigation
+// M3 overflow menu — grouped model-driven, cascade flyout to the right
+// Headers styled as regular items, hover to open/switch cascade
 import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
@@ -18,52 +19,35 @@ Popup {
 
     x: 0
     y: parent ? parent.height + 4 : 0
-    width: 260
     padding: 0
+    focus: true
 
-    // ═══════════════════════════════════════════════════════════════════
-    // SUBMENU NAVIGATION STACK
-    // ═══════════════════════════════════════════════════════════════════
+    // ── Cascade state ──
+    property var _cascadeItems: []
+    property string _cascadeMenuId: ""
+    property int _cascadeTargetIndex: -1
 
-    property var _navStack: []
-    readonly property bool _inSubmenu: _navStack.length > 0
-    readonly property string _subTitle: _inSubmenu
-        ? _navStack[_navStack.length - 1].title : ""
-    readonly property var _subItems: _inSubmenu
-        ? _navStack[_navStack.length - 1].items : []
-    readonly property string _subMenuId: _inSubmenu
-        ? _navStack[_navStack.length - 1].menuId : ""
-
-    property real _mainOp: _inSubmenu ? 0 : 1
-    property real _subOp:  _inSubmenu ? 1 : 0
-    Behavior on _mainOp { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-    Behavior on _subOp  { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-
-    function _pushSub(title, items, menuId) {
-        var s = _navStack.slice()
-        s.push({ title: title, items: items, menuId: menuId })
-        _navStack = s
-    }
-
-    function _popSub() {
-        if (_navStack.length > 0) {
-            var s = _navStack.slice()
-            s.pop(); _navStack = s
+    // Content-aware width
+    readonly property int _contentWidth: {
+        var w = 200
+        for (var i = 0; i < root.menus.length; i++) {
+            var t = root.menus[i].title || ""
+            var tw = t.length * 7 + 56
+            if (tw > w) w = tw
         }
+        return Math.min(w, 360)
     }
+    width: _contentWidth
 
-    onClosed: { _navStack = []; _subFlick.contentY = 0 }
-
-    height: Math.min(_inSubmenu ? _subCol.implicitHeight + 56
-                                : _mainCol.implicitHeight + 16, maxHeight)
-
-    Behavior on height {
-        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+    readonly property int _contentHeight: {
+        var h = 8
+        for (var i = 0; i < root.menus.length; i++)
+            h += 36
+        return h
     }
+    height: Math.min(_contentHeight, maxHeight)
 
-    // ═══════════════════════════════════════════════════════════════════
-    // BACKGROUND
-    // ═══════════════════════════════════════════════════════════════════
+    onClosed: _cascadePopup.close()
 
     background: Rectangle {
         color: root.colors.surfaceContainerHigh
@@ -80,271 +64,257 @@ Popup {
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════════
-    // CONTENT
-    // ═══════════════════════════════════════════════════════════════════
-
-    contentItem: Item {
+    contentItem: Flickable {
+        id: _flick
+        anchors.fill: parent
+        contentHeight: _col.implicitHeight
         clip: true
+        boundsBehavior: Flickable.StopAtBounds
 
-        // ─── MAIN VIEW ──────────────────────────────────────────
+        Column {
+            id: _col
+            anchors.left: parent.left
+            anchors.right: parent.right
+            padding: 4
+            spacing: 0
 
-        Flickable {
-            id: _mainFlick
-            anchors.fill: parent
-            contentHeight: _mainCol.implicitHeight
-            clip: true
-            boundsBehavior: Flickable.StopAtBounds
-            visible: root._mainOp > 0.01
-            opacity: root._mainOp
-            x: (1 - root._mainOp) * -24
+            Repeater {
+                model: root.menus
 
-            Behavior on x { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                delegate: Item {
+                    required property var modelData
+                    required property int index
 
-            Column {
-                id: _mainCol
-                width: parent.width
-                padding: 4
-                spacing: 0
+                    height: 36
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.leftMargin: 0
+                    anchors.rightMargin: 0
 
-                Repeater {
-                    model: root.menus
+                    readonly property bool _hasItems: modelData.items
+                        && modelData.items.length > 0
 
-                    delegate: Column {
-                        required property var modelData
-                        required property int index
+                    Rectangle {
+                        anchors.fill: parent
+                        anchors.leftMargin: 4
+                        anchors.rightMargin: 4
+                        anchors.topMargin: 1
+                        anchors.bottomMargin: 1
+                        radius: 8
+                        color: _headMouse.containsMouse && _hasItems
+                            ? Qt.alpha(root.colors.onSurface, 0.08) : "transparent"
 
-                        width: _mainCol.width - 8
-                        x: 4
-                        spacing: 0
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 12
+                            anchors.rightMargin: 12
+                            spacing: 8
 
-                        // Group header — click/hover to open submenu
-                        Rectangle {
-                            width: parent.width; height: 36
-                            visible: (modelData.title || "") !== ""
-                            radius: 8
-                            color: _ghMouse.containsMouse
-                                ? Qt.alpha(root.colors.onSurface, 0.08)
-                                : "transparent"
-
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: 12
-                                anchors.rightMargin: 12
-                                spacing: 8
-
-                                Text {
-                                    text: modelData.title || ""
-                                    font.family: Theme.ChiTheme.typography.labelSmall.family
-                                    font.pixelSize: Theme.ChiTheme.typography.labelSmall.size
-                                    font.weight: Font.Bold
-                                    color: root.colors.primary
-                                    Layout.fillWidth: true
-                                }
-
-                                Icon {
-                                    source: "chevron_right"
-                                    size: 16
-                                    color: root.colors.primary
-                                    Layout.alignment: Qt.AlignVCenter
-                                }
+                            Text {
+                                text: modelData.title || ""
+                                font.family: Theme.ChiTheme.typography.bodyMedium.family
+                                font.pixelSize: Theme.ChiTheme.typography.bodyMedium.size
+                                font.weight: Theme.ChiTheme.typography.bodyMedium.weight
+                                color: root.colors.onSurface
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
                             }
 
-                            // Click to open submenu
-                            MouseArea {
-                                id: _ghMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    _ghTimer.stop()
-                                    root._pushSub(modelData.title, modelData.items, modelData.id)
+                            Icon {
+                                visible: _hasItems
+                                source: "chevron_right"
+                                size: 16
+                                color: root.colors.onSurfaceVariant
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+                        }
+
+                        // Hover timer for cascade open
+                        Timer {
+                            id: _cascadeTimer
+                            interval: 60
+                            onTriggered: root._openCascade(modelData.items, modelData.id || "", index)
+                        }
+
+                        MouseArea {
+                            id: _headMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (_hasItems) {
+                                    _cascadeTimer.stop()
+                                    root._openCascade(modelData.items, modelData.id || "", index)
                                 }
                             }
-
-                            // Hover timer: 200ms delay then open submenu
-                            Timer {
-                                id: _ghTimer
-                                interval: 200
-                                onTriggered: root._pushSub(modelData.title, modelData.items, modelData.id)
-                            }
-                            Connections {
-                                target: _ghMouse
-                                function onContainsMouseChanged() {
-                                    if (_ghMouse.containsMouse)
-                                        _ghTimer.restart()
-                                    else
-                                        _ghTimer.stop()
+                            onContainsMouseChanged: {
+                                if (containsMouse && _hasItems) {
+                                    if (_cascadePopup.opened) {
+                                        _cascadeTimer.stop()
+                                        root._openCascade(modelData.items, modelData.id || "", index)
+                                    } else {
+                                        _cascadeTimer.restart()
+                                    }
+                                } else {
+                                    _cascadeTimer.stop()
                                 }
-                            }
-
-                            // Separator below header
-                            Rectangle {
-                                anchors { bottom: parent.bottom; left: parent.left; right: parent.right; leftMargin: 12; rightMargin: 12 }
-                                height: 1
-                                color: root.colors.outlineVariant
-                                visible: (modelData.items || []).length > 0
                             }
                         }
                     }
                 }
             }
         }
+    }
 
-        // ─── SUBMENU VIEW ────────────────────────────────────────
+    function _openCascade(items, menuId, index) {
+        root._cascadeItems = items
+        root._cascadeMenuId = menuId
+        root._cascadeTargetIndex = index
 
-        Flickable {
-            id: _subFlick
+        // Position aligned to the hovered item
+        var cascW = _cascadePopup.width
+        var cascY = root.y + 8 + index * 36 - _flick.contentY
+        var cascX = root.x + root.width
+
+        // Boundary: flip to left if too close to right edge
+        var maxX = root.parent ? root.parent.width : Screen.width
+        if (cascX + cascW > maxX - 8)
+            cascX = root.x - cascW
+
+        // Boundary: clamp Y so cascade doesn't clip top/bottom
+        var cascH = _cascadePopup._contentH + 12
+        var maxY = root.parent ? root.parent.height : Screen.height
+        if (cascY + cascH > maxY - 8)
+            cascY = Math.max(8, maxY - cascH - 8)
+        if (cascY < 8)
+            cascY = 8
+
+        _cascadePopup.x = cascX
+        _cascadePopup.y = cascY
+
+        if (!_cascadePopup.opened)
+            _cascadePopup.open()
+    }
+
+    // ── Cascade flyout ──
+    Popup {
+        id: _cascadePopup
+        width: 240
+        padding: 4
+        focus: true
+
+        readonly property int _contentH: {
+            var h = 0
+            for (var i = 0; i < root._cascadeItems.length; i++)
+                h += (root._cascadeItems[i].type === "divider" ? 9 : 36)
+            return h
+        }
+        height: Math.min(_contentH + 8, 400)
+
+        background: Rectangle {
+            color: root.colors.surfaceContainerHigh
+            radius: 12
+            border.width: 1
+            border.color: root.colors.outlineVariant
+
+            layer.enabled: true
+            layer.effect: MultiEffect {
+                shadowEnabled: true
+                shadowColor: Qt.rgba(0, 0, 0, 0.15)
+                shadowVerticalOffset: 4
+                shadowBlur: 0.4
+            }
+        }
+
+        contentItem: Flickable {
+            id: _cascFlick
             anchors.fill: parent
-            contentHeight: _subCol.implicitHeight
+            contentHeight: _cascCol.implicitHeight
             clip: true
             boundsBehavior: Flickable.StopAtBounds
-            visible: root._subOp > 0.01
-            opacity: root._subOp
-            x: (1 - root._subOp) * 24
-
-            Behavior on x { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
 
             Column {
-                id: _subCol
-                width: parent.width
+                id: _cascCol
+                anchors.left: parent.left
+                anchors.right: parent.right
                 padding: 4
                 spacing: 0
 
-                // Back header
-                Item {
-                    width: parent.width - 8; x: 4
-                    height: 36
+                Repeater {
+                model: root._cascadeItems
+
+                delegate: Item {
+                    required property var modelData
+                    required property int index
+
+                    width: parent ? parent.width : 232
+                    height: _isDivider ? 9 : 36
+
+                    readonly property string _id:       modelData.id || ""
+                    readonly property string _text:     modelData.text || ""
+                    readonly property string _icon:     modelData.icon || ""
+                    readonly property string _shortcut: modelData.shortcut || ""
+                    readonly property bool   _isDivider:  modelData.type === "divider"
 
                     Rectangle {
+                        visible: _isDivider
+                        anchors.centerIn: parent
+                        width: parent.width - 16; height: 1
+                        color: root.colors.outlineVariant
+                    }
+
+                    Rectangle {
+                        visible: !_isDivider
                         anchors.fill: parent
                         anchors.margins: 1
                         radius: 8
-                        color: _backM.containsMouse
+                        color: _itemMouse.containsMouse
                             ? Qt.alpha(root.colors.onSurface, 0.08) : "transparent"
 
                         RowLayout {
                             anchors.fill: parent
-                            anchors.leftMargin: 8
+                            anchors.leftMargin: 12
                             anchors.rightMargin: 12
-                            spacing: 8
+                            spacing: 10
 
                             Icon {
-                                source: "arrow_back"
+                                visible: _icon !== ""
+                                source: _icon
                                 size: 18
                                 color: root.colors.onSurfaceVariant
                                 Layout.alignment: Qt.AlignVCenter
                             }
 
                             Text {
-                                text: root._subTitle
-                                font.family: Theme.ChiTheme.typography.labelLarge.family
-                                font.pixelSize: Theme.ChiTheme.typography.labelLarge.size
-                                font.weight: Theme.ChiTheme.typography.labelLarge.weight
+                                text: _text
+                                font.family: Theme.ChiTheme.typography.bodyMedium.family
+                                font.pixelSize: Theme.ChiTheme.typography.bodyMedium.size
+                                font.weight: Theme.ChiTheme.typography.bodyMedium.weight
                                 color: root.colors.onSurface
                                 elide: Text.ElideRight
                                 Layout.fillWidth: true
                             }
+
+                            Text {
+                                visible: _shortcut !== ""
+                                text: _shortcut
+                                font.family: Theme.ChiTheme.typography.labelSmall.family
+                                font.pixelSize: Theme.ChiTheme.typography.labelSmall.size
+                                font.weight: Theme.ChiTheme.typography.labelSmall.weight
+                                color: root.colors.onSurfaceVariant
+                                opacity: 0.6
+                                Layout.alignment: Qt.AlignVCenter
+                            }
                         }
 
                         MouseArea {
-                            id: _backM
+                            id: _itemMouse
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: root._popSub()
-                        }
-                    }
-                }
-
-                // Divider
-                Item {
-                    width: parent.width - 8; x: 4
-                    height: 5
-                    Rectangle {
-                        anchors.centerIn: parent
-                        width: parent.width - 16; height: 1
-                        color: root.colors.outlineVariant
-                    }
-                }
-
-                // Sub items
-                Repeater {
-                    model: root._subItems
-
-                    delegate: Item {
-                        required property var modelData
-                        required property int index
-
-                        width: _subCol.width - 8
-                        x: 4
-                        height: modelData.type === "divider" ? 9 : 36
-
-                        readonly property bool _isDivider: modelData.type === "divider"
-                        readonly property bool _hasSub: (modelData.items || []).length > 0
-
-                        Rectangle {
-                            visible: _isDivider
-                            anchors.centerIn: parent
-                            width: parent.width - 16; height: 1
-                            color: root.colors.outlineVariant
-                        }
-
-                        Rectangle {
-                            visible: !_isDivider
-                            anchors.fill: parent
-                            anchors.margins: 1
-                            radius: 8
-                            color: _subM.containsMouse
-                                ? Qt.alpha(root.colors.onSurface, 0.08)
-                                : "transparent"
-
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: 12
-                                anchors.rightMargin: 12
-                                spacing: 10
-
-                                Icon {
-                                    visible: (modelData.icon || "") !== ""
-                                    source: modelData.icon || ""
-                                    size: 20
-                                    color: root.colors.onSurfaceVariant
-                                    Layout.alignment: Qt.AlignVCenter
-                                }
-
-                                Text {
-                                    text: modelData.text || ""
-                                    font.family: Theme.ChiTheme.typography.bodyMedium.family
-                                    font.pixelSize: Theme.ChiTheme.typography.bodyMedium.size
-                                    font.weight: Theme.ChiTheme.typography.bodyMedium.weight
-                                    color: root.colors.onSurface
-                                    elide: Text.ElideRight
-                                    Layout.fillWidth: true
-                                }
-
-                                Icon {
-                                    visible: _hasSub
-                                    source: "chevron_right"
-                                    size: 16
-                                    color: root.colors.onSurfaceVariant
-                                    Layout.alignment: Qt.AlignVCenter
-                                }
-                            }
-
-                            MouseArea {
-                                id: _subM
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    if (_hasSub)
-                                        root._pushSub(modelData.text, modelData.items, root._subMenuId)
-                                    else {
-                                        root.itemTriggered(root._subMenuId, modelData.id || "")
-                                        root.close()
-                                    }
-                                }
+                            onClicked: {
+                                root.itemTriggered(root._cascadeMenuId, _id)
+                                root.close()
                             }
                         }
                     }

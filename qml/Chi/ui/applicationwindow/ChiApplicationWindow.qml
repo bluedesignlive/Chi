@@ -1141,7 +1141,7 @@ Window {
 
             Timer {
                 id: _tooltipDelay
-                interval: 700
+                interval: 500
                 onTriggered: _tooltipPopup._tooltipReady = true
             }
 
@@ -1158,28 +1158,27 @@ Window {
                 }
             }
 
-            scale: _shown ? 1.0 : 0.85
+            scale: _shown ? 1.0 : 0.92
             opacity: _shown ? 1.0 : 0
             visible: opacity > 0
             transformOrigin: Item.Top
 
             Behavior on opacity {
                 NumberAnimation {
-                    duration: _tooltipPopup._shown ? 250 : 150
-                    easing.type: _tooltipPopup._shown ? Easing.OutQuart : Easing.InQuart
+                    duration: _tooltipPopup._shown ? 200 : 100
+                    easing.type: Easing.OutCubic
                 }
             }
             Behavior on scale {
                 NumberAnimation {
-                    duration: _tooltipPopup._shown ? 300 : 150
-                    easing.type: _tooltipPopup._shown ? Easing.OutBack : Easing.InQuart
-                    easing.overshoot: 1.3
+                    duration: _tooltipPopup._shown ? 250 : 100
+                    easing.type: Easing.OutCubic
                 }
             }
             Behavior on y {
                 NumberAnimation {
-                    duration: _tooltipPopup._shown ? 250 : 150
-                    easing.type: _tooltipPopup._shown ? Easing.OutQuart : Easing.InQuart
+                    duration: _tooltipPopup._shown ? 200 : 100
+                    easing.type: Easing.OutCubic
                 }
             }
 
@@ -1188,7 +1187,6 @@ Window {
                 radius: 8
                 color: root.colors.inverseSurface
 
-                // Subtle shadow via layered rectangle
                 layer.enabled: true
                 layer.effect: MultiEffect {
                     shadowEnabled: true
@@ -1197,6 +1195,15 @@ Window {
                     shadowVerticalOffset: 2
                     shadowHorizontalOffset: 0
                 }
+            }
+
+            // Caret arrow
+            Rectangle {
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: -4
+                width: 8; height: 8
+                color: root.colors.inverseSurface
+                transform: Rotation { origin.x: 4; origin.y: 4; angle: 45 }
             }
 
             Text {
@@ -1340,7 +1347,7 @@ Window {
 
             Timer {
                 id: _mbtnTooltipDelay
-                interval: 700
+                interval: 500
                 onTriggered: _mbtnTooltip._mbtnTooltipReady = true
             }
 
@@ -1357,28 +1364,27 @@ Window {
                 }
             }
 
-            scale: _mbtnTooltipShown ? 1.0 : 0.85
+            scale: _mbtnTooltipShown ? 1.0 : 0.92
             opacity: _mbtnTooltipShown ? 1.0 : 0
             visible: opacity > 0
             transformOrigin: Item.Top
 
             Behavior on opacity {
                 NumberAnimation {
-                    duration: _mbtnTooltip._mbtnTooltipShown ? 250 : 150
-                    easing.type: _mbtnTooltip._mbtnTooltipShown ? Easing.OutQuart : Easing.InQuart
+                    duration: _mbtnTooltip._mbtnTooltipShown ? 200 : 100
+                    easing.type: Easing.OutCubic
                 }
             }
             Behavior on scale {
                 NumberAnimation {
-                    duration: _mbtnTooltip._mbtnTooltipShown ? 300 : 150
-                    easing.type: _mbtnTooltip._mbtnTooltipShown ? Easing.OutBack : Easing.InQuart
-                    easing.overshoot: 1.3
+                    duration: _mbtnTooltip._mbtnTooltipShown ? 250 : 100
+                    easing.type: Easing.OutCubic
                 }
             }
             Behavior on y {
                 NumberAnimation {
-                    duration: _mbtnTooltip._mbtnTooltipShown ? 250 : 150
-                    easing.type: _mbtnTooltip._mbtnTooltipShown ? Easing.OutQuart : Easing.InQuart
+                    duration: _mbtnTooltip._mbtnTooltipShown ? 200 : 100
+                    easing.type: Easing.OutCubic
                 }
             }
 
@@ -1395,6 +1401,15 @@ Window {
                     shadowVerticalOffset: 2
                     shadowHorizontalOffset: 0
                 }
+            }
+
+            // Caret arrow
+            Rectangle {
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: -4
+                width: 8; height: 8
+                color: root.colors.inverseSurface
+                transform: Rotation { origin.x: 4; origin.y: 4; angle: 45 }
             }
 
             Text {

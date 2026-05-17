@@ -1,3 +1,4 @@
+import QtQuick.Controls.Basic
 import QtQuick
 import Chi 1.0
 import "../../theme" as Theme

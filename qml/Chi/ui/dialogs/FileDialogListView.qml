@@ -1,3 +1,4 @@
+import QtQuick.Controls.Basic
 import QtQuick
 import QtQuick.Layouts
 import Chi 1.0

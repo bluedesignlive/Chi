@@ -1,6 +1,6 @@
 // qml/smartui/ui/menus/Menu.qml
-// M3 menu — desktop-density default, in-place submenu navigation
-// Also supports cascade mode (flyout panel to the right, desktop style)
+// M3 menu — desktop-density default, cascade submenu (flyout panel to right)
+// Also supports navigate mode (in-place crossfade)
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects
@@ -23,7 +23,7 @@ Item {
     property string variant: "expressive"
     property string colorStyle: "standard"
     property string density: "compact"
-    property string submenuStyle: "navigate" // "navigate" | "cascade"
+    property string submenuStyle: "navigate" // "cascade" | "navigate"
 
     default property alias items: menuColumn.data
 

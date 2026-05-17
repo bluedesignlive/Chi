@@ -169,7 +169,8 @@ Window {
                         { c: "#FF5F57", a: function() { root.rejected(); root.close() } },
                         { c: "#FFBD2E", a: function() { root.showMinimized() } },
                         { c: "#28C840", a: function() { root.isMaximized ? root.showNormal() : root.showMaximized() } }
-                    ] Rectangle { width: 14; height: 14; radius: 7
+                    ]
+                        Rectangle { width: 14; height: 14; radius: 7
                         color: wcM.pressed ? Qt.darker(modelData.c, 1.2) : wcM.containsMouse ? Qt.lighter(modelData.c, 1.1) : modelData.c
                         border.width: 0.5; border.color: Qt.darker(modelData.c, 1.3)
                         MouseArea { id: wcM; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: modelData.a() }
@@ -181,7 +182,8 @@ Window {
                         { icon: "chevron_left", enabled: root._historyIndex > 0, action: function() { _goBack() }, tip: "Back" },
                         { icon: "chevron_right", enabled: root._historyIndex < root._navigationHistory.length - 1, action: function() { _goForward() }, tip: "Forward" },
                         { icon: "expand_less", enabled: root.currentFolder.toString() !== "file:///", action: function() { _goUp() }, tip: "Up" }
-                    ] Rectangle { width: 36; height: 36; radius: 8
+                    ]
+                        Rectangle { width: 36; height: 36; radius: 8
                         opacity: modelData.enabled ? 1.0 : 0.4
                         color: navM.pressed ? Qt.rgba(colors.primary.r, colors.primary.g, colors.primary.b, 0.15) : navM.containsMouse ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.08) : "transparent"
                         Icon { anchors.centerIn: parent; source: modelData.icon; size: 24; color: colors.onSurfaceVariant }
@@ -206,7 +208,8 @@ Window {
                     { icon: "grid_view", checked: root.viewMode === "grid", action: function() { root.viewMode = "grid" } },
                     { icon: "view_list", checked: root.viewMode === "list", action: function() { root.viewMode = "list" } },
                     { icon: "account_tree", checked: root.viewMode === "tree", action: function() { root.viewMode = "tree" } }
-                ] Rectangle { width: 36; height: 36; radius: 8
+                ]
+                    Rectangle { width: 36; height: 36; radius: 8
                     color: modelData.checked ? colors.secondaryContainer : viewM.containsMouse ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.08) : "transparent"
                     Icon { anchors.centerIn: parent; source: modelData.icon; size: 22; color: modelData.checked ? colors.onSecondaryContainer : colors.onSurfaceVariant }
                     MouseArea { id: viewM; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: modelData.action() }
@@ -314,6 +317,7 @@ Window {
 
                     Component { id: gridComp; FileDialogGridView {
                         anchors.fill: parent
+                        model: folderModel
                         iconSize: root.gridIconSize; showThumbnails: root.showThumbnails
                         colors: root.colors; selectMode: root.mode; selectedSet: root._selectedSet
                         onFileClicked: function(u, d, n) { root._handleClick(u, d, n) }
@@ -323,6 +327,7 @@ Window {
 
                     Component { id: listComp; FileDialogListView {
                         anchors.fill: parent
+                        model: folderModel
                         showThumbnails: root.showThumbnails; colors: root.colors
                         selectMode: root.mode; selectedSet: root._selectedSet
                         onFileClicked: function(u, d, n) { root._handleClick(u, d, n) }
@@ -331,7 +336,9 @@ Window {
                     }}
 
                     Component { id: treeComp; FileDialogTreeView {
-                        anchors.fill: parent; colors: root.colors
+                        anchors.fill: parent
+                        model: folderModel
+                        colors: root.colors
                         onFileClicked: function(u, d, n) { root._handleClick(u, d, n) }
                         onFileDoubleClicked: function(u, d) { root._handleDoubleClick(u, d) }
                         onContextMenuRequested: function(u, n, d, mx, my, a) { root._showCtxAt(u, n, d, mx, my, a) }
