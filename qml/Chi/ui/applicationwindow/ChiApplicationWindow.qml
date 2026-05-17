@@ -16,6 +16,7 @@ import "../../theme" as Theme
 import "../common"
 import "../menus" as Menus
 import "../dialogs" as Dialogs
+import "../feedback" as Feedback
 
 Window {
     id: root
@@ -1031,8 +1032,14 @@ Window {
             _surface.grabToImage(function(r) {
                 r.saveToFile(_screenshotDialog.selectedFile)
                 _clipboard.copyImage(_screenshotDialog.selectedFile)
+                _snackbar.show(qsTr("Screenshot saved"))
             })
         }
+    }
+
+    Feedback.Snackbar {
+        id: _snackbar
+        duration: 4000
     }
 
     // ═══════════════════════════════════════════════════════════════
