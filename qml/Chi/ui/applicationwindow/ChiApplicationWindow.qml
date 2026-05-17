@@ -12,11 +12,13 @@ import QtQuick.Window
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import QtQuick.Effects
+import QtMultimedia
 import "../../theme" as Theme
 import "../common"
 import "../menus" as Menus
 import "../dialogs" as Dialogs
 import "../feedback" as Feedback
+import "../Buttons" as Buttons
 
 Window {
     id: root
@@ -204,6 +206,12 @@ Window {
     readonly property bool isFullScreen: visibility === Window.FullScreen
     readonly property real windowRadius: (isMaximized || isFullScreen) ? 0 : 24
 
+    // ─── Recording State ───
+    property bool _recording: false
+    property int _recordingElapsed: 0
+    property var _lastRecSettings: ({ area: 0, quality: 2, mic: 0 })
+    property url _recordingOutput: Qt.url("")
+
     readonly property string _resolvedMenuStyle: {
         if (!showMenu || globalMenuActive) return "none"
         if (menuStyle === "overflow" || menuStyle === "collapsed") return "overflow"
@@ -335,6 +343,16 @@ Window {
         sequence: "Ctrl+Print"
         context: Qt.ApplicationShortcut
         onActivated: _screenshotDialog.openDialog()
+    }
+    Shortcut {
+        sequence: "Ctrl+Shift+R"
+        context: Qt.ApplicationShortcut
+        onActivated: root._recording ? root._stopRecording() : _recDialog.show()
+    }
+    Shortcut {
+        sequence: "Ctrl+Alt+R"
+        context: Qt.ApplicationShortcut
+        onActivated: root._recording ? root._stopRecording() : root._quickRecord()
     }
     Shortcut {
         sequence: "F11"
@@ -588,6 +606,11 @@ Window {
                     text: qsTr("Take Screenshot")
                     trailingText: qsTr("Ctrl+Print")
                     onClicked: _screenshotDialog.openDialog()
+                }
+                Menus.MenuItem {
+                    text: qsTr("Screen Recording")
+                    trailingText: qsTr("Ctrl+Shift+R")
+                    onClicked: _recDialog.show()
                 }
 
             }
@@ -1032,7 +1055,9 @@ Window {
             _surface.grabToImage(function(r) {
                 r.saveToFile(_screenshotDialog.selectedFile)
                 _clipboard.copyImage(_screenshotDialog.selectedFile)
-                _snackbar.show(qsTr("Screenshot saved"))
+                var name = _screenshotDialog.selectedFile.toString().split("/").pop()
+                _snackbar.multiLine = true
+                _snackbar.show(qsTr("Screenshot saved: %1\nCopied to clipboard").arg(name))
             })
         }
     }
@@ -1040,6 +1065,310 @@ Window {
     Feedback.Snackbar {
         id: _snackbar
         duration: 4000
+    }
+
+    Connections {
+        target: _snackbar
+        function onActionClicked() {
+            if (root._recording) root._stopRecording()
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  SCREEN RECORDING
+    // ═══════════════════════════════════════════════════════════════
+
+    Timer {
+        id: _recTimer
+        interval: 1000
+        repeat: true
+        onTriggered: root._recordingElapsed++
+    }
+
+    Dialogs.FileDialog {
+        id: _saveRecDialog
+        mode: "save"
+        title: qsTr("Save Recording")
+        nameFilters: [qsTr("MP4 video (*.mp4)")]
+        fileName: "Chi-recording.mp4"
+
+        function openDialog() {
+            fileName = "Chi-recording-" + Date.now() + ".mp4"
+            open()
+        }
+
+        onAccepted: {
+            root._recordingOutput = _saveRecDialog.selectedFile
+            _startRecording()
+        }
+    }
+
+    CaptureSession {
+        id: _captureSession
+        screenCapture: ScreenCapture {
+            id: _screenCapture
+        }
+        recorder: MediaRecorder {
+            id: _mediaRecorder
+            outputLocation: root._recordingOutput
+
+            onRecorderStateChanged: function(state) {
+                if (state === MediaRecorder.StoppedState && !root._recording) {
+                    var name = root._recordingOutput.toString().split("/").pop()
+                    _snackbar.duration = 4000
+                    _snackbar.multiLine = false
+                    _snackbar.show(qsTr("Recording saved: %1").arg(name))
+                }
+            }
+            onErrorOccurred: function(error, errorString) {
+                root._recording = false
+                root._recTimer.stop()
+                _screenCapture.active = false
+                _snackbar.duration = 4000
+                _snackbar.show(qsTr("Recording failed: %1").arg(errorString))
+            }
+        }
+        audioInput: AudioInput {
+            id: _audioInput
+        }
+    }
+
+    Dialogs.Dialog {
+        id: _recDialog
+        type: "assistant"
+        title: qsTr("Screen Recording")
+        closeOnOverlayClick: false
+
+        content: Component {
+            ColumnLayout {
+                spacing: 20
+                width: parent ? parent.width : 400
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 16
+
+                    Text {
+                        text: qsTr("Record area")
+                        font.family: Theme.ChiTheme.fontFamily
+                        font.pixelSize: root.typography.bodyLarge.size
+                        color: root.colors.onSurface
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    ComboBox {
+                        id: _areaCombo
+                        model: [qsTr("Full Screen"), qsTr("Current Window")]
+                        currentIndex: root._lastRecSettings.area
+                        font.family: Theme.ChiTheme.fontFamily
+                        font.pixelSize: root.typography.bodyMedium.size
+                        onCurrentIndexChanged: root._lastRecSettings.area = currentIndex
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 16
+
+                    Text {
+                        text: qsTr("Quality")
+                        font.family: Theme.ChiTheme.fontFamily
+                        font.pixelSize: root.typography.bodyLarge.size
+                        color: root.colors.onSurface
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    ComboBox {
+                        id: _qualityCombo
+                        model: [qsTr("Low"), qsTr("Medium"), qsTr("High"), qsTr("Very High")]
+                        currentIndex: root._lastRecSettings.quality
+                        font.family: Theme.ChiTheme.fontFamily
+                        font.pixelSize: root.typography.bodyMedium.size
+                        onCurrentIndexChanged: root._lastRecSettings.quality = currentIndex
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 16
+
+                    Text {
+                        text: qsTr("Microphone")
+                        font.family: Theme.ChiTheme.fontFamily
+                        font.pixelSize: root.typography.bodyLarge.size
+                        color: root.colors.onSurface
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    ComboBox {
+                        id: _micCombo
+                        model: [qsTr("Off"), qsTr("On")]
+                        currentIndex: root._lastRecSettings.mic
+                        font.family: Theme.ChiTheme.fontFamily
+                        font.pixelSize: root.typography.bodyMedium.size
+                        onCurrentIndexChanged: root._lastRecSettings.mic = currentIndex
+                    }
+                }
+            }
+        }
+
+        actions: [
+            Buttons.Button {
+                text: qsTr("Cancel")
+                variant: "text"
+                onClicked: _recDialog.reject()
+            },
+            Buttons.Button {
+                text: qsTr("Start Recording")
+                variant: "text"
+                onClicked: {
+                    _recDialog.accept()
+                }
+            }
+        ]
+
+        onAccepted: {
+            _saveRecDialog.openDialog()
+        }
+    }
+
+    Rectangle {
+        id: _recIndicator
+        visible: root._recording
+        z: 100001
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.rightMargin: 16
+        anchors.topMargin: 60
+
+        width: _recRow.implicitWidth + 24
+        height: 36
+        radius: 18
+        color: root.colors.errorContainer
+
+        layer.enabled: true
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowColor: Qt.rgba(0, 0, 0, 0.2)
+            shadowBlur: 0.4
+            shadowVerticalOffset: 2
+        }
+
+        Row {
+            id: _recRow
+            anchors.centerIn: parent
+            spacing: 6
+
+            Rectangle {
+                width: 8; height: 8; radius: 4
+                anchors.verticalCenter: parent.verticalCenter
+                color: "#e53935"
+                opacity: 0.9
+                NumberAnimation on opacity {
+                    loops: Animation.Infinite
+                    from: 1.0; to: 0.3; duration: 800
+                    running: root._recording
+                }
+            }
+
+            Text {
+                id: _recTime
+                anchors.verticalCenter: parent.verticalCenter
+                font.family: Theme.ChiTheme.fontFamily
+                font.pixelSize: root.typography.labelLarge.size
+                font.weight: Font.Medium
+                font.features: { "tnum": 1 }
+                color: root.colors.onErrorContainer
+                text: {
+                    var m = Math.floor(root._recordingElapsed / 60)
+                    var s = root._recordingElapsed % 60
+                    return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0")
+                }
+            }
+
+            Rectangle {
+                width: 24; height: 24; radius: 12
+                anchors.verticalCenter: parent.verticalCenter
+                color: "#e53935"
+
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 10; height: 10; radius: 2
+                    color: "white"
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    hoverEnabled: true
+                    onClicked: root._stopRecording()
+                }
+
+                Accessible.role: Accessible.Button
+                Accessible.name: qsTr("Stop recording")
+            }
+        }
+
+        Accessible.role: Accessible.StatusBar
+        Accessible.name: qsTr("Recording %1").arg(_recTime.text)
+    }
+
+    function _startRecording() {
+        var qualityMap = [
+            MediaRecorder.VeryLowQuality,
+            MediaRecorder.LowQuality,
+            MediaRecorder.HighQuality,
+            MediaRecorder.VeryHighQuality
+        ]
+        _mediaRecorder.quality = qualityMap[root._lastRecSettings.quality]
+        _audioInput.active = root._lastRecSettings.mic === 1
+
+        if (root._lastRecSettings.area === 0) {
+            _screenCapture.window = null
+            _screenCapture.screen = Screen
+        } else {
+            _screenCapture.screen = null
+            _screenCapture.window = root
+        }
+
+        _screenCapture.active = true
+        _recordingElapsed = 0
+        _recording = true
+        _recTimer.start()
+        _mediaRecorder.record()
+
+        _snackbar.duration = 0
+        _snackbar.multiLine = false
+        _snackbar.show(qsTr("Recording…"), qsTr("Stop"))
+    }
+
+    function _stopRecording() {
+        if (!_recording) return
+        _recording = false
+        _recTimer.stop()
+        _mediaRecorder.stop()
+        _screenCapture.active = false
+        _snackbar.duration = 0
+        _snackbar.hide()
+    }
+
+    function _quickRecord() {
+        root._recordingOutput = _defaultRecordingPath()
+        _startRecording()
+    }
+
+    function _defaultRecordingPath() {
+        var d = new Date()
+        var ts = d.getFullYear() + "-" +
+            String(d.getMonth() + 1).padStart(2, "0") + "-" +
+            String(d.getDate()).padStart(2, "0") + "-" +
+            String(d.getHours()).padStart(2, "0") +
+            String(d.getMinutes()).padStart(2, "0") +
+            String(d.getSeconds()).padStart(2, "0")
+        return "file://" + _clipboard.videosDir() + "/Chi-recording-" + ts + ".mp4"
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -1468,6 +1797,8 @@ Window {
             // Window actions
             r.push(
                 { menuId: "_window", itemId: "screenshot", text: qsTr("Take Screenshot"), shortcut: "Ctrl+Print", icon: "camera" },
+                { menuId: "_window", itemId: "recording", text: qsTr("Screen Recording"), shortcut: "Ctrl+Shift+R", icon: "videocam" },
+                { menuId: "_window", itemId: "quickrecord", text: qsTr("Quick Record"), shortcut: "Ctrl+Alt+R", icon: "radio_button_checked" },
                 { menuId: "_window", itemId: "focus", text: qsTr("Toggle Focus Mode"), shortcut: "Ctrl+Shift+F", icon: "center_focus_strong" },
                 { menuId: "_window", itemId: "fullscreen", text: qsTr("Toggle Fullscreen"), shortcut: "F11", icon: "fullscreen" },
                 { menuId: "_window", itemId: "sidebar", text: qsTr("Toggle Sidebar"), shortcut: "Ctrl+B", icon: "view_sidebar" }
@@ -1718,6 +2049,12 @@ Window {
             break
         case "_window.screenshot":
             _screenshotDialog.openDialog()
+            break
+        case "_window.recording":
+            _recDialog.show()
+            break
+        case "_window.quickrecord":
+            _quickRecord()
             break
         case "_window.focus":
             _focusMode = !_focusMode

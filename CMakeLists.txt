@@ -11,7 +11,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 6.10 REQUIRED COMPONENTS Quick Qml Concurrent)
+find_package(Qt6 6.10 REQUIRED COMPONENTS Quick Qml Concurrent Multimedia)
 
 # ── DBus (Linux only, for global menu support) ───────────────
 set(CHI_HAS_DBUS FALSE)
@@ -45,7 +45,7 @@ add_library(ChiPlugin SHARED
     resources.qrc
 )
 
-target_link_libraries(ChiPlugin PRIVATE Qt6::Quick Qt6::Qml Qt6::Concurrent ChiFileDialog)
+target_link_libraries(ChiPlugin PRIVATE Qt6::Quick Qt6::Qml Qt6::Concurrent Qt6::Multimedia ChiFileDialog)
 target_include_directories(ChiPlugin PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 if(CHI_HAS_DBUS)

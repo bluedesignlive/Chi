@@ -191,6 +191,14 @@ public:
     Q_INVOKABLE QString picturesDir() const {
         return QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
     }
+
+    Q_INVOKABLE QString videosDir() const {
+        return QStandardPaths::writableLocation(QStandardPaths::MoviesLocation);
+    }
+
+    Q_INVOKABLE QString homeDir() const {
+        return QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
+    }
 };
 
 // ═══════════════════════════════════════════════════════════════════
