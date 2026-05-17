@@ -1,5 +1,3 @@
-// qml/smartui/ui/menus/Tooltip.qml
-// M3 tooltip — plain (inverse surface) and rich (surface container)
 import QtQuick
 import QtQuick.Effects
 import "../../theme" as Theme
@@ -11,10 +9,14 @@ Item {
     property Item target: null
     property string position: "bottom"
     property int delay: 500
-    property int showDuration: 1500
+    property int showDuration: 0
     property bool rich: false
+    property bool showCaret: true
+    property bool ready: false
 
     readonly property bool isVisible: state === "visible"
+
+    signal shown()
 
     visible: false
     z: 2000
@@ -22,18 +24,12 @@ Item {
     implicitWidth: _container.width
     implicitHeight: _container.height
 
-    // ═══════════════════════════════════════════════════════════════════
-    // THEME
-    // ═══════════════════════════════════════════════════════════════════
-
     property var colors: Theme.ChiTheme.colors
 
     readonly property var _plainTypo: Theme.ChiTheme.typography.bodySmall
     readonly property var _richTypo:  Theme.ChiTheme.typography.bodyMedium
 
-    // ═══════════════════════════════════════════════════════════════════
-    // STATES
-    // ═══════════════════════════════════════════════════════════════════
+    readonly property int _caretSize: 8
 
     state: "hidden"
 
@@ -49,6 +45,10 @@ Item {
             PropertyChanges { target: root; visible: true }
         }
     ]
+
+    onStateChanged: {
+        if (state === "visible") shown()
+    }
 
     transitions: [
         Transition {
@@ -67,10 +67,6 @@ Item {
         }
     ]
 
-    // ═══════════════════════════════════════════════════════════════════
-    // VISUAL
-    // ═══════════════════════════════════════════════════════════════════
-
     Rectangle {
         id: _container
         width: rich ? _richLabel.implicitWidth + 24 : _plainLabel.implicitWidth + 16
@@ -78,16 +74,14 @@ Item {
         radius: rich ? 12 : 4
         color: rich ? colors.surfaceContainer : colors.inverseSurface
 
-        // Shadow only for rich tooltips — single pass
-        layer.enabled: rich
+        layer.enabled: true
         layer.effect: MultiEffect {
             shadowEnabled: true
-            shadowColor: Qt.rgba(0, 0, 0, 0.18)
-            shadowVerticalOffset: 2
-            shadowBlur: 0.25
+            shadowColor: Qt.rgba(0, 0, 0, 0.15)
+            shadowVerticalOffset: 1
+            shadowBlur: 0.2
         }
 
-        // Plain label
         Text {
             id: _plainLabel
             visible: !rich
@@ -100,7 +94,6 @@ Item {
             color: colors.inverseOnSurface
         }
 
-        // Rich label
         Text {
             id: _richLabel
             visible: rich
@@ -114,11 +107,26 @@ Item {
             wrapMode: Text.WordWrap
             maximumLineCount: 4
         }
-    }
 
-    // ═══════════════════════════════════════════════════════════════════
-    // TIMERS
-    // ═══════════════════════════════════════════════════════════════════
+        Rectangle {
+            id: _caret
+            visible: root.showCaret
+            x: {
+                var c = (parent.width - _caretSize) / 2
+                if (root.position === "left") c = -_caretSize / 2
+                else if (root.position === "right") c = parent.width - _caretSize / 2
+                return c
+            }
+            y: {
+                if (root.position === "top") return parent.height - _caretSize / 2
+                if (root.position === "bottom") return -_caretSize / 2
+                return (parent.height - _caretSize) / 2
+            }
+            width: _caretSize; height: _caretSize
+            color: parent.color
+            transform: Rotation { origin.x: _caretSize / 2; origin.y: _caretSize / 2; angle: 45 }
+        }
+    }
 
     Timer {
         id: _showTimer
@@ -136,9 +144,14 @@ Item {
         onTriggered: root.state = "hidden"
     }
 
-    // ═══════════════════════════════════════════════════════════════════
-    // POSITIONING
-    // ═══════════════════════════════════════════════════════════════════
+    onReadyChanged: {
+        if (root.ready && root.target && root.target.containsMouse && root.text !== "") {
+            _showTimer.stop()
+            _positionTooltip()
+            root.state = "visible"
+            if (root.showDuration > 0) _hideTimer.start()
+        }
+    }
 
     function _positionTooltip() {
         if (!target || !target.parent) return
@@ -168,21 +181,23 @@ Item {
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════════
-    // PUBLIC FUNCTIONS
-    // ═══════════════════════════════════════════════════════════════════
-
-    function show() { _showTimer.start() }
+    function show() {
+        if (root.text === "") return
+        if (root.ready) {
+            _showTimer.stop()
+            _positionTooltip()
+            root.state = "visible"
+            if (root.showDuration > 0) _hideTimer.start()
+        } else {
+            _showTimer.start()
+        }
+    }
 
     function hide() {
         _showTimer.stop()
         _hideTimer.stop()
         state = "hidden"
     }
-
-    // ═══════════════════════════════════════════════════════════════════
-    // TARGET CONNECTIONS
-    // ═══════════════════════════════════════════════════════════════════
 
     Connections {
         target: root.target

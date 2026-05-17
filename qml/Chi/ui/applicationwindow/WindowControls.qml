@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Window
 import "../../theme" as Theme
 import "../common"
+import "../menus" as Menus
 
 Item {
     id: root
@@ -215,105 +216,43 @@ Item {
         }
 
         // Tooltip
-        Item {
+        Menus.Tooltip {
             id: tlTooltip
-            y: tlTooltipShown ? parent.height + 8 : parent.height + 2
-            width: tlTooltipLabel.implicitWidth + 16
-            height: 24
-            z: 2000
+            text: tlBtn.tooltipText !== "" && !root.menuOpen ? tlBtn.tooltipText : ""
+            ready: root._macTooltipsHot
+            delay: 500
+            onShown: {
+                root._macTooltipsHot = true
+                macTooltipsHotTimer.stop()
+            }
+        }
 
-            property bool tlTooltipShown: tlMouse.containsMouse
-                                          && tlBtn.tooltipText !== ""
-                                          && !tlTooltipDelay.running
-                                          && tlTooltipReady
-                                          && !root.menuOpen
+        function _clampTlTooltip() {
+            tlTooltip.x = (parent.width - tlTooltip.width) / 2
+            tlTooltip.y = parent.height + 8
+            if (root.targetWindow) {
+                var sx = tlTooltip.mapToItem(root.targetWindow.contentItem, 0, 0).x
+                if (sx < 4) tlTooltip.x += 4 - sx
+                if (sx + tlTooltip.width > root.targetWindow.width - 4)
+                    tlTooltip.x -= sx + tlTooltip.width - root.targetWindow.width + 4
+            }
+        }
 
-            property bool tlTooltipReady: false
-            onTlTooltipShownChanged: {
-                if (tlTooltipShown) {
-                    root._macTooltipsHot = true
-                    macTooltipsHotTimer.stop()
+        Connections {
+            target: tlMouse
+            function onContainsMouseChanged() {
+                if (tlMouse.containsMouse && tlBtn.tooltipText !== "" && !root.menuOpen) {
+                    _clampTlTooltip()
+                    tlTooltip.show()
+                } else {
+                    tlTooltip.hide()
                 }
             }
+        }
 
-            // Clamp to window edges
-            onWidthChanged: _clampX()
-            onVisibleChanged: if (visible) _clampX()
-            function _clampX() {
-                var cx = parent.width / 2 - width / 2
-                if (root.targetWindow) {
-                    var sx = mapToItem(root.targetWindow.contentItem, 0, 0).x
-                    if (sx < 4) cx += -sx + 4
-                    if (sx + width > root.targetWindow.width - 4)
-                        cx += root.targetWindow.width - 4 - sx - width
-                }
-                x = cx
-            }
-
-            Timer {
-                id: tlTooltipDelay
-                interval: 500
-                onTriggered: tlTooltip.tlTooltipReady = true
-            }
-
-            Connections {
-                target: tlMouse
-                function onContainsMouseChanged() {
-                    if (tlMouse.containsMouse) {
-                        if (root._macTooltipsHot) {
-                            tlTooltip.tlTooltipReady = true
-                        } else {
-                            tlTooltip.tlTooltipReady = false
-                            tlTooltipDelay.restart()
-                        }
-                    } else {
-                        tlTooltipDelay.stop()
-                        tlTooltip.tlTooltipReady = false
-                    }
-                }
-            }
-
-            scale: tlTooltipShown ? 1.0 : 0.92
-            opacity: tlTooltipShown ? 1.0 : 0
-            visible: opacity > 0
-            transformOrigin: Item.Top
-
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: tlTooltip.tlTooltipShown ? 200 : 100
-                    easing.type: Easing.OutCubic
-                }
-            }
-            Behavior on scale {
-                NumberAnimation {
-                    duration: tlTooltip.tlTooltipShown ? 250 : 100
-                    easing.type: Easing.OutCubic
-                }
-            }
-
-            Rectangle {
-                anchors.fill: parent
-                radius: 4
-                color: root.colors.inverseSurface
-            }
-
-            // Caret arrow
-            Rectangle {
-                anchors.horizontalCenter: parent.horizontalCenter
-                y: -4
-                width: 8; height: 8
-                color: root.colors.inverseSurface
-                transform: Rotation { origin.x: 4; origin.y: 4; angle: 45 }
-            }
-
-            Text {
-                id: tlTooltipLabel
-                anchors.centerIn: parent
-                text: tlBtn.tooltipText
-                font.pixelSize: 11
-                font.weight: Font.Medium
-                color: root.colors.inverseOnSurface
-            }
+        Connections {
+            target: tlTooltip
+            function onWidthChanged() { if (tlTooltip.isVisible) _clampTlTooltip() }
         }
     }
 
@@ -366,104 +305,43 @@ Item {
         }
 
         // Tooltip
-        Item {
+        Menus.Tooltip {
             id: winTooltip
-            y: winTooltipShown ? parent.height + 6 : parent.height + 2
-            width: winTooltipLabel.implicitWidth + 16
-            height: 24
-            z: 2000
+            text: winBtn.tooltipText !== "" && !root.menuOpen ? winBtn.tooltipText : ""
+            ready: root._winTooltipsHot
+            delay: 500
+            onShown: {
+                root._winTooltipsHot = true
+                winTooltipsHotTimer.stop()
+            }
+        }
 
-            property bool winTooltipShown: winBtnMouse.containsMouse
-                                           && winBtn.tooltipText !== ""
-                                           && !winTooltipDelay.running
-                                           && winTooltipReady
-                                           && !root.menuOpen
+        function _clampWinTooltip() {
+            winTooltip.x = (parent.width - winTooltip.width) / 2
+            winTooltip.y = parent.height + 8
+            if (root.targetWindow) {
+                var sx = winTooltip.mapToItem(root.targetWindow.contentItem, 0, 0).x
+                if (sx < 4) winTooltip.x += 4 - sx
+                if (sx + winTooltip.width > root.targetWindow.width - 4)
+                    winTooltip.x -= sx + winTooltip.width - root.targetWindow.width + 4
+            }
+        }
 
-            property bool winTooltipReady: false
-            onWinTooltipShownChanged: {
-                if (winTooltipShown) {
-                    root._winTooltipsHot = true
-                    winTooltipsHotTimer.stop()
+        Connections {
+            target: winBtnMouse
+            function onContainsMouseChanged() {
+                if (winBtnMouse.containsMouse && winBtn.tooltipText !== "" && !root.menuOpen) {
+                    _clampWinTooltip()
+                    winTooltip.show()
+                } else {
+                    winTooltip.hide()
                 }
             }
+        }
 
-            onWidthChanged: _clampX()
-            onVisibleChanged: if (visible) _clampX()
-            function _clampX() {
-                var cx = parent.width / 2 - width / 2
-                if (root.targetWindow) {
-                    var sx = mapToItem(root.targetWindow.contentItem, 0, 0).x
-                    if (sx < 4) cx += -sx + 4
-                    if (sx + width > root.targetWindow.width - 4)
-                        cx += root.targetWindow.width - 4 - sx - width
-                }
-                x = cx
-            }
-
-            Timer {
-                id: winTooltipDelay
-                interval: 500
-                onTriggered: winTooltip.winTooltipReady = true
-            }
-
-            Connections {
-                target: winBtnMouse
-                function onContainsMouseChanged() {
-                    if (winBtnMouse.containsMouse) {
-                        if (root._winTooltipsHot) {
-                            winTooltip.winTooltipReady = true
-                        } else {
-                            winTooltip.winTooltipReady = false
-                            winTooltipDelay.restart()
-                        }
-                    } else {
-                        winTooltipDelay.stop()
-                        winTooltip.winTooltipReady = false
-                    }
-                }
-            }
-
-            scale: winTooltipShown ? 1.0 : 0.92
-            opacity: winTooltipShown ? 1.0 : 0
-            visible: opacity > 0
-            transformOrigin: Item.Top
-
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: winTooltip.winTooltipShown ? 200 : 100
-                    easing.type: Easing.OutCubic
-                }
-            }
-            Behavior on scale {
-                NumberAnimation {
-                    duration: winTooltip.winTooltipShown ? 250 : 100
-                    easing.type: Easing.OutCubic
-                }
-            }
-
-            Rectangle {
-                anchors.fill: parent
-                radius: 4
-                color: root.colors.inverseSurface
-            }
-
-            // Caret arrow
-            Rectangle {
-                anchors.horizontalCenter: parent.horizontalCenter
-                y: -4
-                width: 8; height: 8
-                color: root.colors.inverseSurface
-                transform: Rotation { origin.x: 4; origin.y: 4; angle: 45 }
-            }
-
-            Text {
-                id: winTooltipLabel
-                anchors.centerIn: parent
-                text: winBtn.tooltipText
-                font.pixelSize: 11
-                font.weight: Font.Medium
-                color: root.colors.inverseOnSurface
-            }
+        Connections {
+            target: winTooltip
+            function onWidthChanged() { if (winTooltip.isVisible) _clampWinTooltip() }
         }
     }
 }

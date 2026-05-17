@@ -1525,103 +1525,39 @@ Window {
             }
         }
 
-        // ── Material 3 Expressive Tooltip ──
-        // Pops up from below with scale+opacity+translate, matching
-        // the seek hover popup style from the video player.
-
-        Item {
+        Menus.Tooltip {
             id: _tooltipPopup
-            anchors.horizontalCenter: parent.horizontalCenter
-            y: _shown ? parent.height + 6 : parent.height + 2
-            width: _tooltipLabel.implicitWidth + 20
-            height: 32
-            z: 2000
+            text: _tbtn.tooltipText !== "" && _tbtn.enabled && !root._anyMenuOpen
+                  ? _tbtn.tooltipText : ""
+            delay: 500
+        }
 
-            property bool _shown: _tbtnMouse.containsMouse
-                                  && _tbtn.tooltipText !== ""
-                                  && _tbtn.enabled
-                                  && !_tooltipDelay.running
-                                  && _tooltipReady
-                                  && !root._anyMenuOpen
-
-            property bool _tooltipReady: false
-
-            Timer {
-                id: _tooltipDelay
-                interval: 500
-                onTriggered: _tooltipPopup._tooltipReady = true
+        function _clampTbTooltip() {
+            _tooltipPopup.x = (_tbtn.width - _tooltipPopup.width) / 2
+            _tooltipPopup.y = _tbtn.height + 6
+            if (root) {
+                var sx = _tooltipPopup.mapToItem(root.contentItem, 0, 0).x
+                if (sx < 4) _tooltipPopup.x += 4 - sx
+                if (sx + _tooltipPopup.width > root.width - 4)
+                    _tooltipPopup.x -= sx + _tooltipPopup.width - root.width + 4
             }
+        }
 
-            Connections {
-                target: _tbtnMouse
-                function onContainsMouseChanged() {
-                    if (_tbtnMouse.containsMouse) {
-                        _tooltipPopup._tooltipReady = false
-                        _tooltipDelay.restart()
-                    } else {
-                        _tooltipDelay.stop()
-                        _tooltipPopup._tooltipReady = false
-                    }
+        Connections {
+            target: _tbtnMouse
+            function onContainsMouseChanged() {
+                if (_tbtnMouse.containsMouse && _tbtn.tooltipText !== "" && _tbtn.enabled && !root._anyMenuOpen) {
+                    _clampTbTooltip()
+                    _tooltipPopup.show()
+                } else {
+                    _tooltipPopup.hide()
                 }
             }
+        }
 
-            scale: _shown ? 1.0 : 0.92
-            opacity: _shown ? 1.0 : 0
-            visible: opacity > 0
-            transformOrigin: Item.Top
-
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: _tooltipPopup._shown ? 200 : 100
-                    easing.type: Easing.OutCubic
-                }
-            }
-            Behavior on scale {
-                NumberAnimation {
-                    duration: _tooltipPopup._shown ? 250 : 100
-                    easing.type: Easing.OutCubic
-                }
-            }
-            Behavior on y {
-                NumberAnimation {
-                    duration: _tooltipPopup._shown ? 200 : 100
-                    easing.type: Easing.OutCubic
-                }
-            }
-
-            Rectangle {
-                anchors.fill: parent
-                radius: 8
-                color: root.colors.inverseSurface
-
-                layer.enabled: true
-                layer.effect: MultiEffect {
-                    shadowEnabled: true
-                    shadowColor: Qt.rgba(0, 0, 0, 0.2)
-                    shadowBlur: 0.3
-                    shadowVerticalOffset: 2
-                    shadowHorizontalOffset: 0
-                }
-            }
-
-            // Caret arrow
-            Rectangle {
-                anchors.horizontalCenter: parent.horizontalCenter
-                y: -4
-                width: 8; height: 8
-                color: root.colors.inverseSurface
-                transform: Rotation { origin.x: 4; origin.y: 4; angle: 45 }
-            }
-
-            Text {
-                id: _tooltipLabel
-                anchors.centerIn: parent
-                text: _tbtn.tooltipText
-                font.family: root.fontFamily
-                font.pixelSize: root.typography.bodySmall.size
-                font.weight: root.typography.bodySmall.weight
-                color: root.colors.inverseOnSurface
-            }
+        Connections {
+            target: _tooltipPopup
+            function onWidthChanged() { if (_tooltipPopup.isVisible) _clampTbTooltip() }
         }
     }
 
@@ -1734,100 +1670,42 @@ Window {
             }
         }
 
-        // Tooltip
-        Item {
+        Menus.Tooltip {
             id: _mbtnTooltip
-            anchors.horizontalCenter: parent.horizontalCenter
-            y: _mbtnTooltipShown ? parent.height + 6 : parent.height + 2
-            width: _mbtnTooltipLabel.implicitWidth + 20
-            height: 32
-            z: 2000
-
-            readonly property string _text: _mbtn.tooltipText || _mbtn.menuData.title || ""
-            property bool _mbtnTooltipShown: _mbtnMouse.containsMouse
-                                              && _text !== ""
-                                              && !_mbtnTooltipDelay.running
-                                              && _mbtnTooltipReady
-                                              && !root._anyMenuOpen
-
-            property bool _mbtnTooltipReady: false
-
-            Timer {
-                id: _mbtnTooltipDelay
-                interval: 500
-                onTriggered: _mbtnTooltip._mbtnTooltipReady = true
+            text: {
+                var t = _mbtn.tooltipText || _mbtn.menuData.title || ""
+                return t !== "" && !root._anyMenuOpen ? t : ""
             }
+            delay: 500
+        }
 
-            Connections {
-                target: _mbtnMouse
-                function onContainsMouseChanged() {
-                    if (_mbtnMouse.containsMouse) {
-                        _mbtnTooltip._mbtnTooltipReady = false
-                        _mbtnTooltipDelay.restart()
-                    } else {
-                        _mbtnTooltipDelay.stop()
-                        _mbtnTooltip._mbtnTooltipReady = false
-                    }
+        function _clampMbTooltip() {
+            _mbtnTooltip.x = (_mbtn.width - _mbtnTooltip.width) / 2
+            _mbtnTooltip.y = _mbtn.height + 6
+            if (root) {
+                var sx = _mbtnTooltip.mapToItem(root.contentItem, 0, 0).x
+                if (sx < 4) _mbtnTooltip.x += 4 - sx
+                if (sx + _mbtnTooltip.width > root.width - 4)
+                    _mbtnTooltip.x -= sx + _mbtnTooltip.width - root.width + 4
+            }
+        }
+
+        Connections {
+            target: _mbtnMouse
+            function onContainsMouseChanged() {
+                var t = _mbtn.tooltipText || _mbtn.menuData.title || ""
+                if (_mbtnMouse.containsMouse && t !== "" && !root._anyMenuOpen) {
+                    _clampMbTooltip()
+                    _mbtnTooltip.show()
+                } else {
+                    _mbtnTooltip.hide()
                 }
             }
+        }
 
-            scale: _mbtnTooltipShown ? 1.0 : 0.92
-            opacity: _mbtnTooltipShown ? 1.0 : 0
-            visible: opacity > 0
-            transformOrigin: Item.Top
-
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: _mbtnTooltip._mbtnTooltipShown ? 200 : 100
-                    easing.type: Easing.OutCubic
-                }
-            }
-            Behavior on scale {
-                NumberAnimation {
-                    duration: _mbtnTooltip._mbtnTooltipShown ? 250 : 100
-                    easing.type: Easing.OutCubic
-                }
-            }
-            Behavior on y {
-                NumberAnimation {
-                    duration: _mbtnTooltip._mbtnTooltipShown ? 200 : 100
-                    easing.type: Easing.OutCubic
-                }
-            }
-
-            Rectangle {
-                anchors.fill: parent
-                radius: 8
-                color: root.colors.inverseSurface
-
-                layer.enabled: true
-                layer.effect: MultiEffect {
-                    shadowEnabled: true
-                    shadowColor: Qt.rgba(0, 0, 0, 0.2)
-                    shadowBlur: 0.3
-                    shadowVerticalOffset: 2
-                    shadowHorizontalOffset: 0
-                }
-            }
-
-            // Caret arrow
-            Rectangle {
-                anchors.horizontalCenter: parent.horizontalCenter
-                y: -4
-                width: 8; height: 8
-                color: root.colors.inverseSurface
-                transform: Rotation { origin.x: 4; origin.y: 4; angle: 45 }
-            }
-
-            Text {
-                id: _mbtnTooltipLabel
-                anchors.centerIn: parent
-                text: _mbtnTooltip._text
-                font.family: root.fontFamily
-                font.pixelSize: root.typography.bodySmall.size
-                font.weight: root.typography.bodySmall.weight
-                color: root.colors.inverseOnSurface
-            }
+        Connections {
+            target: _mbtnTooltip
+            function onWidthChanged() { if (_mbtnTooltip.isVisible) _clampMbTooltip() }
         }
 
         Menus.DropdownMenu {
@@ -1956,6 +1834,21 @@ Window {
                             _qp._qpNavOffset = 0
                         }
 
+                        Keys.onUpPressed: {
+                            if (_qp._qpNavOffset > 0) _qp._qpNavOffset--
+                        }
+                        Keys.onDownPressed: {
+                            if (_qp._qpNavOffset < _qp._qpFiltered.length - 1) _qp._qpNavOffset++
+                        }
+                        Keys.onReturnPressed: {
+                            var s = _qp._qpSelected
+                            if (s >= 0 && s < _qp._qpFiltered.length) {
+                                var it = _qp._qpFiltered[s]
+                                root._qpOpen = false
+                                root._handleMenuAction(it.menuId, it.itemId)
+                            }
+                        }
+
                         Text {
                             anchors { left: parent.left; verticalCenter: parent.verticalCenter }
                             text: qsTr("Search commands…")
@@ -2029,21 +1922,6 @@ Window {
                 }
             }
 
-            // Keyboard nav
-            Keys.onUpPressed: {
-                if (_qp._qpNavOffset > 0) _qp._qpNavOffset--
-            }
-            Keys.onDownPressed: {
-                if (_qp._qpNavOffset < _qp._qpFiltered.length - 1) _qp._qpNavOffset++
-            }
-            Keys.onReturnPressed: {
-                var s = _qp._qpSelected
-                if (s >= 0 && s < _qp._qpFiltered.length) {
-                    var it = _qp._qpFiltered[s]
-                    root._qpOpen = false
-                    root._handleMenuAction(it.menuId, it.itemId)
-                }
-            }
         }
     }
 

@@ -1,5 +1,6 @@
 import QtQuick
 import "../../theme" as Theme
+import "../menus" as Menus
 
 Item {
     id: root
@@ -50,6 +51,11 @@ Item {
         cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
 
         onClicked: root.clicked()
+    }
+
+    Menus.Tooltip {
+        target: mouseArea
+        text: root.tooltip
     }
 
     Accessible.role: Accessible.Button

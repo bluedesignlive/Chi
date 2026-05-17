@@ -1,8 +1,8 @@
 // IconButtonToggle — Toggleable icon button with selected/unselected states
 import QtQuick
-import QtQuick.Controls.Basic
 import "../../theme" as Theme
 import "../common" as Common
+import "../menus" as Menus
 
 Item {
     id: root
@@ -122,8 +122,8 @@ Item {
         }
     }
 
-    ToolTip {
-        visible: root.tooltip !== "" && mouseArea.containsMouse
+    Menus.Tooltip {
+        target: mouseArea
         text: root.tooltip
         delay: 500
     }
