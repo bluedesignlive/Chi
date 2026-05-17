@@ -133,7 +133,8 @@ Popup {
                         Timer {
                             id: _cascadeTimer
                             interval: 60
-                            onTriggered: root._openCascade(modelData.items, modelData.id || "", index)
+                            onTriggered: root._openCascade(modelData.items, modelData.id || "", index,
+                                _headMouse.mapToItem(null, 0, 0).y)
                         }
 
                         MouseArea {
@@ -144,14 +145,16 @@ Popup {
                             onClicked: {
                                 if (_hasItems) {
                                     _cascadeTimer.stop()
-                                    root._openCascade(modelData.items, modelData.id || "", index)
+                                    root._openCascade(modelData.items, modelData.id || "", index,
+                                        _headMouse.mapToItem(null, 0, 0).y)
                                 }
                             }
                             onContainsMouseChanged: {
                                 if (containsMouse && _hasItems) {
                                     if (_cascadePopup.opened) {
                                         _cascadeTimer.stop()
-                                        root._openCascade(modelData.items, modelData.id || "", index)
+                                        root._openCascade(modelData.items, modelData.id || "", index,
+                                            _headMouse.mapToItem(null, 0, 0).y)
                                     } else {
                                         _cascadeTimer.restart()
                                     }
@@ -166,14 +169,14 @@ Popup {
         }
     }
 
-    function _openCascade(items, menuId, index) {
+    function _openCascade(items, menuId, index, yPos) {
         root._cascadeItems = items
         root._cascadeMenuId = menuId
         root._cascadeTargetIndex = index
 
-        // Position to the right, aligned with hovered item Y
+        // Position to the right, aligned with hovered item
         _cascadePopup.x = root.x + root.width
-        _cascadePopup.y = root.y + 8 + index * 36 - _flick.contentY
+        _cascadePopup.y = yPos
 
         if (!_cascadePopup.opened)
             _cascadePopup.open()
