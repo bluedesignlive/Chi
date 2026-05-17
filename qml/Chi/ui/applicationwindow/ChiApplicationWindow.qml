@@ -1117,6 +1117,13 @@ Window {
         screenCapture: ScreenCapture {
             id: _screenCapture
         }
+        windowCapture: WindowCapture {
+            id: _windowCapture
+            onWindowChanged: console.log("Recording: WindowCapture window=" + (_windowCapture.window ? _windowCapture.window.description : "null"))
+            onErrorOccurred: function(error, errorString) {
+                console.log("Recording: WindowCapture error=" + error + " " + errorString)
+            }
+        }
         recorder: MediaRecorder {
             id: _mediaRecorder
             outputLocation: root._recordingOutput
@@ -1136,6 +1143,7 @@ Window {
                 root._recording = false
                 root._recTimer.stop()
                 _screenCapture.active = false
+                _windowCapture.active = false
                 _snackbar.duration = 4000
                 _snackbar.multiLine = false
                 _snackbar.show(qsTr("Recording failed: %1").arg(errorString))
@@ -1350,17 +1358,31 @@ Window {
             console.log("Recording: microphone disabled")
         }
 
-        if (root._lastRecSettings.area === 0) {
-            _screenCapture.window = null
-            _screenCapture.screen = Screen
-            console.log("Recording: capturing full screen")
-        } else {
-            _screenCapture.screen = null
-            _screenCapture.window = root
-            console.log("Recording: capturing current window")
-        }
+        _screenCapture.active = false
+        _windowCapture.active = false
 
-        _screenCapture.active = true
+        if (root._lastRecSettings.area === 0) {
+            _captureSession.windowCapture = null
+            _captureSession.screenCapture = _screenCapture
+            _screenCapture.screen = Screen
+            _screenCapture.active = true
+            console.log("Recording: full screen capture")
+        } else {
+            _captureSession.screenCapture = null
+            _captureSession.windowCapture = _windowCapture
+            var w = _findChiWindow()
+            if (w && w.isValid) {
+                _windowCapture.window = w
+                _windowCapture.active = true
+                console.log("Recording: window capture: " + w.description)
+            } else {
+                console.log("Recording: no capturable window found, use full screen")
+                _captureSession.windowCapture = null
+                _captureSession.screenCapture = _screenCapture
+                _screenCapture.screen = Screen
+                _screenCapture.active = true
+            }
+        }
         _recordingElapsed = 0
         _recording = true
         _recTimer.start()
@@ -1382,9 +1404,25 @@ Window {
         _recTimer.stop()
         _mediaRecorder.stop()
         _screenCapture.active = false
+        _windowCapture.active = false
         _snackbar.duration = 0
         _snackbar.hide()
         console.log("Recording: stop requested, waiting for finalization")
+    }
+
+    function _findChiWindow() {
+        var windows = _windowCapture.capturableWindows()
+        console.log("Recording: capturable windows count=" + windows.length)
+        for (var i = 0; i < windows.length; i++) {
+            console.log("Recording:   window[" + i + "] '" + windows[i].description + "' valid=" + windows[i].isValid)
+        }
+        for (var j = 0; j < windows.length; j++) {
+            if (windows[j].description === root.title) return windows[j]
+        }
+        for (var k = 0; k < windows.length; k++) {
+            if (windows[k].isValid) return windows[k]
+        }
+        return null
     }
 
     function _quickRecord() {
