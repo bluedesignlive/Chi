@@ -1,4 +1,6 @@
-// IconButtonToggle — Toggleable icon button with selected/unselected states
+// IconButtonToggle.qml - Material 3 Expressive Icon Button Toggle
+// Implements M3 tokenization while preserving specific morphing behavior
+
 import QtQuick
 import "../../theme" as Theme
 import "../common" as Common
@@ -7,122 +9,126 @@ import "../menus" as Menus
 Item {
     id: root
 
+    // ─── Public API ───────────────────────────────────────────
     property string icon: "star_outline"
     property string selectedIcon: "star"
-    property string size: "small"
-    property string widthMode: "default"
+    property string variant: "standard"      // standard | filled | tonal | outlined
+    property string size: "medium"           // xsmall | small | medium | large | xlarge
+    property string widthMode: "default"     // narrow | default | wide
     property bool selected: false
+    property alias toggled: root.selected    // Alias for ButtonsPage compatibility
     property bool enabled: true
     property string tooltip: ""
 
-    signal toggled(bool selected)
+    signal toggleChanged(bool isSelected)
+    signal toggled(bool isSelected)          // Emitted for backward compatibility
 
-    opacity: enabled ? 1.0 : 0.38
-    Behavior on opacity {
-        enabled: Theme.ChiMotion.animationsEnabled
-        NumberAnimation {
-            duration: Theme.ChiMotion.duration.medium1
-            easing.type: Easing.BezierSpline
-            easing.bezierCurve: Theme.ChiMotion.easing.standard
-        }
-    }
-
-    readonly property var sizeSpecs: Theme.SizeSpecs.iconButton
-    readonly property var cs: sizeSpecs[size] || sizeSpecs.small
-
-    readonly property int containerWidth: {
-        if (widthMode === "narrow")
-            return cs.narrowWidth;
-        if (widthMode === "wide")
-            return cs.wideWidth;
-        return cs.defaultWidth;
-    }
+    // ─── Tokens & Sizes ───────────────────────────────────────
+    readonly property var colors: Theme.ChiTheme.colors
+    readonly property var motion: Theme.ChiTheme.motion
+    readonly property var spec: Theme.SizeSpecs.getSpec(Theme.SizeSpecs.iconButton, size)
 
     readonly property string effectiveIcon: selected && selectedIcon !== "" ? selectedIcon : icon
 
-    property var colors: Theme.ChiTheme.colors
+    readonly property bool _filled: variant === "filled"
+    readonly property bool _tonal: variant === "tonal"
+    readonly property bool _outlined: variant === "outlined"
 
-    readonly property color _interactColor: selected ? colors.onPrimary : colors.onSurfaceVariant
-    readonly property color _iconColor: enabled ? _interactColor : colors.onSurface
+    readonly property int containerWidth: {
+        if (widthMode === "narrow") return spec.narrowWidth
+        if (widthMode === "wide") return spec.wideWidth
+        return spec.defaultWidth
+    }
 
+    // ─── Colors (M3 Toggle Specs) ─────────────────────────────
+    readonly property color _containerColor: {
+        if (!enabled) {
+            if (_filled || _tonal || _outlined)
+                return Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.12)
+            return "transparent"
+        }
+        if (_filled) return selected ? colors.primary : colors.surfaceContainerHighest
+        if (_tonal) return selected ? colors.secondaryContainer : colors.surfaceContainerHighest
+        if (_outlined && selected) return colors.inverseSurface
+        return "transparent"
+    }
+
+    readonly property color _iconColor: {
+        if (!enabled) return Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.38)
+        if (_filled) return selected ? colors.onPrimary : colors.primary
+        if (_tonal) return selected ? colors.onSecondaryContainer : colors.onSurfaceVariant
+        if (_outlined) return selected ? colors.inverseOnSurface : colors.onSurfaceVariant
+        return selected ? colors.primary : colors.onSurfaceVariant
+    }
+
+    // ─── Geometry ─────────────────────────────────────────────
     implicitWidth: containerWidth
-    implicitHeight: cs.height
+    implicitHeight: spec.height
+
+    opacity: enabled ? 1.0 : 0.6
+    Behavior on opacity {
+        enabled: motion.animationsEnabled
+        NumberAnimation {
+            duration: motion.durationMedium
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: motion.easing.standard
+        }
+    }
 
     Rectangle {
         id: container
         anchors.centerIn: parent
         width: root.containerWidth
-        height: cs.height
+        height: spec.height
         clip: true
-        radius: root.selected ? cs.squareRadius : height / 2
+        
+        // M3 Morphing: Round when unselected, Square when selected
+        radius: root.selected ? spec.squareRadius : height / 2
 
-        color: !root.enabled ? Qt.rgba(colors.onSurface.r, colors.onSurface.g, colors.onSurface.b, 0.12) : (root.selected ? colors.primary : colors.surfaceContainer)
+        color: _containerColor
+        border.width: _outlined && !selected ? 1 : 0
+        border.color: _outlined ? colors.outline : "transparent"
 
         Behavior on radius {
-            enabled: Theme.ChiMotion.animationsEnabled
+            enabled: motion.animationsEnabled
             NumberAnimation {
-                duration: Theme.ChiMotion.duration.medium1
+                duration: motion.durationMedium
                 easing.type: Easing.BezierSpline
-                easing.bezierCurve: Theme.ChiMotion.easing.standard
+                easing.bezierCurve: motion.easing.standard
             }
         }
         Behavior on color {
-            enabled: Theme.ChiMotion.animationsEnabled
+            enabled: motion.animationsEnabled
             ColorAnimation {
-                duration: Theme.ChiMotion.duration.medium1
+                duration: motion.durationMedium
                 easing.type: Easing.BezierSpline
-                easing.bezierCurve: Theme.ChiMotion.easing.standard
+                easing.bezierCurve: motion.easing.standard
             }
         }
+        Behavior on border.color {
+            enabled: motion.animationsEnabled
+            ColorAnimation { duration: motion.durationFast }
+        }
 
-        // Ripple
-        Rectangle {
-            anchors.fill: parent
+        Common.StateLayer {
+            layerColor: _iconColor
+            containerRadius: parent.radius
+            pressed: mouseArea.pressed
+            hovered: mouseArea.containsMouse
+            focused: root.activeFocus
+            enabled: root.enabled
+        }
+
+        Common.Ripple {
+            color: _iconColor
             radius: parent.radius
-            color: root._interactColor
-            opacity: 0
-
-            SequentialAnimation on opacity {
-                id: rippleAnimation
-                running: false
-                NumberAnimation {
-                    from: 0
-                    to: 0.16
-                    duration: Theme.ChiMotion.duration.short1
-                    easing.type: Easing.BezierSpline
-                    easing.bezierCurve: Theme.ChiMotion.easing.standard
-                }
-                NumberAnimation {
-                    to: 0
-                    duration: Theme.ChiMotion.duration.medium1
-                    easing.type: Easing.BezierSpline
-                    easing.bezierCurve: Theme.ChiMotion.easing.standard
-                }
-            }
+            enabled: root.enabled
         }
 
-        // State layer
-        Rectangle {
-            anchors.fill: parent
-            radius: parent.radius
-            color: root._interactColor
-            opacity: !root.enabled ? 0 : mouseArea.pressed ? Theme.ChiMotion.stateLayer.pressed : root.activeFocus ? Theme.ChiMotion.stateLayer.focus : mouseArea.containsMouse ? Theme.ChiMotion.stateLayer.hover : 0
-
-            Behavior on opacity {
-                enabled: Theme.ChiMotion.animationsEnabled
-                NumberAnimation {
-                    duration: mouseArea.pressed ? Theme.ChiMotion.duration.short1 : Theme.ChiMotion.duration.short2
-                    easing.type: Easing.BezierSpline
-                    easing.bezierCurve: Theme.ChiMotion.easing.standard
-                }
-            }
-        }
-
-        // Icon — uses Common.Icon for cross-platform reliability
         Common.Icon {
             anchors.centerIn: parent
             source: root.effectiveIcon
-            size: cs.iconSize
+            size: spec.iconSize
             color: root._iconColor
         }
 
@@ -130,11 +136,11 @@ Item {
         Rectangle {
             visible: root.activeFocus && !mouseArea.pressed
             anchors.fill: parent
-            anchors.margins: 2
-            radius: parent.radius
+            anchors.margins: -2
+            radius: parent.radius + 2
             color: "transparent"
-            border.width: 3
-            border.color: colors.secondary
+            border.width: 2
+            border.color: colors.primary
         }
     }
 
@@ -143,12 +149,8 @@ Item {
         anchors.fill: parent
         enabled: root.enabled
         hoverEnabled: true
-        cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-        onPressed: rippleAnimation.restart()
-        onClicked: {
-            root.selected = !root.selected;
-            root.toggled(root.selected);
-        }
+        cursorShape: Qt.PointingHandCursor
+        onClicked: _activate()
     }
 
     Menus.Tooltip {
@@ -157,16 +159,13 @@ Item {
         delay: 500
     }
 
-    Keys.onSpacePressed: if (enabled)
-        _activate()
-    Keys.onEnterPressed: if (enabled)
-        _activate()
-    Keys.onReturnPressed: if (enabled)
-        _activate()
+    Keys.onSpacePressed: if (enabled) _activate()
+    Keys.onEnterPressed: if (enabled) _activate()
+    Keys.onReturnPressed: if (enabled) _activate()
 
     function _activate() {
-        rippleAnimation.restart();
-        selected = !selected;
-        toggled(selected);
+        root.selected = !root.selected
+        root.toggled(root.selected)
+        root.toggleChanged(root.selected)
     }
 }
