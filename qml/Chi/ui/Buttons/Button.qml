@@ -78,7 +78,7 @@ Item {
     }
 
     readonly property bool needsShadow: enabled
-        && (isElevated || (isFilled && root.state === "hovered"))
+        && (isElevated || (isFilled && root.state === "hovered") || (isTonal && root.state === "hovered"))
 
     // ─── Geometry ───────────────────────────────────────────────
     implicitWidth: content.implicitWidth
@@ -90,7 +90,6 @@ Item {
         NumberAnimation {
             _animDur
             easing.type: Easing.BezierSpline
-            easing.bezierCurve: Theme.ChiMotion.easing.standard
         }
     }
 
@@ -198,14 +197,12 @@ Item {
             NumberAnimation {
                 _animDur
                 easing.type: Easing.BezierSpline
-            easing.bezierCurve: Theme.ChiMotion.easing.standard
             }
         }
         Behavior on shadowBlur {
             NumberAnimation {
                 _animDur
                 easing.type: Easing.BezierSpline
-            easing.bezierCurve: Theme.ChiMotion.easing.standard
             }
         }
     }
