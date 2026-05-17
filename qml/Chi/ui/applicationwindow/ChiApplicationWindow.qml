@@ -1060,12 +1060,12 @@ Window {
         }
 
         onAccepted: {
+            var path = _screenshotDialog.selectedFile
+            var name = path.toString().split("/").pop()
             _surface.grabToImage(function(r) {
-                r.saveToFile(_screenshotDialog.selectedFile)
-                _clipboard.copyImage(_screenshotDialog.selectedFile)
-                var name = _screenshotDialog.selectedFile.toString().split("/").pop()
-                _snackbar.multiLine = true
-                _snackbar.show(qsTr("Screenshot saved: %1\nCopied to clipboard").arg(name))
+                r.saveToFile(path)
+                _clipboard.copyImage(path)
+                _snackbar.show(qsTr("Screenshot saved: %1 · Copied to clipboard").arg(name))
             })
         }
     }
