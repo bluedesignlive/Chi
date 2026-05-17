@@ -221,6 +221,7 @@ Item {
             text: tlBtn.tooltipText !== "" && !root.menuOpen ? tlBtn.tooltipText : ""
             ready: root._macTooltipsHot
             delay: 500
+            positionTarget: tlMouse
             onShown: {
                 root._macTooltipsHot = true
                 macTooltipsHotTimer.stop()
@@ -236,6 +237,7 @@ Item {
                 if (sx + tlTooltip.width > root.targetWindow.width - 4)
                     tlTooltip.x -= sx + tlTooltip.width - root.targetWindow.width + 4
             }
+            tlTooltip._positionCaret()
         }
 
         Connections {
@@ -252,7 +254,7 @@ Item {
 
         Connections {
             target: tlTooltip
-            function onWidthChanged() { if (tlTooltip.isVisible) _clampTlTooltip() }
+            function onWidthChanged() { if (tlTooltip.isVisible) { _clampTlTooltip(); tlTooltip._positionCaret() } }
         }
     }
 
@@ -310,6 +312,7 @@ Item {
             text: winBtn.tooltipText !== "" && !root.menuOpen ? winBtn.tooltipText : ""
             ready: root._winTooltipsHot
             delay: 500
+            positionTarget: winBtnMouse
             onShown: {
                 root._winTooltipsHot = true
                 winTooltipsHotTimer.stop()
@@ -325,6 +328,7 @@ Item {
                 if (sx + winTooltip.width > root.targetWindow.width - 4)
                     winTooltip.x -= sx + winTooltip.width - root.targetWindow.width + 4
             }
+            winTooltip._positionCaret()
         }
 
         Connections {
@@ -341,7 +345,7 @@ Item {
 
         Connections {
             target: winTooltip
-            function onWidthChanged() { if (winTooltip.isVisible) _clampWinTooltip() }
+            function onWidthChanged() { if (winTooltip.isVisible) { _clampWinTooltip(); winTooltip._positionCaret() } }
         }
     }
 }

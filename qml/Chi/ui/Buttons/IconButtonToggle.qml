@@ -22,7 +22,7 @@ Item {
         enabled: Theme.ChiMotion.animationsEnabled
         NumberAnimation {
             duration: Theme.ChiMotion.colorChange.duration
-            easing.type: Easing.Bezier
+            easing.type: Easing.BezierSpline
             easing.bezierCurve: Theme.ChiMotion.colorChange.curve
         }
     }
@@ -62,16 +62,16 @@ Item {
         Behavior on radius {
             enabled: Theme.ChiMotion.animationsEnabled
             NumberAnimation {
-                duration: Theme.ChiMotion.shapeMorph.duration
-                easing.type: Easing.Bezier
-                easing.bezierCurve: Theme.ChiMotion.shapeMorph.curve
+                duration: 250
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Theme.ChiMotion.spring.fast.effects.curve
             }
         }
         Behavior on color {
             enabled: Theme.ChiMotion.animationsEnabled
             ColorAnimation {
                 duration: Theme.ChiMotion.colorChange.duration
-                easing.type: Easing.Bezier
+                easing.type: Easing.BezierSpline
                 easing.bezierCurve: Theme.ChiMotion.colorChange.curve
             }
         }
@@ -86,8 +86,8 @@ Item {
             SequentialAnimation on opacity {
                 id: rippleAnimation
                 running: false
-                NumberAnimation { from: 0; to: 0.16; duration: Theme.ChiMotion.press.duration; easing.type: Easing.Bezier; easing.bezierCurve: Theme.ChiMotion.press.curve }
-                NumberAnimation { to: 0; duration: Theme.ChiMotion.release.duration; easing.type: Easing.Bezier; easing.bezierCurve: Theme.ChiMotion.release.curve }
+                NumberAnimation { from: 0; to: 0.16; duration: Theme.ChiMotion.press.duration; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.ChiMotion.press.curve }
+                NumberAnimation { to: 0; duration: Theme.ChiMotion.release.duration; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.ChiMotion.release.curve }
             }
         }
 
@@ -106,7 +106,7 @@ Item {
                 enabled: Theme.ChiMotion.animationsEnabled
                 NumberAnimation {
                     duration: mouseArea.pressed ? Theme.ChiMotion.press.duration : Theme.ChiMotion.hoverState.duration
-                    easing.type: Easing.Bezier
+                    easing.type: Easing.BezierSpline
                     easing.bezierCurve: mouseArea.pressed ? Theme.ChiMotion.press.curve : Theme.ChiMotion.hoverState.curve
                 }
             }

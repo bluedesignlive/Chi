@@ -36,7 +36,16 @@ Item {
     Rectangle {
         anchors.fill: parent
         color: colors.scrim
-        opacity: 0.5
+        opacity: root.open ? 0.5 : 0
+
+        Behavior on opacity {
+            enabled: Theme.ChiMotion.animationsEnabled
+            NumberAnimation {
+                duration: root.open ? Theme.ChiMotion.entry.duration : Theme.ChiMotion.exit.duration
+                easing.type: Easing.Bezier
+                easing.bezierCurve: root.open ? Theme.ChiMotion.entry.curve : Theme.ChiMotion.exit.curve
+            }
+        }
 
         MouseArea {
             anchors.fill: parent
@@ -56,12 +65,35 @@ Item {
         color: colors.surfaceContainerHigh
         clip: true
 
-        scale: root.open ? 1 : 0.95
+        transform: Scale { origin.x: palette.width / 2; origin.y: 0 }
+
+        scale: root.open ? 1 : 0.92
         opacity: root.open ? 1 : 0
 
-        Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-        Behavior on opacity { NumberAnimation { duration: 150 } }
-        Behavior on color { ColorAnimation { duration: 200 } }
+        Behavior on scale {
+            enabled: Theme.ChiMotion.animationsEnabled
+            NumberAnimation {
+                duration: root.open ? Theme.ChiMotion.entry.duration : Theme.ChiMotion.exit.duration
+                easing.type: Easing.Bezier
+                easing.bezierCurve: root.open ? Theme.ChiMotion.entry.curve : Theme.ChiMotion.exit.curve
+            }
+        }
+        Behavior on opacity {
+            enabled: Theme.ChiMotion.animationsEnabled
+            NumberAnimation {
+                duration: root.open ? Theme.ChiMotion.entry.duration : Theme.ChiMotion.exit.duration
+                easing.type: Easing.Bezier
+                easing.bezierCurve: root.open ? Theme.ChiMotion.entry.curve : Theme.ChiMotion.exit.curve
+            }
+        }
+        Behavior on color {
+            enabled: Theme.ChiMotion.animationsEnabled
+            ColorAnimation {
+                duration: Theme.ChiMotion.colorChange.duration
+                easing.type: Easing.Bezier
+                easing.bezierCurve: Theme.ChiMotion.colorChange.curve
+            }
+        }
 
         layer.enabled: root.open
         layer.effect: MultiEffect {
@@ -183,7 +215,14 @@ Item {
                             property bool _sel: index === root.selectedIndex
 
                             color: _sel ? colors.primaryContainer : "transparent"
-                            Behavior on color { ColorAnimation { duration: 100 } }
+                            Behavior on color {
+                                enabled: Theme.ChiMotion.animationsEnabled
+                                ColorAnimation {
+                                    duration: Theme.ChiMotion.colorChange.duration
+                                    easing.type: Easing.Bezier
+                                    easing.bezierCurve: Theme.ChiMotion.colorChange.curve
+                                }
+                            }
 
                             // Hover overlay
                             Rectangle {
@@ -205,7 +244,14 @@ Item {
                                     font.pixelSize: 20
                                     color: _sel ? colors.onPrimaryContainer : colors.onSurfaceVariant
                                     Layout.alignment: Qt.AlignVCenter
-                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                    Behavior on color {
+                                        enabled: Theme.ChiMotion.animationsEnabled
+                                        ColorAnimation {
+                                            duration: Theme.ChiMotion.colorChange.duration
+                                            easing.type: Easing.Bezier
+                                            easing.bezierCurve: Theme.ChiMotion.colorChange.curve
+                                        }
+                                    }
                                 }
 
                                 // Label + category
@@ -220,7 +266,14 @@ Item {
                                         color: _sel ? colors.onPrimaryContainer : colors.onSurface
                                         elide: Text.ElideRight
                                         Layout.fillWidth: true
-                                        Behavior on color { ColorAnimation { duration: 100 } }
+                                        Behavior on color {
+                                        enabled: Theme.ChiMotion.animationsEnabled
+                                        ColorAnimation {
+                                            duration: Theme.ChiMotion.colorChange.duration
+                                            easing.type: Easing.Bezier
+                                            easing.bezierCurve: Theme.ChiMotion.colorChange.curve
+                                        }
+                                    }
                                     }
 
                                     Text {

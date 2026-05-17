@@ -1530,6 +1530,7 @@ Window {
             text: _tbtn.tooltipText !== "" && _tbtn.enabled && !root._anyMenuOpen
                   ? _tbtn.tooltipText : ""
             delay: 500
+            positionTarget: _tbtnMouse
         }
 
         function _clampTbTooltip() {
@@ -1541,6 +1542,7 @@ Window {
                 if (sx + _tooltipPopup.width > root.width - 4)
                     _tooltipPopup.x -= sx + _tooltipPopup.width - root.width + 4
             }
+            _tooltipPopup._positionCaret()
         }
 
         Connections {
@@ -1557,7 +1559,7 @@ Window {
 
         Connections {
             target: _tooltipPopup
-            function onWidthChanged() { if (_tooltipPopup.isVisible) _clampTbTooltip() }
+            function onWidthChanged() { if (_tooltipPopup.isVisible) { _clampTbTooltip(); _tooltipPopup._positionCaret() } }
         }
     }
 
@@ -1677,6 +1679,7 @@ Window {
                 return t !== "" && !root._anyMenuOpen ? t : ""
             }
             delay: 500
+            positionTarget: _mbtnMouse
         }
 
         function _clampMbTooltip() {
@@ -1688,6 +1691,7 @@ Window {
                 if (sx + _mbtnTooltip.width > root.width - 4)
                     _mbtnTooltip.x -= sx + _mbtnTooltip.width - root.width + 4
             }
+            _mbtnTooltip._positionCaret()
         }
 
         Connections {
@@ -1705,7 +1709,7 @@ Window {
 
         Connections {
             target: _mbtnTooltip
-            function onWidthChanged() { if (_mbtnTooltip.isVisible) _clampMbTooltip() }
+            function onWidthChanged() { if (_mbtnTooltip.isVisible) { _clampMbTooltip(); _mbtnTooltip._positionCaret() } }
         }
 
         Menus.DropdownMenu {

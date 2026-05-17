@@ -133,3 +133,6 @@ StateLayer 1.0 ui/common/StateLayer.qml
 ChiApplicationWindow 1.0 ui/applicationwindow/ChiApplicationWindow.qml
 WindowControls 1.0 ui/applicationwindow/WindowControls.qml
 FileDialog 1.0 ui/dialogs/FileDialog.qml
+
+singleton ChiElevation 1.0 theme/ChiElevation.qml
+singleton ShapeTokens 1.0 theme/ShapeTokens.qml
