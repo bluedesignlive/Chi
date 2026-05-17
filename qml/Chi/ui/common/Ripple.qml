@@ -3,16 +3,16 @@
 // Single source of truth for all ripple animations across the library
 
 import QtQuick
+import "../../theme" as Theme
 
 Item {
     id: root
 
     // ─── Public API ───────────────────────────────────────────
-    property color color: "white"          // Ripple tint color
-    property real radius: 0                 // Container radius (matches parent)
-    property bool enabled: true             // Whether ripple is active
+    property color color: "white"
+    property real radius: 0
+    property bool enabled: true
 
-    // Call this to trigger the ripple animation
     function trigger() {
         if (enabled) rippleAnimation.restart()
     }
@@ -28,12 +28,11 @@ Item {
         opacity: 0
         clip: true
 
-        // Material 3 ripple timing: 90ms fade in, 210ms fade out
         SequentialAnimation on opacity {
             id: rippleAnimation
             running: false
-            NumberAnimation { from: 0; to: 0.16; duration: 90; easing.type: Easing.OutCubic }
-            NumberAnimation { to: 0; duration: 210; easing.type: Easing.OutCubic }
+            NumberAnimation { from: 0; to: Theme.ChiMotion.stateLayer.pressed; duration: Theme.ChiMotion.press.duration; easing.type: Easing.Bezier; easing.bezierCurve: Theme.ChiMotion.press.curve }
+            NumberAnimation { to: 0; duration: Theme.ChiMotion.release.duration; easing.type: Easing.Bezier; easing.bezierCurve: Theme.ChiMotion.release.curve }
         }
     }
 }

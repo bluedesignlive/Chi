@@ -13,6 +13,7 @@ Item {
     property bool rich: false
     property bool showCaret: true
     property bool ready: false
+    property Item positionTarget: null
 
     readonly property bool isVisible: state === "visible"
 
@@ -53,15 +54,27 @@ Item {
     transitions: [
         Transition {
             from: "hidden"; to: "visible"
+            enabled: Theme.ChiMotion.animationsEnabled
             SequentialAnimation {
                 PropertyAction { property: "visible"; value: true }
-                NumberAnimation { properties: "opacity,scale"; duration: 120; easing.type: Easing.OutCubic }
+                NumberAnimation {
+                    duration: Theme.ChiMotion.entry.duration
+                    properties: "opacity,scale"
+                    easing.type: Easing.Bezier
+                    easing.bezierCurve: Theme.ChiMotion.entry.curve
+                }
             }
         },
         Transition {
             from: "visible"; to: "hidden"
+            enabled: Theme.ChiMotion.animationsEnabled
             SequentialAnimation {
-                NumberAnimation { properties: "opacity,scale"; duration: 80; easing.type: Easing.InCubic }
+                NumberAnimation {
+                    duration: Theme.ChiMotion.exit.duration
+                    properties: "opacity,scale"
+                    easing.type: Easing.Bezier
+                    easing.bezierCurve: Theme.ChiMotion.exit.curve
+                }
                 PropertyAction { property: "visible"; value: false }
             }
         }
@@ -111,12 +124,7 @@ Item {
         Rectangle {
             id: _caret
             visible: root.showCaret
-            x: {
-                var c = (parent.width - _caretSize) / 2
-                if (root.position === "left") c = -_caretSize / 2
-                else if (root.position === "right") c = parent.width - _caretSize / 2
-                return c
-            }
+            x: (_container.width - _caretSize) / 2
             y: {
                 if (root.position === "top") return parent.height - _caretSize / 2
                 if (root.position === "bottom") return -_caretSize / 2
@@ -125,6 +133,15 @@ Item {
             width: _caretSize; height: _caretSize
             color: parent.color
             transform: Rotation { origin.x: _caretSize / 2; origin.y: _caretSize / 2; angle: 45 }
+
+            Behavior on x {
+                enabled: Theme.ChiMotion.animationsEnabled
+                NumberAnimation {
+                    duration: Theme.ChiMotion.spring.fast.effects.duration
+                    easing.type: Easing.Bezier
+                    easing.bezierCurve: Theme.ChiMotion.spring.fast.spatial.curve
+                }
+            }
         }
     }
 
@@ -178,6 +195,19 @@ Item {
         if (parent) {
             x = Math.max(m, Math.min(x, parent.width - width - m))
             y = Math.max(m, Math.min(y, parent.height - height - m))
+        }
+
+        _positionCaret()
+    }
+
+    function _positionCaret() {
+        if (!root.showCaret) return
+        var tgt = root.positionTarget || root.target
+        if (tgt) {
+            var tc = tgt.mapToItem(_container, tgt.width / 2, 0)
+            _caret.x = Math.max(4, Math.min(tc.x - _caretSize / 2, _container.width - _caretSize - 4))
+        } else {
+            _caret.x = (_container.width - _caretSize) / 2
         }
     }
 

@@ -3,6 +3,7 @@ plugin ChiPlugin
 
 # ─── Theme ───────────────────────────────────────────────────
 singleton ChiTheme 1.0 theme/ChiTheme.qml
+singleton ChiMotion 1.0 theme/ChiMotion.qml
 singleton IconFont 1.0 theme/IconFont.qml
 singleton SizeSpecs 1.0 theme/SizeSpecs.qml
 

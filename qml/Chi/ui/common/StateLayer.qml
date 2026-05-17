@@ -3,25 +3,25 @@
 // Single source of truth for all state layer implementations
 
 import QtQuick
+import "../../theme" as Theme
 
 Rectangle {
     id: root
 
     // ─── Public API ───────────────────────────────────────────
-    property color layerColor: "white"           // State layer tint color
-    property real containerRadius: 0                  // Container radius
-    property bool pressed: false             // Pressed state
-    property bool hovered: false             // Hovered state
-    property bool focused: false             // Focused state
-    property bool enabled: true              // Whether state layer is active
+    property color layerColor: "white"
+    property real containerRadius: 0
+    property bool pressed: false
+    property bool hovered: false
+    property bool focused: false
+    property bool enabled: true
 
     // ─── Material 3 State Layer Opacities ────────────────────
-    // Hover: 0.08, Focus: 0.12, Press: 0.12
     readonly property real _opacity: {
         if (!enabled) return 0
-        if (pressed) return 0.12
-        if (focused) return 0.12
-        if (hovered) return 0.08
+        if (pressed) return Theme.ChiMotion.stateLayer.pressed
+        if (focused) return Theme.ChiMotion.stateLayer.focus
+        if (hovered) return Theme.ChiMotion.stateLayer.hover
         return 0
     }
 
@@ -34,9 +34,15 @@ Rectangle {
 
     // Smooth transitions between states
     Behavior on opacity {
+        enabled: Theme.ChiMotion.animationsEnabled
         NumberAnimation {
-            duration: pressed ? 50 : 150
-            easing.type: Easing.OutCubic
+            duration: pressed
+                ? Theme.ChiMotion.press.duration
+                : Theme.ChiMotion.hoverState.duration
+            easing.type: Easing.Bezier
+            easing.bezierCurve: pressed
+                ? Theme.ChiMotion.press.curve
+                : Theme.ChiMotion.hoverState.curve
         }
     }
 }

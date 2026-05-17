@@ -174,21 +174,5 @@ Item {
         }
     }
 
-    readonly property QtObject motion: QtObject {
-        readonly property int durationFast: 100
-        readonly property int durationMedium: 250
-        readonly property int durationSlow: 350
-        readonly property int durationExpressive: 600
-        readonly property int easeStandard: Easing.OutCubic
-        readonly property int easeEmphasized: Easing.OutQuart
-        readonly property int easeBounce: Easing.OutBounce
-        readonly property int easeElastic: Easing.OutElastic
-        readonly property int easeBack: Easing.OutBack
-        readonly property int pageExitDuration: 120
-        readonly property int pageEnterDuration: 180
-        readonly property int pageExitEasing: Easing.InQuart
-        readonly property int pageEnterEasing: Easing.OutQuart
-        readonly property real pageSlideDistance: 30
-        readonly property real pageScaleOut: 0.96
-    }
+    readonly property var motion: ChiMotion
 }
