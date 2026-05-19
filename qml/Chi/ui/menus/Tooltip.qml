@@ -79,7 +79,7 @@ Item {
                 NumberAnimation {
                     duration: Theme.ChiMotion.entry.duration
                     properties: "opacity,scale"
-                    easing.type: Easing.Bezier
+                    easing.type: Easing.BezierSpline
                     easing.bezierCurve: Theme.ChiMotion.entry.curve
                 }
             }
@@ -92,7 +92,7 @@ Item {
                 NumberAnimation {
                     duration: Theme.ChiMotion.exit.duration
                     properties: "opacity,scale"
-                    easing.type: Easing.Bezier
+                    easing.type: Easing.BezierSpline
                     easing.bezierCurve: Theme.ChiMotion.exit.curve
                 }
                 PropertyAction {
@@ -168,7 +168,7 @@ Item {
                 enabled: Theme.ChiMotion.animationsEnabled
                 NumberAnimation {
                     duration: Theme.ChiMotion.spring.fast.effects.duration
-                    easing.type: Easing.Bezier
+                    easing.type: Easing.BezierSpline
                     easing.bezierCurve: Theme.ChiMotion.spring.fast.spatial.curve
                 }
             }

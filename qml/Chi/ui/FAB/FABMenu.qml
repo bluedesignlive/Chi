@@ -1,5 +1,6 @@
 // smartui/ui/FAB/FABMenu.qml
 import QtQuick
+import "../../theme" as Theme
 import "."    // FAB and FABMenuItem in this directory
 
 Item {
@@ -10,6 +11,8 @@ Item {
     property var menuItems: []   // array of { text, icon, enabled? }
 
     signal itemClicked(int index, string text)
+
+    readonly property var motion: Theme.ChiTheme.motion
 
     implicitWidth: 135
     implicitHeight: column.height
@@ -28,20 +31,24 @@ Item {
 
             opacity: open ? 1 : 0
             visible: opacity > 0
-            scale: open ? 1 : 0.8
+            scale: open ? 1 : 0.88
             transformOrigin: Item.BottomRight
 
             Behavior on opacity {
+                enabled: fabMenu.motion.animationsEnabled
                 NumberAnimation {
-                    duration: 200
-                    easing.type: Easing.OutCubic
+                    duration: fabMenu.motion.entry.duration
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: fabMenu.motion.entry.curve
                 }
             }
 
             Behavior on scale {
+                enabled: fabMenu.motion.animationsEnabled
                 NumberAnimation {
-                    duration: 200
-                    easing.type: Easing.OutBack
+                    duration: fabMenu.motion.spring.fast.spatial.duration
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: fabMenu.motion.spring.fast.spatial.curve
                 }
             }
 

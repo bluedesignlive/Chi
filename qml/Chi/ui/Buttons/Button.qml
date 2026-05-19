@@ -86,6 +86,7 @@ Item {
     opacity: enabled ? 1.0 : 0.38
 
     Behavior on opacity {
+        enabled: Theme.ChiMotion.animationsEnabled
         NumberAnimation {
             duration: _animDur
             easing.type: Easing.BezierSpline
@@ -194,6 +195,7 @@ Item {
         shadowBlur: root.state === "hovered" ? Theme.ChiElevation.blurRadius(Theme.ChiElevation.level2) : Theme.ChiElevation.blurRadius(Theme.ChiElevation.level1)
 
         Behavior on shadowVerticalOffset {
+            enabled: Theme.ChiMotion.animationsEnabled
             NumberAnimation {
                 duration: _animDur
                 easing.type: Easing.BezierSpline
@@ -201,6 +203,7 @@ Item {
             }
         }
         Behavior on shadowBlur {
+            enabled: Theme.ChiMotion.animationsEnabled
             NumberAnimation {
                 duration: _animDur
                 easing.type: Easing.BezierSpline

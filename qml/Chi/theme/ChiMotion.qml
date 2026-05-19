@@ -150,6 +150,7 @@ QtObject {
     // ═══════════════════════════════════════════════════════════════
 
     // ── Entry (hidden → visible): small elements ──
+    // Uses emphasizedDecelerate for smooth entrance — opacity-safe
     readonly property QtObject entry: QtObject {
         readonly property int duration: motion.duration.short3
         readonly property var curve: motion.easing.emphasizedDecelerate
@@ -158,13 +159,35 @@ QtObject {
         readonly property real translateY: 6
     }
 
+    // ── Entry Bouncy (hidden → visible): spatial-only with M3 Expressive overshoot
+    // Uses 12-value multi-segment emphasized curve for extra bounce on scale/position
+    // Do NOT use for opacity — the overshoot causes opacity > 1 flicker
+    readonly property QtObject entryBouncy: QtObject {
+        readonly property int duration: motion.duration.medium1
+        readonly property var curve: motion.easing.emphasized
+        readonly property real scaleFrom: 0.88
+        readonly property real scaleTo: 1.0
+        readonly property real translateY: 8
+    }
+
     // ── Exit (visible → hidden): small elements ──
+    // Uses emphasizedAccelerate for fast departure — no bounce needed on exit
     readonly property QtObject exit: QtObject {
         readonly property int duration: motion.duration.short2
         readonly property var curve: motion.easing.emphasizedAccelerate
         readonly property real scaleTo: 0.92
         readonly property real scaleFrom: 1.0
         readonly property real translateY: -6
+    }
+
+    // ── Exit Bouncy (visible → hidden): spatial-only with M3 Expressive overshoot
+    // Uses 12-value multi-segment emphasized curve for expressive exit
+    readonly property QtObject exitBouncy: QtObject {
+        readonly property int duration: motion.duration.short3
+        readonly property var curve: motion.easing.emphasized
+        readonly property real scaleTo: 0.85
+        readonly property real scaleFrom: 1.0
+        readonly property real translateY: -8
     }
 
     // ── Press (touch down) ──

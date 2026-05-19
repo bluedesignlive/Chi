@@ -123,8 +123,8 @@ Item {
                 SequentialAnimation on opacity {
                     id: leadingRippleAnim
                     running: false
-                    NumberAnimation { from: 0; to: 0.16; duration: 100; easing.type: Easing.OutCubic }
-                    NumberAnimation { to: 0; duration: 250; easing.type: Easing.OutCubic }
+                    NumberAnimation { from: 0; to: Theme.ChiMotion.stateLayer.pressed; duration: Theme.ChiMotion.press.duration; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.ChiMotion.press.curve }
+                    NumberAnimation { to: 0; duration: Theme.ChiMotion.release.duration; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.ChiMotion.release.curve }
                 }
             }
 
@@ -231,8 +231,8 @@ Item {
                 SequentialAnimation on opacity {
                     id: trailingRippleAnim
                     running: false
-                    NumberAnimation { from: 0; to: 0.16; duration: 100; easing.type: Easing.OutCubic }
-                    NumberAnimation { to: 0; duration: 250; easing.type: Easing.OutCubic }
+                    NumberAnimation { from: 0; to: Theme.ChiMotion.stateLayer.pressed; duration: Theme.ChiMotion.press.duration; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.ChiMotion.press.curve }
+                    NumberAnimation { to: 0; duration: Theme.ChiMotion.release.duration; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.ChiMotion.release.curve }
                 }
             }
 

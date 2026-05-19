@@ -51,6 +51,7 @@ Item {
 
     opacity: enabled ? 1.0 : 0.38
     Behavior on opacity {
+        enabled: motion.animationsEnabled
         NumberAnimation {
             duration: motion.durationMedium
             easing.type: motion.easeStandard

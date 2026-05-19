@@ -608,8 +608,8 @@ Window {
 
             Behavior on _toolbarOpacity {
                 NumberAnimation {
-                    duration: motion.durationMedium
-                    easing.type: motion.easeStandard
+                    duration: Theme.ChiMotion.duration.medium1
+                    easing.type: Easing.BezierSpline
                 }
             }
 
@@ -987,8 +987,8 @@ Window {
 
                     Behavior on opacity {
                         NumberAnimation {
-                            duration: root.motion.durationMedium
-                            easing.type: Easing.InOutCubic
+                            duration: Theme.ChiMotion.duration.medium1
+                            easing.type: Easing.BezierSpline
                         }
                     }
                 }
@@ -1014,8 +1014,8 @@ Window {
 
             Behavior on anchors.topMargin {
                 NumberAnimation {
-                    duration: root.motion.durationMedium
-                    easing.type: root.motion.easeStandard
+                    duration: Theme.ChiMotion.duration.medium1
+                    easing.type: Easing.BezierSpline
                 }
             }
         }
@@ -1035,7 +1035,7 @@ Window {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: root.motion.durationFast
+                duration: Theme.ChiMotion.duration.short2
                 easing.type: Easing.OutCubic
             }
         }
@@ -1058,7 +1058,7 @@ Window {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: root.motion.durationFast
+                duration: Theme.ChiMotion.duration.short2
                 easing.type: Easing.OutCubic
             }
         }
@@ -1187,8 +1187,8 @@ Window {
 
         Behavior on y {
             NumberAnimation {
-                duration: root.motion.durationMedium
-                easing.type: root.motion.easeStandard
+                duration: Theme.ChiMotion.duration.medium1
+                easing.type: Easing.BezierSpline
             }
         }
 
@@ -1687,7 +1687,7 @@ Window {
 
             Behavior on color {
                 ColorAnimation {
-                    duration: root.motion.durationFast
+                    duration: Theme.ChiMotion.duration.short2
                 }
             }
         }
@@ -1820,7 +1820,7 @@ Window {
 
             Behavior on color {
                 ColorAnimation {
-                    duration: root.motion.durationFast
+                    duration: Theme.ChiMotion.duration.short2
                 }
             }
         }

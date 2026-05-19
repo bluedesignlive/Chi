@@ -132,7 +132,7 @@ Popup {
                         Timer {
                             id: _cascadeTimer
                             interval: 60
-                            onTriggered: root._openCascade(modelData.items, modelData.id || "", index, _headMouse.mapToItem(null, 0, 0).y)
+                            onTriggered: root._openCascade(modelData.items, modelData.id || "", index, parent)
                         }
 
                         MouseArea {
@@ -143,14 +143,14 @@ Popup {
                             onClicked: {
                                 if (_hasItems) {
                                     _cascadeTimer.stop();
-                                    root._openCascade(modelData.items, modelData.id || "", index, _headMouse.mapToItem(null, 0, 0).y);
+                                    root._openCascade(modelData.items, modelData.id || "", index, parent);
                                 }
                             }
                             onContainsMouseChanged: {
                                 if (containsMouse && _hasItems) {
                                     if (_cascadePopup.opened) {
                                         _cascadeTimer.stop();
-                                        root._openCascade(modelData.items, modelData.id || "", index, _headMouse.mapToItem(null, 0, 0).y);
+                                        root._openCascade(modelData.items, modelData.id || "", index, parent);
                                     } else {
                                         _cascadeTimer.restart();
                                     }
@@ -165,14 +165,15 @@ Popup {
         }
     }
 
-    function _openCascade(items, menuId, index, yPos) {
+    function _openCascade(items, menuId, index, sourceItem) {
         root._cascadeItems = items;
         root._cascadeMenuId = menuId;
         root._cascadeTargetIndex = index;
 
         // Position to the right, aligned with hovered item
-        _cascadePopup.x = root.x + root.width;
-        _cascadePopup.y = yPos;
+        _cascadePopup.x = root.width - 4;
+        var pt = sourceItem.mapToItem(root.contentItem, 0, 0)
+        _cascadePopup.y = pt.y;
 
         if (!_cascadePopup.opened)
             _cascadePopup.open();

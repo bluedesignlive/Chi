@@ -49,12 +49,18 @@ Item {
                 });
 
             if (child.hasOwnProperty("selected") && child.hasOwnProperty("toggled")) {
+                // Support both signal-toggled (ToggleButton) and alias-toggled + toggleChanged (IconButtonToggle)
                 toggles.push(child);
-                child.toggled.connect((function (c) {
-                        return function (selected) {
-                            root.handleChildToggled(c, selected);
-                        };
-                    })(child));
+                var toggleSignal = typeof child.toggled === "function" ? child.toggled
+                                : typeof child.toggleChanged === "function" ? child.toggleChanged
+                                : null;
+                if (toggleSignal) {
+                    toggleSignal.connect((function (c) {
+                            return function (selected) {
+                                root.handleChildToggled(c, selected);
+                            };
+                        })(child));
+                }
             }
         }
 

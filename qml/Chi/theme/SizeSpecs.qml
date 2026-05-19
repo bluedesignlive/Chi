@@ -547,26 +547,11 @@ QtObject {
     // SEGMENTED BUTTON SIZES
     // ═══════════════════════════════════════════════════════════════════════
 
-    readonly property var segmentedButton: ({
-            small: {
-                height: 36,
-                fontSize: 12,
-                iconSize: 18,
-                padding: 12
-            },
-            medium: {
-                height: 44,
-                fontSize: 14,
-                iconSize: 20,
-                padding: 16
-            },
-            large: {
-                height: 52,
-                fontSize: 16,
-                iconSize: 22,
-                padding: 20
-            }
-        })
+readonly property var segmentedButton: ({
+    small:  { height: 32, fontSize: 12, iconSize: 16, padding: 10, gap: 8, outlineWidth: 1 },
+    medium: { height: 40, fontSize: 14, iconSize: 20, padding: 12, gap: 8, outlineWidth: 1 },
+    large:  { height: 48, fontSize: 16, iconSize: 24, padding: 16, gap: 8, outlineWidth: 1 }
+})
 
     // ═══════════════════════════════════════════════════════════════════════
     // CHIP SIZES

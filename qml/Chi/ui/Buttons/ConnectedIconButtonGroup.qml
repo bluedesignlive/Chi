@@ -177,7 +177,7 @@ Item {
                         topRightRadius: parent.topRightRadius
                         bottomRightRadius: parent.bottomRightRadius
                         color: parent._stateColor
-                        opacity: isPressed ? 0.12 : (isHovered ? 0.08 : 0)
+                        opacity: isPressed ? Theme.ChiMotion.stateLayer.pressed : (isHovered ? Theme.ChiMotion.stateLayer.hover : 0)
                         Behavior on opacity {
                             enabled: Theme.ChiMotion.animationsEnabled
                             NumberAnimation {

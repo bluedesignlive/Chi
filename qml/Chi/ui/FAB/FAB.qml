@@ -56,6 +56,7 @@ Item {
 
     opacity: enabled ? 1.0 : 0.38
     Behavior on opacity {
+        enabled: motion.animationsEnabled
         NumberAnimation {
             duration: motion.durationMedium
             easing.type: motion.easeStandard
@@ -106,8 +107,11 @@ Item {
             color: fab._contentColor
             rotation: fab.menuOpen ? 45 : 0
             Behavior on rotation {
+                enabled: motion.animationsEnabled
                 NumberAnimation {
-                    duration: motion.durationMedium
+                    duration: motion.spring.fast.spatial.duration
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: motion.spring.fast.spatial.curve
                 }
             }
         }
