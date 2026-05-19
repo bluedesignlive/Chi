@@ -29,30 +29,9 @@ Popup {
     padding: 0
     focus: true
 
-    // ═══════════════════════════════════════════════════════
-    //  CASCADE STATE MACHINE
-    // ═══════════════════════════════════════════════════════
-
-    property int _targetIndex: -1
     property var _cascadeItems: []
     property string _cascadeMenuId: ""
-
-    on_TargetIndexChanged: {
-        if (_targetIndex >= 0) {
-            _cascadeCloseTimer.stop()
-            if (_cascadePopup.opened) {
-                // Already open — crossfade content + slide position
-                _cascadeOpenTimer.stop()
-                _switchCascade(_targetIndex)
-            } else {
-                // First open — hover delay
-                _cascadeOpenTimer.restart()
-            }
-        } else {
-            _cascadeOpenTimer.stop()
-            _cascadeCloseTimer.restart()
-        }
-    }
+    property int _cascadeTargetIndex: -1
 
     readonly property int _contentWidth: {
         var w = 200
@@ -74,7 +53,6 @@ Popup {
     }
     height: Math.min(_contentHeight, maxHeight)
 
-    // ── M3 Expressive enter/exit ──
     enter: Transition {
         ParallelAnimation {
             NumberAnimation {
@@ -103,35 +81,16 @@ Popup {
         }
     }
 
-    onClosed: {
-        _cascadePopup.close()
-        _targetIndex = -1
-        _cascadeOpenTimer.stop()
-        _cascadeCloseTimer.stop()
-    }
-
-    // ── Timers ──
-    Timer {
-        id: _cascadeOpenTimer
-        interval: 150
-        onTriggered: {
-            if (root._targetIndex >= 0)
-                root._openCascadeFromIndex(root._targetIndex)
-        }
-    }
+    onClosed: _cascadePopup.close()
 
     Timer {
         id: _cascadeCloseTimer
-        interval: 250
+        interval: 200
         onTriggered: {
-            if (!_cascadeHover)
+            if (!_cascadeHover.hovered)
                 _cascadePopup.close()
         }
     }
-
-    // ═══════════════════════════════════════════════════════
-    //  BACKGROUND
-    // ═══════════════════════════════════════════════════════
 
     background: Rectangle {
         color: root.colors.surfaceContainerHigh
@@ -147,10 +106,6 @@ Popup {
             shadowBlur: 0.4
         }
     }
-
-    // ═══════════════════════════════════════════════════════
-    //  CONTENT
-    // ═══════════════════════════════════════════════════════
 
     contentItem: Item {
         id: _content
@@ -194,7 +149,7 @@ Popup {
                             }
 
                             Behavior on color {
-                                ColorAnimation { duration: 80 }
+                                ColorAnimation { duration: 100 }
                             }
 
                             RowLayout {
@@ -223,6 +178,19 @@ Popup {
                             }
                         }
 
+                        Timer {
+                            id: _cascadeOpenTimer
+                            interval: 180
+                            onTriggered: {
+                                root._openCascade(
+                                    _headItem.modelData.items,
+                                    _headItem.modelData.id || "",
+                                    _headItem.index,
+                                    _headItem
+                                )
+                            }
+                        }
+
                         MouseArea {
                             id: _headMouse
                             anchors.fill: parent
@@ -232,16 +200,36 @@ Popup {
                             onClicked: {
                                 if (_headItem._hasItems) {
                                     _cascadeOpenTimer.stop()
-                                    root._openCascadeFromIndex(_headItem.index)
+                                    root._openCascade(
+                                        _headItem.modelData.items,
+                                        _headItem.modelData.id || "",
+                                        _headItem.index,
+                                        _headItem
+                                    )
                                 }
                             }
 
                             onContainsMouseChanged: {
                                 if (containsMouse && _headItem._hasItems) {
-                                    root._targetIndex = _headItem.index
+                                    _cascadeCloseTimer.stop()
+                                    if (_cascadePopup.opened) {
+                                        _cascadeOpenTimer.stop()
+                                        root._openCascade(
+                                            _headItem.modelData.items,
+                                            _headItem.modelData.id || "",
+                                            _headItem.index,
+                                            _headItem
+                                        )
+                                    } else {
+                                        _cascadeOpenTimer.restart()
+                                    }
                                 } else if (containsMouse && !_headItem._hasItems) {
-                                    root._targetIndex = -1
-                                    root._cascadePopup.close()
+                                    _cascadeOpenTimer.stop()
+                                    _cascadeCloseTimer.stop()
+                                    _cascadePopup.close()
+                                } else {
+                                    _cascadeOpenTimer.stop()
+                                    _cascadeCloseTimer.restart()
                                 }
                             }
                         }
@@ -250,10 +238,7 @@ Popup {
             }
         }
 
-        // ═══════════════════════════════════════════════════
-        //  SCROLL INDICATORS — top
-        // ═══════════════════════════════════════════════════
-
+        // ── Scroll indicator — top ──
         Item {
             id: _scrollUp
             readonly property bool _show: _mainFlick.contentHeight > _mainFlick.height + 4
@@ -269,7 +254,7 @@ Popup {
             opacity: _show ? 1 : 0
 
             Behavior on opacity {
-                NumberAnimation { duration: 120 }
+                NumberAnimation { duration: 100 }
             }
 
             Rectangle {
@@ -322,10 +307,7 @@ Popup {
             }
         }
 
-        // ═══════════════════════════════════════════════════
-        //  SCROLL INDICATORS — bottom
-        // ═══════════════════════════════════════════════════
-
+        // ── Scroll indicator — bottom ──
         Item {
             id: _scrollDown
             readonly property bool _show: _mainFlick.contentHeight > _mainFlick.height + 4
@@ -341,7 +323,7 @@ Popup {
             opacity: _show ? 1 : 0
 
             Behavior on opacity {
-                NumberAnimation { duration: 120 }
+                NumberAnimation { duration: 100 }
             }
 
             Rectangle {
@@ -401,107 +383,18 @@ Popup {
         }
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  CASCADE — position helpers
-    // ═══════════════════════════════════════════════════════
+    function _openCascade(items, menuId, index, sourceItem) {
+        root._cascadeItems = items
+        root._cascadeMenuId = menuId
+        root._cascadeTargetIndex = index
 
-    function _headerY(idx) {
-        var y = _pad
-        for (var i = 0; i < idx; i++)
-            y += _itemH
-        return y
-    }
-
-    function _openCascadeFromIndex(idx) {
-        if (idx < 0 || idx >= root.menus.length)
-            return
-        var menu = root.menus[idx]
-        if (!menu || !menu.items || menu.items.length === 0)
-            return
-
-        root._cascadeItems = menu.items
-        root._cascadeMenuId = menu.id || ""
-
-        // First open — position the popup, snap Y instantly
-        _cascadePopup.y = _headerY(idx)
         _cascadePopup.x = root.width + 4
-        _cascContent._contentOpacity = 1
-        _cascContent._contentSlide = 0
+        var pt = sourceItem.mapToItem(root.contentItem, 0, 0)
+        _cascadePopup.y = pt.y
 
         if (!_cascadePopup.opened)
             _cascadePopup.open()
     }
-
-    // ═══════════════════════════════════════════════════════
-    //  CASCADE — smooth crossfade switch
-    //
-    //  Phase 1: fade out current content + start Y slide
-    //  Phase 2 (150ms later): swap _cascadeItems, fade in
-    //  The Y position animates continuously via Behavior.
-    // ═══════════════════════════════════════════════════════
-
-    property int _switchTargetIndex: -1
-    property var _switchTargetItems: null
-    property string _switchTargetMenuId: ""
-
-    function _switchCascade(idx) {
-        if (idx < 0 || idx >= root.menus.length)
-            return
-        var menu = root.menus[idx]
-        if (!menu || !menu.items || menu.items.length === 0)
-            return
-
-        // Store the pending switch
-        _switchTargetIndex = idx
-        _switchTargetItems = menu.items
-        _switchTargetMenuId = menu.id || ""
-
-        // Animate Y position (smooth spring)
-        _cascadePopup.y = _headerY(idx)
-
-        // Crossfade: fade out current content
-        _cascContent._contentOpacity = 0
-        _cascContent._contentSlide = -8
-
-        // After content fades out, swap data and fade in
-        _crossfadeTimer.restart()
-    }
-
-    Timer {
-        id: _crossfadeTimer
-        interval: 120
-        onTriggered: {
-            if (root._switchTargetIndex < 0)
-                return
-
-            // Swap content
-            root._cascadeItems = root._switchTargetItems
-            root._cascadeMenuId = root._switchTargetMenuId
-
-            // Reset flickable scroll
-            _cascFlick.contentY = 0
-
-            // Fade in new content
-            _cascContent._contentSlide = 8
-            _cascContent._contentOpacity = 1
-            _cascContent._contentSlide = 0
-
-            root._switchTargetIndex = -1
-            root._switchTargetItems = null
-        }
-    }
-
-    property bool _cascadeHover: false
-
-    // ═══════════════════════════════════════════════════════
-    //  CASCADE PANEL
-    //
-    //  Position Y animates via Behavior (smooth spring).
-    //  Content opacity/slide animates via Behavior (crossfade).
-    //  Enter animation only on first open.
-    //  HoverHandler keeps cascade alive.
-    //  Scroll indicators on cascade panel.
-    // ═══════════════════════════════════════════════════════
 
     Popup {
         id: _cascadePopup
@@ -533,15 +426,6 @@ Popup {
         width: _cascW
         height: Math.min(_cascH, root.maxHeight)
 
-        // Smooth Y position animation (the slide)
-        Behavior on y {
-            NumberAnimation {
-                duration: 200
-                easing.type: Easing.OutCubic
-            }
-        }
-
-        // Enter only on first open
         enter: Transition {
             ParallelAnimation {
                 NumberAnimation {
@@ -553,7 +437,7 @@ Popup {
                 }
                 NumberAnimation {
                     property: "scale"
-                    from: 0.95
+                    from: 0.92
                     to: 1
                     duration: 200
                     easing.type: Easing.OutCubic
@@ -565,16 +449,9 @@ Popup {
                 property: "opacity"
                 from: 1
                 to: 0
-                duration: 120
+                duration: 150
                 easing.type: Easing.OutCubic
             }
-        }
-
-        onClosed: {
-            root._cascadeHover = false
-            root._cascadeItems = []
-            _crossfadeTimer.stop()
-            root._switchTargetIndex = -1
         }
 
         background: Rectangle {
@@ -596,32 +473,14 @@ Popup {
             id: _cascContent
             implicitHeight: _cascadePopup._cascH
 
-            // Crossfade state
-            property real _contentOpacity: 1
-            property real _contentSlide: 0
-
-            Behavior on _contentOpacity {
-                NumberAnimation {
-                    duration: 120
-                    easing.type: Easing.OutCubic
-                }
-            }
-
-            Behavior on _contentSlide {
-                NumberAnimation {
-                    duration: 150
-                    easing.type: Easing.OutCubic
-                }
-            }
-
             HoverHandler {
-                id: _cascHoverHandler
-                onHoveredChanged: {
-                    root._cascadeHover = hovered
-                    if (hovered)
-                        _cascadeCloseTimer.stop()
-                }
+                    onHoveredChanged: {
+                        if (hovered)
+                            _cascadeCloseTimer.stop()
+                    }
+                id: _cascadeHover
             }
+
 
             Flickable {
                 id: _cascFlick
@@ -630,12 +489,6 @@ Popup {
                 contentHeight: _cascCol.implicitHeight
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
-                opacity: _cascContent._contentOpacity
-
-                // Smooth slide transform
-                transform: Translate {
-                    y: _cascContent._contentSlide
-                }
 
                 Column {
                     id: _cascCol
@@ -683,7 +536,7 @@ Popup {
                                 }
 
                                 Behavior on color {
-                                    ColorAnimation { duration: 80 }
+                                    ColorAnimation { duration: 100 }
                                 }
 
                                 RowLayout {
@@ -755,7 +608,7 @@ Popup {
                 opacity: _show ? 1 : 0
 
                 Behavior on opacity {
-                    NumberAnimation { duration: 120 }
+                    NumberAnimation { duration: 100 }
                 }
 
                 Rectangle {
@@ -824,7 +677,7 @@ Popup {
                 opacity: _show ? 1 : 0
 
                 Behavior on opacity {
-                    NumberAnimation { duration: 120 }
+                    NumberAnimation { duration: 100 }
                 }
 
                 Rectangle {

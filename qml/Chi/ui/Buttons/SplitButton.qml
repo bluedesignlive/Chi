@@ -66,7 +66,7 @@ Item {
     implicitWidth: leadingRect.width + spec.betweenSpace + trailingRect.width
     implicitHeight: spec.height
 
-    opacity: enabled ? 1.0 : 0.8
+    opacity: enabled ? 1.0 : 0.38
     Behavior on opacity { 
         enabled: motion.animationsEnabled
         NumberAnimation { duration: motion.durationMedium; easing.type: motion.easeStandard } 
@@ -98,7 +98,7 @@ Item {
                 topRightRadius: parent.topRightRadius; bottomRightRadius: parent.bottomRightRadius
                 color: colors.onSurface
                 opacity: 0.12
-                visible: !root.enabled && (_filled || _elevated)
+                visible: !root.enabled && (_filled || _elevated || _tonal)
             }
 
             Rectangle {
@@ -206,7 +206,7 @@ Item {
                 topRightRadius: parent.topRightRadius; bottomRightRadius: parent.bottomRightRadius
                 color: colors.onSurface
                 opacity: 0.12
-                visible: !root.enabled && (_filled || _elevated)
+                visible: !root.enabled && (_filled || _elevated || _tonal)
             }
 
             Rectangle {

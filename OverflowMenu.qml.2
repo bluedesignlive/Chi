@@ -31,24 +31,33 @@ Popup {
 
     // ═══════════════════════════════════════════════════════
     //  CASCADE STATE MACHINE
+    //
+    //  Single source of truth: _targetIndex
+    //    -1  = no cascade, nothing hovered
+    //    >=0 = header at this index is hovered / active
+    //
+    //  _cascadeOpenTimer fires after 150ms hover.
+    //  When _targetIndex changes while cascade is already open,
+    //  we switch immediately (no delay) — this is Chromium behavior.
+    //  When _targetIndex becomes -1, we start _cascadeCloseTimer.
+    //  The HoverHandler on the cascade popup cancels close.
     // ═══════════════════════════════════════════════════════
 
     property int _targetIndex: -1
-    property var _cascadeItems: []
-    property string _cascadeMenuId: ""
 
     on_TargetIndexChanged: {
         if (_targetIndex >= 0) {
             _cascadeCloseTimer.stop()
             if (_cascadePopup.opened) {
-                // Already open — crossfade content + slide position
+                // Already open — switch immediately, no delay
                 _cascadeOpenTimer.stop()
-                _switchCascade(_targetIndex)
+                _openCascadeFromIndex(_targetIndex)
             } else {
-                // First open — hover delay
+                // First open — wait 150ms
                 _cascadeOpenTimer.restart()
             }
         } else {
+            // Left all headers — start close delay
             _cascadeOpenTimer.stop()
             _cascadeCloseTimer.restart()
         }
@@ -110,7 +119,7 @@ Popup {
         _cascadeCloseTimer.stop()
     }
 
-    // ── Timers ──
+    // ── Timers — single instance, shared ──
     Timer {
         id: _cascadeOpenTimer
         interval: 150
@@ -124,7 +133,7 @@ Popup {
         id: _cascadeCloseTimer
         interval: 250
         onTriggered: {
-            if (!_cascadeHover)
+            if (!_cascadeHover.hovered)
                 _cascadePopup.close()
         }
     }
@@ -181,6 +190,7 @@ Popup {
                         width: parent ? parent.width : 200
 
                         readonly property bool _hasItems: modelData.items && modelData.items.length > 0
+                        readonly property bool _isTarget: index === root._targetIndex
 
                         Rectangle {
                             anchors.fill: parent
@@ -189,6 +199,8 @@ Popup {
 
                             color: {
                                 if (_headMouse.containsMouse && _headItem._hasItems)
+                                    return Qt.alpha(root.colors.onSurface, 0.08)
+                                if (_headItem._isTarget && _headItem._hasItems)
                                     return Qt.alpha(root.colors.onSurface, 0.08)
                                 return "transparent"
                             }
@@ -231,7 +243,7 @@ Popup {
 
                             onClicked: {
                                 if (_headItem._hasItems) {
-                                    _cascadeOpenTimer.stop()
+                                    root._cascadeOpenTimer.stop()
                                     root._openCascadeFromIndex(_headItem.index)
                                 }
                             }
@@ -243,6 +255,9 @@ Popup {
                                     root._targetIndex = -1
                                     root._cascadePopup.close()
                                 }
+                                // else: leaving header — onContainsMouseChanged on
+                                // the next header will set _targetIndex to its index,
+                                // or _col's onHoverChanged sets it to -1
                             }
                         }
                     }
@@ -252,6 +267,9 @@ Popup {
 
         // ═══════════════════════════════════════════════════
         //  SCROLL INDICATORS — top
+        //  Gradient fade + chevron icon
+        //  Click = scroll one page
+        //  Hover-and-hold = continuous auto-scroll
         // ═══════════════════════════════════════════════════
 
         Item {
@@ -402,19 +420,13 @@ Popup {
     }
 
     // ═══════════════════════════════════════════════════════
-    //  CASCADE — position helpers
+    //  CASCADE OPEN — reads from _targetIndex, not params
     // ═══════════════════════════════════════════════════════
-
-    function _headerY(idx) {
-        var y = _pad
-        for (var i = 0; i < idx; i++)
-            y += _itemH
-        return y
-    }
 
     function _openCascadeFromIndex(idx) {
         if (idx < 0 || idx >= root.menus.length)
             return
+
         var menu = root.menus[idx]
         if (!menu || !menu.items || menu.items.length === 0)
             return
@@ -422,86 +434,32 @@ Popup {
         root._cascadeItems = menu.items
         root._cascadeMenuId = menu.id || ""
 
-        // First open — position the popup, snap Y instantly
-        _cascadePopup.y = _headerY(idx)
+        // Find the header item for positioning
+        var headerItem = _col.children[idx]
+        if (!headerItem)
+            return
+
+        var pt = headerItem.mapToItem(root.contentItem, 0, 0)
         _cascadePopup.x = root.width + 4
-        _cascContent._contentOpacity = 1
-        _cascContent._contentSlide = 0
+        _cascadePopup.y = pt.y
 
         if (!_cascadePopup.opened)
             _cascadePopup.open()
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  CASCADE — smooth crossfade switch
-    //
-    //  Phase 1: fade out current content + start Y slide
-    //  Phase 2 (150ms later): swap _cascadeItems, fade in
-    //  The Y position animates continuously via Behavior.
-    // ═══════════════════════════════════════════════════════
-
-    property int _switchTargetIndex: -1
-    property var _switchTargetItems: null
-    property string _switchTargetMenuId: ""
-
-    function _switchCascade(idx) {
-        if (idx < 0 || idx >= root.menus.length)
-            return
-        var menu = root.menus[idx]
-        if (!menu || !menu.items || menu.items.length === 0)
-            return
-
-        // Store the pending switch
-        _switchTargetIndex = idx
-        _switchTargetItems = menu.items
-        _switchTargetMenuId = menu.id || ""
-
-        // Animate Y position (smooth spring)
-        _cascadePopup.y = _headerY(idx)
-
-        // Crossfade: fade out current content
-        _cascContent._contentOpacity = 0
-        _cascContent._contentSlide = -8
-
-        // After content fades out, swap data and fade in
-        _crossfadeTimer.restart()
-    }
-
-    Timer {
-        id: _crossfadeTimer
-        interval: 120
-        onTriggered: {
-            if (root._switchTargetIndex < 0)
-                return
-
-            // Swap content
-            root._cascadeItems = root._switchTargetItems
-            root._cascadeMenuId = root._switchTargetMenuId
-
-            // Reset flickable scroll
-            _cascFlick.contentY = 0
-
-            // Fade in new content
-            _cascContent._contentSlide = 8
-            _cascContent._contentOpacity = 1
-            _cascContent._contentSlide = 0
-
-            root._switchTargetIndex = -1
-            root._switchTargetItems = null
-        }
-    }
-
-    property bool _cascadeHover: false
+    property var _cascadeItems: []
+    property string _cascadeMenuId: ""
 
     // ═══════════════════════════════════════════════════════
     //  CASCADE PANEL
     //
-    //  Position Y animates via Behavior (smooth spring).
-    //  Content opacity/slide animates via Behavior (crossfade).
-    //  Enter animation only on first open.
-    //  HoverHandler keeps cascade alive.
-    //  Scroll indicators on cascade panel.
+    //  Enter: 150ms scale 0.95→1 + opacity (M3 standard)
+    //  Exit:  100ms opacity only
+    //  HoverHandler: keeps cascade alive when mouse inside
+    //  Scroll indicators on cascade panel
     // ═══════════════════════════════════════════════════════
+
+    property bool _cascadeHover: false
 
     Popup {
         id: _cascadePopup
@@ -533,29 +491,20 @@ Popup {
         width: _cascW
         height: Math.min(_cascH, root.maxHeight)
 
-        // Smooth Y position animation (the slide)
-        Behavior on y {
-            NumberAnimation {
-                duration: 200
-                easing.type: Easing.OutCubic
-            }
-        }
-
-        // Enter only on first open
         enter: Transition {
             ParallelAnimation {
                 NumberAnimation {
                     property: "opacity"
                     from: 0
                     to: 1
-                    duration: 200
+                    duration: 150
                     easing.type: Easing.OutCubic
                 }
                 NumberAnimation {
                     property: "scale"
                     from: 0.95
                     to: 1
-                    duration: 200
+                    duration: 150
                     easing.type: Easing.OutCubic
                 }
             }
@@ -565,7 +514,7 @@ Popup {
                 property: "opacity"
                 from: 1
                 to: 0
-                duration: 120
+                duration: 100
                 easing.type: Easing.OutCubic
             }
         }
@@ -573,8 +522,6 @@ Popup {
         onClosed: {
             root._cascadeHover = false
             root._cascadeItems = []
-            _crossfadeTimer.stop()
-            root._switchTargetIndex = -1
         }
 
         background: Rectangle {
@@ -596,30 +543,12 @@ Popup {
             id: _cascContent
             implicitHeight: _cascadePopup._cascH
 
-            // Crossfade state
-            property real _contentOpacity: 1
-            property real _contentSlide: 0
-
-            Behavior on _contentOpacity {
-                NumberAnimation {
-                    duration: 120
-                    easing.type: Easing.OutCubic
-                }
-            }
-
-            Behavior on _contentSlide {
-                NumberAnimation {
-                    duration: 150
-                    easing.type: Easing.OutCubic
-                }
-            }
-
             HoverHandler {
                 id: _cascHoverHandler
                 onHoveredChanged: {
                     root._cascadeHover = hovered
                     if (hovered)
-                        _cascadeCloseTimer.stop()
+                        root._cascadeCloseTimer.stop()
                 }
             }
 
@@ -630,12 +559,6 @@ Popup {
                 contentHeight: _cascCol.implicitHeight
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
-                opacity: _cascContent._contentOpacity
-
-                // Smooth slide transform
-                transform: Translate {
-                    y: _cascContent._contentSlide
-                }
 
                 Column {
                     id: _cascCol
