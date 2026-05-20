@@ -17,7 +17,7 @@ Item {
     property alias showIcon: root.showLeadingIcon // Backward compat
     property string trailingIcon: "arrow_drop_down" // M3 Standard Chevron
     property string variant: "filled"        // filled | elevated | tonal | outlined
-    property string size: "medium"           // xsmall | small | medium | large | xlarge
+    property string size: "small"           // xsmall | small | medium | large | xlarge
     property bool enabled: true
     
     // Pass a QtQuick.Controls.Menu here. The button will automatically manage it.

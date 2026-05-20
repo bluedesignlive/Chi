@@ -24,7 +24,7 @@ Item {
     // ─── Public API ───────────────────────────────────────────
     property string text: "Button"
     property string variant: "filled"       // filled | elevated | tonal | outlined | text
-    property string size: "medium"          // xsmall | small | medium | large | xlarge
+    property string size: "small"          // xsmall | small | medium | large | xlarge
     property string shape: "round"          // round | square
     property bool showIcon: false
     property string icon: ""
