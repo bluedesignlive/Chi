@@ -169,6 +169,7 @@ Item {
 
         // Ripple
         Common.Ripple {
+            id: rippleLayer
             color: _stateLayerColor
             radius: parent.radius
             enabled: iconButton.enabled
@@ -190,6 +191,9 @@ Item {
         enabled: iconButton.enabled
         hoverEnabled: true
         cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+        onPressed: (mouse) => rippleLayer.addRipple(mouse.x, mouse.y)
+        onReleased: rippleLayer.removeRipple()
+        onCanceled: rippleLayer.removeRipple()
         onClicked: iconButton.clicked()
     }
 
@@ -202,6 +206,8 @@ Item {
         activate()
 
     function activate() {
+        rippleLayer.addRipple();
+        rippleLayer.removeRipple();
         clicked();
     }
 }

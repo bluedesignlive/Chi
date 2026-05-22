@@ -535,7 +535,9 @@ Window {
         layer.enabled: windowRadius > 0
     }
 
-    Item {
+    property alias dialogLayer: _surface
+
+        Item {
         id: _surface
         anchors.fill: parent
 

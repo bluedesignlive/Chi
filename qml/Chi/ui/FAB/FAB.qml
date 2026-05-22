@@ -1,6 +1,3 @@
-// FAB.qml - Material 3 Floating Action Button
-// Uses shared components (Icon, Ripple, StateLayer) following Dieter Rams principles
-
 import QtQuick
 import QtQuick.Effects
 import "../../theme" as Theme
@@ -8,134 +5,71 @@ import "../common" as Common
 
 Item {
     id: fab
-
-    // ─── Public API ───────────────────────────────────────────
     property string icon: "add"
-    property string variant: "primary"       // primary | secondary | tertiary | surface
-    property string size: "medium"           // small | medium | large
+    property string variant: "primary"
+    property string size: "medium"
     property bool enabled: true
     property bool menuOpen: false
-
     signal clicked
 
-    // ─── Theme Tokens ───────────────────────────────────────────
     readonly property var colors: Theme.ChiTheme.colors
-    readonly property var motion: Theme.ChiTheme.motion
     readonly property var spec: Theme.SizeSpecs.getSpec(Theme.SizeSpecs.fab, size)
 
-    // ─── Variant Colors ──────────────────────────────────────────
-    readonly property color _containerColor: {
-        switch (variant) {
-        case "secondary":
-            return colors.secondaryContainer;
-        case "tertiary":
-            return colors.tertiaryContainer;
-        case "surface":
-            return colors.surfaceContainerHigh;
-        default:
-            return colors.primaryContainer;
-        }
-    }
+    readonly property color _containerColor: variant === "secondary" ? colors.secondaryContainer : (variant === "tertiary" ? colors.tertiaryContainer : (variant === "surface" ? colors.surfaceContainerHigh : colors.primaryContainer))
+    readonly property color _contentColor: variant === "secondary" ? colors.onSecondaryContainer : (variant === "tertiary" ? colors.onTertiaryContainer : (variant === "surface" ? colors.primary : colors.onPrimaryContainer))
 
-    readonly property color _contentColor: {
-        switch (variant) {
-        case "secondary":
-            return colors.onSecondaryContainer;
-        case "tertiary":
-            return colors.onTertiaryContainer;
-        case "surface":
-            return colors.primary;
-        default:
-            return colors.onPrimaryContainer;
-        }
-    }
-
-    // ─── Geometry ───────────────────────────────────────────────
     implicitWidth: spec.size
     implicitHeight: spec.size
 
     opacity: enabled ? 1.0 : 0.38
-    Behavior on opacity {
-        enabled: motion.animationsEnabled
-        NumberAnimation {
-            duration: motion.durationMedium
-            easing.type: motion.easeStandard
-        }
-    }
+    Behavior on opacity { NumberAnimation { duration: 200 } }
+    
+    scale: mouseArea.pressed ? 0.92 : 1.0
+    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
 
-    // ─── Visual Container ───────────────────────────────────────
     Rectangle {
         id: container
         anchors.fill: parent
-        radius: spec.radius
+        
+        radius: fab.menuOpen ? height / 2 : spec.radius
         clip: true
         color: fab._containerColor
 
-        // Shadow
+        // OutQuart (350ms): Instant reaction, but a long, luxurious, smooth settle
+        Behavior on radius { NumberAnimation { duration: 350; easing.type: Easing.OutQuart } }
+
         layer.enabled: fab.enabled
         layer.effect: MultiEffect {
             shadowEnabled: true
             shadowColor: Qt.rgba(0, 0, 0, 0.25)
-            shadowHorizontalOffset: 0
             shadowVerticalOffset: mouseArea.containsMouse ? 4 : 2
             shadowBlur: mouseArea.containsMouse ? 0.4 : 0.2
         }
 
-        // State Layer
-        Common.StateLayer {
-            layerColor: fab._contentColor
-            containerRadius: parent.radius
-            pressed: mouseArea.pressed
-            hovered: mouseArea.containsMouse
-            focused: fab.activeFocus
-            enabled: fab.enabled
-        }
+        Common.StateLayer { layerColor: fab._contentColor; containerRadius: parent.radius; pressed: mouseArea.pressed; hovered: mouseArea.containsMouse; enabled: fab.enabled }
+        Common.Ripple { id: ripple; color: fab._contentColor; radius: parent.radius; enabled: fab.enabled }
 
-        // Ripple
-        Common.Ripple {
-            id: ripple
-            color: fab._contentColor
-            radius: parent.radius
-            enabled: fab.enabled
-        }
-
-        // Icon - using shared Icon component
         Common.Icon {
             anchors.centerIn: parent
             source: fab.icon
             size: spec.iconSize
             color: fab._contentColor
+            
             rotation: fab.menuOpen ? 45 : 0
-            Behavior on rotation {
-                enabled: motion.animationsEnabled
-                NumberAnimation {
-                    duration: motion.spring.fast.spatial.duration
-                    easing.type: Easing.BezierSpline
-                    easing.bezierCurve: motion.spring.fast.spatial.curve
-                }
-            }
+            // Rotation exactly matches the silky morph curve
+            Behavior on rotation { NumberAnimation { duration: 350; easing.type: Easing.OutQuart } }
         }
     }
 
-    // ─── Input ──────────────────────────────────────────────────
     MouseArea {
         id: mouseArea
         anchors.fill: parent
         enabled: fab.enabled
         hoverEnabled: true
         cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+        onPressed: (mouse) => ripple.addRipple(mouse.x, mouse.y)
+        onReleased: ripple.removeRipple()
+        onCanceled: ripple.removeRipple()
         onClicked: fab.clicked()
-    }
-
-    // ─── Keyboard Support ───────────────────────────────────────
-    Keys.onSpacePressed: if (enabled)
-        activate()
-    Keys.onEnterPressed: if (enabled)
-        activate()
-    Keys.onReturnPressed: if (enabled)
-        activate()
-
-    function activate() {
-        clicked();
     }
 }

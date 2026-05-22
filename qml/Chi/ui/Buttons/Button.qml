@@ -1,17 +1,4 @@
 // ui/Buttons/Button.qml
-// Chi Button — Material 3 Expressive Design System
-// Dieter Rams 10 Principles of Good Design applied throughout:
-// #1  Innovative — MultiEffect shadow, no legacy GraphicalEffects
-// #2  Useful — Five sizes tuned for pointer-driven interfaces
-// #3  Aesthetic — Compact, rhythmic spacing; nothing superfluous
-// #4  Understandable — Variant names map directly to visual output
-// #5  Unobtrusive — Buttons serve content, never dominate it
-// #6  Honest — No fake depth unless elevated; states are truthful
-// #7  Long-lasting — Theme-driven tokens; zero hardcoded values
-// #8  Thorough — Every padding, radius, and opacity is intentional
-// #9  Environmentally friendly — Minimal redraws, shared components
-// #10 As little design as possible — Less, but better
-
 import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Effects
@@ -21,11 +8,10 @@ import "../common" as Common
 Item {
     id: root
 
-    // ─── Public API ───────────────────────────────────────────
     property string text: "Button"
-    property string variant: "filled"       // filled | elevated | tonal | outlined | text
-    property string size: "small"          // xsmall | small | medium | large | xlarge
-    property string shape: "round"          // round | square
+    property string variant: "filled"
+    property string size: "small"
+    property string shape: "round"
     property bool showIcon: false
     property string icon: ""
     property bool enabled: true
@@ -33,30 +19,22 @@ Item {
 
     signal clicked()
 
-    // ─── Theme Tokens ───────────────────────────────────────────
     readonly property var colors: Theme.ChiTheme.colors
     readonly property var typography: Theme.ChiTheme.typography
     readonly property int _animDur: Theme.ChiMotion.duration.short4
     readonly property string fontFamily: Theme.ChiTheme.fontFamily
     readonly property string iconFamily: Theme.ChiTheme.iconFamily
 
-    // ─── Size Specifications — Material 3 Expressive ────────────
-    // Expressive design uses larger touch targets for better accessibility
-    // Desktop minimum: 40px, Mobile minimum: 48px
     readonly property var spec: Theme.SizeSpecs.getSpec(Theme.SizeSpecs.button, size)
     readonly property var typo: typography[spec.typo] ?? typography.labelLarge
 
-    readonly property bool isIconImage: icon.endsWith(".svg")
-                                     || icon.endsWith(".png")
-                                     || icon.endsWith(".jpg")
-                                     || icon.startsWith("qrc:/")
+    readonly property bool isIconImage: icon.endsWith(".svg") || icon.endsWith(".png") || icon.endsWith(".jpg") || icon.startsWith("qrc:/")
 
     readonly property bool isFilled:   variant === "filled"
     readonly property bool isElevated: variant === "elevated"
     readonly property bool isTonal:    variant === "tonal"
     readonly property bool isOutlined: variant === "outlined"
 
-    // Pre-resolve variant colors — single switch, not repeated per-item
     readonly property color fillColor: {
         if (isFilled)   return colors.primary
         if (isElevated) return colors.surfaceContainerLow
@@ -68,7 +46,7 @@ Item {
         if (!enabled)   return colors.onSurface
         if (isFilled)   return colors.onPrimary
         if (isTonal)    return colors.onSecondaryContainer
-        return colors.primary                       // elevated, outlined, text
+        return colors.primary 
     }
 
     readonly property color overlayColor: {
@@ -77,24 +55,18 @@ Item {
         return colors.primary
     }
 
+    // Fixed shadow logic: Evaluates to true if it currently needs to DISPLAY a shadow
     readonly property bool needsShadow: enabled && (isElevated || (isFilled && root.state === "hovered") || (isTonal && root.state === "hovered"))
 
-    // ─── Geometry ───────────────────────────────────────────────
     implicitWidth: content.implicitWidth
     implicitHeight: spec.height
 
     opacity: enabled ? 1.0 : 0.38
-
     Behavior on opacity {
         enabled: Theme.ChiMotion.animationsEnabled
-        NumberAnimation {
-            duration: _animDur
-            easing.type: Easing.BezierSpline
-            easing.bezierCurve: Theme.ChiMotion.easing.standard
-        }
+        NumberAnimation { duration: _animDur; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.ChiMotion.easing.standard }
     }
 
-    // ─── Interaction States ─────────────────────────────────────
     states: [
         State { name: "disabled"; when: !enabled },
         State { name: "pressed";  when: mouseArea.pressed && enabled },
@@ -103,16 +75,14 @@ Item {
         State { name: "idle";     when: enabled }
     ]
 
-    // ─── Visual Container ───────────────────────────────────────
     Rectangle {
         id: container
         anchors.fill: parent
-        visible: !needsShadow
-
+        
         radius: shape === "round" ? height / 2 : spec.squareRadius
         color: enabled ? fillColor : "transparent"
 
-        // Disabled fill substitute — M3: onSurface @ 12%
+        // Disabled fill substitute
         Rectangle {
             anchors.fill: parent
             radius: parent.radius
@@ -128,7 +98,32 @@ Item {
             return colors.outline
         }
 
-        // State layer — hover / focus / press feedback (using shared component)
+        // --- PROPER SHADOW RENDERING PIPELINE ---
+        // Layer remains enabled for variants that support shadows to prevent swapping bugs
+        layer.enabled: root.enabled && (isElevated || isFilled || isTonal)
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowColor: Theme.ChiElevation.shadowColor(Theme.ChiElevation.level1)
+            // Dynamically fade the shadow in and out without destroying the component
+            shadowOpacity: root.needsShadow ? Theme.ChiElevation.shadowOpacity(Theme.ChiElevation.level1) : 0.0
+            shadowHorizontalOffset: 0
+            shadowVerticalOffset: root.state === "hovered" ? Theme.ChiElevation.verticalOffset(Theme.ChiElevation.level2) : Theme.ChiElevation.verticalOffset(Theme.ChiElevation.level1)
+            shadowBlur: root.state === "hovered" ? Theme.ChiElevation.blurRadius(Theme.ChiElevation.level2) : Theme.ChiElevation.blurRadius(Theme.ChiElevation.level1)
+
+            Behavior on shadowOpacity {
+                enabled: Theme.ChiMotion.animationsEnabled
+                NumberAnimation { duration: _animDur; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.ChiMotion.easing.standard }
+            }
+            Behavior on shadowVerticalOffset {
+                enabled: Theme.ChiMotion.animationsEnabled
+                NumberAnimation { duration: _animDur; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.ChiMotion.easing.standard }
+            }
+            Behavior on shadowBlur {
+                enabled: Theme.ChiMotion.animationsEnabled
+                NumberAnimation { duration: _animDur; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.ChiMotion.easing.standard }
+            }
+        }
+
         Common.StateLayer {
             layerColor: overlayColor
             containerRadius: parent.radius
@@ -138,14 +133,13 @@ Item {
             enabled: root.enabled
         }
 
-        // Ripple — full-surface flash
         Common.Ripple {
+            id: rippleLayer
             color: overlayColor
             radius: parent.radius
             enabled: root.enabled
         }
 
-        // Content row — icon + label
         Row {
             id: content
             anchors.centerIn: parent
@@ -167,12 +161,10 @@ Item {
             Text {
                 id: label
                 text: root.text
-
                 font.family:        fontFamily
                 font.weight:        typo.weight
                 font.pixelSize:     typo.size
                 font.letterSpacing: typo.spacing
-
                 verticalAlignment: Text.AlignVCenter
                 color: contentColor
                 anchors.verticalCenter: parent.verticalCenter
@@ -180,39 +172,6 @@ Item {
         }
     }
 
-    // ─── Elevation — Modern MultiEffect ──────────────────────────
-    MultiEffect {
-        source: container
-        anchors.fill: container
-        visible: needsShadow
-        autoPaddingEnabled: true
-
-        shadowEnabled: true
-        shadowColor: Theme.ChiElevation.shadowColor(Theme.ChiElevation.level1)
-        shadowOpacity: Theme.ChiElevation.shadowOpacity(Theme.ChiElevation.level1)
-        shadowHorizontalOffset: 0
-        shadowVerticalOffset: root.state === "hovered" ? Theme.ChiElevation.verticalOffset(Theme.ChiElevation.level2) : Theme.ChiElevation.verticalOffset(Theme.ChiElevation.level1)
-        shadowBlur: root.state === "hovered" ? Theme.ChiElevation.blurRadius(Theme.ChiElevation.level2) : Theme.ChiElevation.blurRadius(Theme.ChiElevation.level1)
-
-        Behavior on shadowVerticalOffset {
-            enabled: Theme.ChiMotion.animationsEnabled
-            NumberAnimation {
-                duration: _animDur
-                easing.type: Easing.BezierSpline
-                easing.bezierCurve: Theme.ChiMotion.easing.standard
-            }
-        }
-        Behavior on shadowBlur {
-            enabled: Theme.ChiMotion.animationsEnabled
-            NumberAnimation {
-                duration: _animDur
-                easing.type: Easing.BezierSpline
-                easing.bezierCurve: Theme.ChiMotion.easing.standard
-            }
-        }
-    }
-
-    // ─── Input ──────────────────────────────────────────────────
     MouseArea {
         id: mouseArea
         anchors.fill: parent
@@ -220,6 +179,9 @@ Item {
         hoverEnabled: true
         cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
 
+        onPressed: (mouse) => rippleLayer.addRipple(mouse.x, mouse.y)
+        onReleased: rippleLayer.removeRipple()
+        onCanceled: rippleLayer.removeRipple()
         onClicked: root.clicked()
     }
 
@@ -228,6 +190,8 @@ Item {
     Keys.onReturnPressed: if (enabled && !loading) activate()
 
     function activate() {
+        rippleLayer.addRipple();
+        rippleLayer.removeRipple();
         clicked()
     }
 }
