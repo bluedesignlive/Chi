@@ -17,6 +17,10 @@ qt_add_qml_module(chitimer
     VERSION 1.0
     QML_FILES
         qml/Main.qml
+        qml/TimerTab.qml
+        qml/StopwatchTab.qml
+        qml/AlarmTab.qml
+        qml/WorldClockTab.qml
     IMPORTS
         Chi
 )
@@ -26,9 +30,3 @@ target_link_libraries(chitimer
         Qt6::Quick
         Qt6::QuickControls2
 )
-
-# Point to Chi library
-# In production: install Chi to QML import path or use add_subdirectory
-# For this example, assumes Chi is in ../../ relative to project
-set(CHI_QML_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../qml")
-set(QML_IMPORT_PATH "${CHI_QML_DIR}" CACHE STRING "" FORCE)
