@@ -6,10 +6,10 @@ import "../common" as Common
 import "../menus" as Menus
 
 Item {
-    id: root
+ id: root
 
-    property string text: ""
-    property string placeholderText: ""
+ property alias text: textInput.text
+ property string placeholderText: ""
     property string label: ""
     property string supportingText: ""
     property string errorText: ""
@@ -140,21 +140,20 @@ Item {
         height: 0
     }
 
-    function _performCut() {
-        if (_storedSelectedText.length > 0) {
-            _clipboardHelper.text = _storedSelectedText;
-            _clipboardHelper.selectAll();
-            _clipboardHelper.cut();
+ function _performCut() {
+ if (_storedSelectedText.length > 0) {
+ _clipboardHelper.text = _storedSelectedText;
+ _clipboardHelper.selectAll();
+ _clipboardHelper.cut();
 
-            var before = root.text.substring(0, _storedSelectionStart);
-            var after = root.text.substring(_storedSelectionEnd);
-            root.text = before + after;
-            textInput.text = root.text;
+ var before = textInput.text.substring(0, _storedSelectionStart);
+ var after = textInput.text.substring(_storedSelectionEnd);
+ textInput.text = before + after;
 
-            textInput.forceActiveFocus();
-            textInput.cursorPosition = _storedSelectionStart;
-        }
-    }
+ textInput.forceActiveFocus();
+ textInput.cursorPosition = _storedSelectionStart;
+ }
+ }
 
     function _performCopy() {
         if (_storedSelectedText.length > 0) {
@@ -486,13 +485,12 @@ Item {
                     }
                 }
 
-                TextInput {
-                    id: textInput
-                    anchors.fill: parent
-                    verticalAlignment: Text.AlignVCenter
+ TextInput {
+ id: textInput
+ anchors.fill: parent
+ verticalAlignment: Text.AlignVCenter
 
-                    text: root.text
-                    font.family: fontFamily
+ font.family: fontFamily
                     font.pixelSize: currentSize.fontSize
                     color: enabled ? colors.onSurface : colors.onSurface
                     selectionColor: colors.primaryContainer
@@ -510,10 +508,9 @@ Item {
                     selectByMouse: true
                     persistentSelection: true
                     clip: true
-                    cursorVisible: activeFocus
+ cursorVisible: activeFocus
 
-                    onTextChanged: root.text = text
-                    onAccepted: root.accepted()
+ onAccepted: root.accepted()
                     onEditingFinished: root.editingFinished()
 
                     onActiveFocusChanged: {
@@ -742,10 +739,9 @@ Item {
     // ═══════════════════════════════════════════════════════════════════
     // PUBLIC FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════
-    function clear() {
-        textInput.clear();
-        root.text = "";
-    }
+ function clear() {
+ textInput.clear()
+ }
 
     function selectAll() {
         textInput.selectAll();

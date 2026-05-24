@@ -10,12 +10,13 @@ import "../../theme" as Theme
 Rectangle {
     id: root
 
-    // ─── Public API ───────────────────────────────────────────
-    property int currentIndex: 0
-    property bool scrollable: false
-    default property list<Item> tabs
+ // ─── Public API ───────────────────────────────────────────
+ property int currentIndex: 0
+ property bool scrollable: false
+ default property list<Item> tabs
+ readonly property alias contentChildren: tabsRow.children
 
-    signal tabClicked(int index)
+ signal tabClicked(int index)
 
     // ─── Theme Tokens ───────────────────────────────────────────
     readonly property var colors: Theme.ChiTheme.colors

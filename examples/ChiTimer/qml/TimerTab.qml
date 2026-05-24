@@ -40,7 +40,6 @@ Item {
     Canvas {
         id: ringCanvas
         anchors.fill: parent
-        anchors.bottomMargin: 120
         visible: !root.isIdle
         onPaint: drawRing()
     }
@@ -81,21 +80,22 @@ Item {
 
     Column {
         anchors.centerIn: parent
-        spacing: 32
+        spacing: 36
         visible: root.isIdle
 
         Label {
             text: "Set Timer"
             font.family: root.fontFamily
-            font.pixelSize: 28
+            font.pixelSize: 24
             font.weight: Font.Light
-            color: colors.onSurface
+            color: colors.onSurfaceVariant
             anchors.horizontalCenter: parent.horizontalCenter
         }
 
-        RowLayout {
+        Flow {
             anchors.horizontalCenter: parent.horizontalCenter
             spacing: 8
+            layoutDirection: Qt.LeftToRight
 
             Repeater {
                 model: [1, 3, 5, 10, 15, 30]
@@ -107,53 +107,54 @@ Item {
             }
         }
 
-        // Custom duration spinner
         Row {
             anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 8
+            spacing: 12
 
             property int hours: Math.floor(root.duration / 3600000)
             property int minutes: Math.floor((root.duration % 3600000) / 60000)
             property int seconds: Math.floor((root.duration % 60000) / 1000)
 
-            TimerSpinner {
-                label: "HH"
+            SpinnerSegment {
                 value: parent.hours
-                max: 99
-                onIncrement: { root.duration = root.duration + 3600000 }
-                onDecrement: { root.duration = Math.max(0, root.duration - 3600000) }
+                onUp: root.duration = root.duration + 3600000
+                onDown: root.duration = Math.max(0, root.duration - 3600000)
+                atMax: parent.hours >= 99
+                atMin: parent.hours <= 0
             }
 
             Label {
                 text: ":"
-                font.pixelSize: 32
+                font.pixelSize: 36
                 font.family: root.fontFamily
+                font.weight: Font.Light
                 color: colors.onSurface
                 anchors.verticalCenter: parent.verticalCenter
             }
 
-            TimerSpinner {
-                label: "MM"
+            SpinnerSegment {
                 value: parent.minutes
-                max: 59
-                onIncrement: { root.duration = Math.min(99*3600000, root.duration + 60000) }
-                onDecrement: { root.duration = Math.max(0, root.duration - 60000) }
+                onUp: root.duration = Math.min(99*3600000, root.duration + 60000)
+                onDown: root.duration = Math.max(0, root.duration - 60000)
+                atMax: parent.minutes >= 59
+                atMin: parent.minutes <= 0
             }
 
             Label {
                 text: ":"
-                font.pixelSize: 32
+                font.pixelSize: 36
                 font.family: root.fontFamily
+                font.weight: Font.Light
                 color: colors.onSurface
                 anchors.verticalCenter: parent.verticalCenter
             }
 
-            TimerSpinner {
-                label: "SS"
+            SpinnerSegment {
                 value: parent.seconds
-                max: 59
-                onIncrement: { root.duration = Math.min(99*3600000, root.duration + 1000) }
-                onDecrement: { root.duration = Math.max(0, root.duration - 1000) }
+                onUp: root.duration = Math.min(99*3600000, root.duration + 1000)
+                onDown: root.duration = Math.max(0, root.duration - 1000)
+                atMax: parent.seconds >= 59
+                atMin: parent.seconds <= 0
             }
         }
 
@@ -174,51 +175,43 @@ Item {
 
     Column {
         anchors.centerIn: ringCanvas
-        spacing: -6
+        spacing: 0
         visible: !root.isIdle
 
         Label {
             id: timerDisplay
-            text: formatCountdown(root.remaining)
+            text: root.isCompleted ? "Time's up!" : formatCountdown(root.remaining)
             font.family: root.fontFamily
-            font.pixelSize: root.isCompleted ? 48 : root.isRunning ? 76 : 72
+            font.pixelSize: root.isCompleted ? 40 : 72
             font.weight: root.isCompleted ? Font.Light : Font.Bold
             color: root.isCompleted ? colors.tertiary : colors.onSurface
             anchors.horizontalCenter: parent.horizontalCenter
-
-            Behavior on font.pixelSize {
-                NumberAnimation {
-                    duration: 350
-                    easing.type: Easing.OutBack
-                }
-            }
         }
 
         Label {
-            text: root.isCompleted ? "Time's up" : ""
+            text: root.isCompleted ? "" : "remaining"
             font.family: root.fontFamily
-            font.pixelSize: 20
-            font.weight: Font.Medium
-            color: colors.tertiary
+            font.pixelSize: 14
+            font.weight: Font.Normal
+            color: colors.onSurfaceVariant
             anchors.horizontalCenter: parent.horizontalCenter
-            visible: root.isCompleted
+            visible: !root.isCompleted
         }
     }
 
-    RowLayout {
-        id: timerControls
+    // ─── CONTROLS (active states) ────────────────────────────
+
+    Column {
+        anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.margins: 16
-        height: 56
+        anchors.bottomMargin: 48
         spacing: 12
         visible: !root.isIdle
 
         Button {
             text: root.isCompleted ? "Done" : root.isPaused ? "Resume" : "Pause"
-            variant: root.isCompleted ? "tonal" : root.isPaused ? "filled" : "outlined"
-            Layout.fillWidth: true
+            variant: root.isCompleted ? "tonal" : "filled"
+            anchors.horizontalCenter: parent.horizontalCenter
             onClicked: {
                 if (root.isCompleted) {
                     root.duration = 0
@@ -238,30 +231,33 @@ Item {
             }
         }
 
-        Button {
-            text: "Cancel"
-            variant: "tonal"
-            Layout.fillWidth: true
-            enabled: !root.isCompleted
-            onClicked: {
-                countdown.stop()
-                root.isRunning = false
-                root.isPaused = false
-                root.remaining = 0
-                root.duration = 0
-            }
-        }
+        Row {
+            anchors.horizontalCenter: parent.horizontalCenter
+            spacing: 16
 
-        Button {
-            text: "Reset"
-            variant: "text"
-            Layout.fillWidth: true
-            enabled: !root.isCompleted && (root.isRunning || root.isPaused || root.remaining < root.duration)
-            onClicked: {
-                countdown.stop()
-                root.isRunning = false
-                root.isPaused = false
-                root.remaining = root.duration
+            Button {
+                text: "Cancel"
+                variant: "text"
+                enabled: !root.isCompleted
+                onClicked: {
+                    countdown.stop()
+                    root.isRunning = false
+                    root.isPaused = false
+                    root.remaining = 0
+                    root.duration = 0
+                }
+            }
+
+            Button {
+                text: "Reset"
+                variant: "text"
+                enabled: !root.isCompleted && (root.isRunning || root.isPaused || root.remaining < root.duration)
+                onClicked: {
+                    countdown.stop()
+                    root.isRunning = false
+                    root.isPaused = false
+                    root.remaining = root.duration
+                }
             }
         }
     }
@@ -278,45 +274,55 @@ Item {
         return String(n).padStart(2, '0')
     }
 
-    // ─── INLINE COMPONENT ────────────────────────────────────
+    // ─── SPINNER SEGMENT ─────────────────────────────────────
 
-    component TimerSpinner: Item {
-        property string label: ""
+    component SpinnerSegment: Item {
         property int value: 0
-        property int max: 59
-        signal increment()
-        signal decrement()
+        property bool atMax: false
+        property bool atMin: false
+        signal up()
+        signal down()
 
-        width: 64
-        height: 120
+        width: 72
+        height: 140
 
         Column {
             anchors.centerIn: parent
-            spacing: 4
+            spacing: 2
 
-            Button {
-                text: "+"
-                variant: "text"
+            IconButton {
+                icon: "expand_less"
+                size: "small"
+                variant: "standard"
                 anchors.horizontalCenter: parent.horizontalCenter
-                enabled: parent.parent.value < parent.parent.max
-                onClicked: parent.parent.increment()
+                enabled: !atMax
+                onClicked: parent.parent.up()
             }
 
-            Label {
-                text: String(parent.parent.value).padStart(2, '0')
-                font.family: root.fontFamily
-                font.pixelSize: 32
-                font.weight: Font.Medium
-                color: colors.onSurface
+            Rectangle {
+                width: 64
+                height: 48
+                radius: 12
+                color: colors.surfaceContainerHigh
                 anchors.horizontalCenter: parent.horizontalCenter
+
+                Label {
+                    anchors.centerIn: parent
+                    text: String(parent.parent.parent.value).padStart(2, '0')
+                    font.family: root.fontFamily
+                    font.pixelSize: 28
+                    font.weight: Font.Medium
+                    color: colors.onSurface
+                }
             }
 
-            Button {
-                text: "−"
-                variant: "text"
+            IconButton {
+                icon: "expand_more"
+                size: "small"
+                variant: "standard"
                 anchors.horizontalCenter: parent.horizontalCenter
-                enabled: parent.parent.value > 0
-                onClicked: parent.parent.decrement()
+                enabled: !atMin
+                onClicked: parent.parent.down()
             }
         }
     }

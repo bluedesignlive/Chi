@@ -1,28 +1,66 @@
 # Chi
 
-Chi is built on a simple belief: open-source desktops deserve the same care that went into the software underneath them.
+Build beautiful QML applications without thinking about styling.
 
-Unix systems are powerful, stable, and free. They should also be beautiful, personal, and alive. Not because beauty is superficial — but because the way software looks and moves is how it *communicates* with the person using it.
+```qml
+import Chi
 
-### What Chi Is
-**A modern UI library for Unix-based systems.**
-Built to make apps feel timeless, elegant, expressive, and deeply human.
+ChiApplicationWindow {
+    title: "My App"
+    
+    Button {
+        text: "Do something"
+        onClicked: console.log("done")
+    }
+}
+```
 
-Chi aims to help developers build applications that feel
-intuitive, refined, and timeless — and in doing so, bring fresh energy to
-the Unix software landscape.
-
----
-
-### Early Development
-
-Chi is under active development. Documentation, installation guides, and
-contribution guidelines are coming soon.
+That's the whole idea. Import a component, it looks right. Dark mode works. Motion works. The window frame, the headerbar, the menus — handled.
 
 ---
 
-*Chi is a Smart design system.*
-*Made for people who believe open-source deserves to feel alive.*
+## What you get
 
+- **~100 components** — buttons, inputs, navigation, dialogs, tables, pickers
+- **Application shell** — frameless window, headerbar, global menu support, auto-hide, focus mode, built-in screenshots and screen recording
+- **Motion system** — shared tokens, no random durations hardcoded everywhere
+- **Responsive breakpoints** — `context.isCompact`, `context.isExpanded`, etc.
+- **Dark mode** — toggle it, everything reacts
 
-> **Note:** this project is currently transitioning from the name **SmartUI** to **Chi**.
+---
+
+## Install
+
+```bash
+git clone https://github.com/[your-org]/chi.git
+cd chi
+./install.sh
+```
+
+Requires Qt 6.
+
+---
+
+## Status
+
+**Beta.** Some components are polished. Some are rough. The architecture is solid and the API won't change wildly from here. I'm shipping now because six months is long enough to wait for perfect.
+
+---
+
+## Platform
+
+Developed on Linux and BSD. Cross-platform in principle — macOS and Windows should work, but they aren't my daily drivers. If something's broken, open an issue.
+
+---
+
+## Contributing
+
+Issues, PRs, and harsh feedback welcome.
+
+If you add a component, follow the existing pattern: read colors from `ChiTheme`, read durations from `ChiMotion`, don't hardcode anything.
+
+---
+
+Replace `[your-org]` with your actual GitHub path. Put a screenshot or GIF at the top when you have one — above the code block, under the tagline. That's the only thing that matters for getting people to scroll down.
+
+Want me to write the GitHub release notes and the Reddit post next, or are you shipping this README and tagging the release yourself?

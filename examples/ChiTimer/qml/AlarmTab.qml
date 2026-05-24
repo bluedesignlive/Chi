@@ -9,8 +9,6 @@ Item {
     readonly property var colors: ChiTheme.colors
     readonly property string fontFamily: ChiTheme.fontFamily
 
-    property var alarms: []
-
     Label {
         id: titleLabel
         text: "Alarms"
@@ -21,6 +19,10 @@ Item {
         anchors.top: parent.top
         anchors.topMargin: 24
         anchors.horizontalCenter: parent.horizontalCenter
+    }
+
+    ListModel {
+        id: alarmModel
     }
 
     ListView {
@@ -34,20 +36,17 @@ Item {
         anchors.rightMargin: 16
         clip: true
         spacing: 8
-        model: root.alarms
+        model: alarmModel
 
         delegate: Item {
-            required property var modelData
-            required property int index
-
             width: alarmList.width
             height: 88
 
             Rectangle {
                 anchors.fill: parent
                 radius: 16
-                color: modelData.enabled ? colors.surfaceContainerLow : colors.surfaceVariant
-                opacity: modelData.enabled ? 1.0 : 0.6
+                color: model.enabled ? colors.surfaceContainerLow : colors.surfaceVariant
+                opacity: model.enabled ? 1.0 : 0.6
 
                 Column {
                     anchors.verticalCenter: parent.verticalCenter
@@ -56,7 +55,7 @@ Item {
                     spacing: 2
 
                     Label {
-                        text: formatAlarmTime(modelData.hour, modelData.minute)
+                        text: formatAlarmTime(model.hour, model.minute)
                         font.family: root.fontFamily
                         font.pixelSize: 32
                         font.weight: Font.Light
@@ -64,19 +63,19 @@ Item {
                     }
 
                     Label {
-                        text: modelData.label
+                        text: model.label
                         font.family: root.fontFamily
                         font.pixelSize: 14
                         color: colors.onSurfaceVariant
-                        visible: modelData.label !== ""
+                        visible: model.label !== ""
                     }
 
                     Label {
-                        text: formatRepeatDays(modelData.repeat)
+                        text: formatRepeatDays(model.repeat)
                         font.family: root.fontFamily
                         font.pixelSize: 12
                         color: colors.onSurfaceVariant
-                        visible: modelData.repeat && modelData.repeat.length > 0
+                        visible: model.repeat && model.repeat.length > 0
                     }
                 }
 
@@ -84,12 +83,8 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.right: parent.right
                     anchors.rightMargin: 16
-                    checked: modelData.enabled
-                    onToggled: {
-                        var newAlarms = root.alarms.slice()
-                        newAlarms[index] = Object.assign({}, newAlarms[index], { enabled: checked })
-                        root.alarms = newAlarms
-                    }
+                    checked: model.enabled
+                    onToggled: alarmModel.setProperty(index, "enabled", checked)
                 }
             }
         }
@@ -100,7 +95,7 @@ Item {
             font.family: root.fontFamily
             font.pixelSize: 16
             color: colors.onSurfaceVariant
-            visible: root.alarms.length === 0
+            visible: alarmModel.count === 0
         }
     }
 
@@ -112,23 +107,24 @@ Item {
         text: "Add alarm"
         variant: "filled"
         onClicked: {
-            newAlarmHour = 7
-            newAlarmMinute = 0
-            newAlarmLabel = ""
-            newAlarmDays = []
+            alarmTimePicker.hours = 7
+            alarmTimePicker.minutes = 0
+            labelField.text = ""
+            monBtn.selected = false
+            tueBtn.selected = false
+            wedBtn.selected = false
+            thuBtn.selected = false
+            friBtn.selected = false
+            satBtn.selected = false
+            sunBtn.selected = false
             addSheet.open = true
         }
     }
 
-    property int newAlarmHour: 7
-    property int newAlarmMinute: 0
-    property string newAlarmLabel: ""
-    property var newAlarmDays: []
-
     BottomSheet {
         id: addSheet
         variant: "modal"
-        minHeight: 480
+        minHeight: 520
         maxHeight: parent.height * 0.85
         dismissible: true
 
@@ -136,7 +132,7 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.margins: 24
-            spacing: 24
+            spacing: 20
 
             Label {
                 text: "New Alarm"
@@ -150,64 +146,43 @@ Item {
             TimePicker {
                 id: alarmTimePicker
                 Layout.alignment: Qt.AlignHCenter
-                hours: root.newAlarmHour
-                minutes: root.newAlarmMinute
-                onHoursChanged: root.newAlarmHour = hours
-                onMinutesChanged: root.newAlarmMinute = minutes
             }
 
             TextField {
                 id: labelField
                 placeholderText: "Label (optional)"
                 Layout.fillWidth: true
-                onTextChanged: root.newAlarmLabel = text
             }
 
             RowLayout {
-                spacing: 8
-                Layout.fillWidth: true
+                spacing: 6
+                Layout.alignment: Qt.AlignHCenter
 
-                Repeater {
-                    id: dayRepeater
-                    model: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-                    delegate: Item {
-                        required property string modelData
-                        required property int index
+                IconButtonToggle { id: monBtn; icon: "calendar_clear_day"; selectedIcon: "calendar_month"; tooltip: "Monday"; variant: "tonal" }
+                IconButtonToggle { id: tueBtn; icon: "calendar_clear_day"; selectedIcon: "calendar_month"; tooltip: "Tuesday"; variant: "tonal" }
+                IconButtonToggle { id: wedBtn; icon: "calendar_clear_day"; selectedIcon: "calendar_month"; tooltip: "Wednesday"; variant: "tonal" }
+                IconButtonToggle { id: thuBtn; icon: "calendar_clear_day"; selectedIcon: "calendar_month"; tooltip: "Thursday"; variant: "tonal" }
+                IconButtonToggle { id: friBtn; icon: "calendar_clear_day"; selectedIcon: "calendar_month"; tooltip: "Friday"; variant: "tonal" }
+                IconButtonToggle { id: satBtn; icon: "calendar_clear_day"; selectedIcon: "calendar_month"; tooltip: "Saturday"; variant: "tonal" }
+                IconButtonToggle { id: sunBtn; icon: "calendar_clear_day"; selectedIcon: "calendar_month"; tooltip: "Sunday"; variant: "tonal" }
+            }
 
-                        property bool selected: root.newAlarmDays.indexOf(index) >= 0
-
-                        onSelectedChanged: {
-                            var days = root.newAlarmDays.slice()
-                            var pos = days.indexOf(index)
-                            if (selected && pos < 0) days.push(index)
-                            else if (!selected && pos >= 0) days.splice(pos, 1)
-                            root.newAlarmDays = days
-                        }
-
-                        width: 40
-                        height: 40
-
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: 20
-                            color: parent.selected ? colors.primary : colors.surfaceContainerHigh
-
-                            Label {
-                                anchors.centerIn: parent
-                                text: parent.parent.modelData.charAt(0)
-                                font.family: root.fontFamily
-                                font.pixelSize: 12
-                                font.weight: parent.parent.selected ? Font.Bold : Font.Normal
-                                color: parent.parent.selected ? colors.onPrimary : colors.onSurface
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: parent.parent.selected = !parent.parent.selected
-                            }
-                        }
-                    }
+            Label {
+                text: {
+                    var names = []
+                    if (monBtn.selected) names.push("Mon")
+                    if (tueBtn.selected) names.push("Tue")
+                    if (wedBtn.selected) names.push("Wed")
+                    if (thuBtn.selected) names.push("Thu")
+                    if (friBtn.selected) names.push("Fri")
+                    if (satBtn.selected) names.push("Sat")
+                    if (sunBtn.selected) names.push("Sun")
+                    return names.length > 0 ? names.join(", ") : "No repeat"
                 }
+                font.family: root.fontFamily
+                font.pixelSize: 13
+                color: colors.onSurfaceVariant
+                Layout.alignment: Qt.AlignHCenter
             }
 
             Item {
@@ -219,13 +194,21 @@ Item {
                 variant: "filled"
                 Layout.fillWidth: true
                 onClicked: {
-                    root.alarms = root.alarms.concat([{
-                        hour: root.newAlarmHour,
-                        minute: root.newAlarmMinute,
-                        label: root.newAlarmLabel,
-                        repeat: root.newAlarmDays.slice(),
+                    var days = []
+                    if (monBtn.selected) days.push(1)
+                    if (tueBtn.selected) days.push(2)
+                    if (wedBtn.selected) days.push(3)
+                    if (thuBtn.selected) days.push(4)
+                    if (friBtn.selected) days.push(5)
+                    if (satBtn.selected) days.push(6)
+                    if (sunBtn.selected) days.push(0)
+                    alarmModel.append({
+                        hour: alarmTimePicker.hours,
+                        minute: alarmTimePicker.minutes,
+                        label: labelField.text,
+                        repeat: days,
                         enabled: true
-                    }])
+                    })
                     addSheet.open = false
                 }
             }
@@ -245,7 +228,8 @@ Item {
         if (days.length === 7) return "Every day"
         if (days.length === 5 && days.indexOf(1) >= 0 && days.indexOf(5) >= 0) return "Weekdays"
         if (days.length === 2 && days.indexOf(0) >= 0 && days.indexOf(6) >= 0) return "Weekends"
-        return days.map(function(d) { return names[d] }).join(", ")
+        var mapped = days.map(function(d) { return names[d] })
+        return mapped.join(", ")
     }
 
     function pad(n) {

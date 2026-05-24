@@ -22,32 +22,33 @@ Item {
         { name: "Berlin",       offset: 2    }
     ]
 
+    property string filterText: ""
     property int _tick: 0
 
     Timer {
-        id: clockTimer
         interval: 1000
         repeat: true
         running: true
         onTriggered: root._tick++
     }
 
-    Label {
-        id: titleLabel
-        text: "World Clock"
-        font.family: root.fontFamily
-        font.pixelSize: 28
-        font.weight: Font.Light
-        color: colors.onSurface
+    SearchBar {
+        id: searchBar
+        placeholderText: "Search cities..."
+        leadingIcon: "location_city"
+        showTrailingIcon: false
         anchors.top: parent.top
-        anchors.topMargin: 24
-        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.margins: 16
+        onTextChanged: root.filterText = text
+        onCleared: root.filterText = ""
     }
 
     ListView {
         id: cityList
-        anchors.top: titleLabel.bottom
-        anchors.topMargin: 16
+        anchors.top: searchBar.bottom
+        anchors.topMargin: 8
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
@@ -63,6 +64,10 @@ Item {
 
             width: cityList.width
             height: 100
+            visible: {
+                if (root.filterText === "") return true
+                return modelData.name.toLowerCase().indexOf(root.filterText.toLowerCase()) >= 0
+            }
 
             Rectangle {
                 anchors.fill: parent
@@ -108,6 +113,25 @@ Item {
                     font.weight: Font.Light
                     color: colors.onSurface
                 }
+            }
+        }
+
+        Label {
+            anchors.centerIn: parent
+            text: "No cities match your search"
+            font.family: root.fontFamily
+            font.pixelSize: 16
+            color: colors.onSurfaceVariant
+            visible: {
+                if (root.filterText === "") return false
+                var hasVisible = false
+                for (var i = 0; i < root.cities.length; i++) {
+                    if (root.cities[i].name.toLowerCase().indexOf(root.filterText.toLowerCase()) >= 0) {
+                        hasVisible = true
+                        break
+                    }
+                }
+                return !hasVisible
             }
         }
     }

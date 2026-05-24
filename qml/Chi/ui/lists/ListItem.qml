@@ -125,15 +125,16 @@ Item {
                         color: colors.onPrimary
                     }
 
-                    MouseArea {
-                        anchors.fill: parent
-                        anchors.margins: -8
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            root.checked = !root.checked;
-                            root.checkboxToggled(root.checked);
-                        }
-                    }
+ MouseArea {
+ anchors.fill: parent
+ anchors.margins: -8
+ enabled: root.enabled
+ cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+ onClicked: {
+ root.checked = !root.checked;
+ root.checkboxToggled(root.checked);
+ }
+ }
                 }
 
                 // Radio
@@ -160,15 +161,16 @@ Item {
                         }
                     }
 
-                    MouseArea {
-                        anchors.fill: parent
-                        anchors.margins: -8
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            root.radioChecked = true;
-                            root.radioToggled();
-                        }
-                    }
+ MouseArea {
+ anchors.fill: parent
+ anchors.margins: -8
+ enabled: root.enabled
+ cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+ onClicked: {
+ root.radioChecked = true;
+ root.radioToggled();
+ }
+ }
                 }
 
                 // Avatar
@@ -317,14 +319,15 @@ Item {
                         }
                     }
 
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            root.switchChecked = !root.switchChecked;
-                            root.switchToggled(root.switchChecked);
-                        }
-                    }
+ MouseArea {
+ anchors.fill: parent
+ enabled: root.enabled
+ cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+ onClicked: {
+ root.switchChecked = !root.switchChecked;
+ root.switchToggled(root.switchChecked);
+ }
+ }
                 }
 
                 // Trailing text
@@ -357,12 +360,13 @@ Item {
                         }
                     }
 
-                    MouseArea {
-                        anchors.fill: parent
-                        anchors.margins: -8
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.trailingClicked()
-                    }
+ MouseArea {
+ anchors.fill: parent
+ anchors.margins: -8
+ enabled: root.enabled
+ cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+ onClicked: root.trailingClicked()
+ }
                 }
             }
         }

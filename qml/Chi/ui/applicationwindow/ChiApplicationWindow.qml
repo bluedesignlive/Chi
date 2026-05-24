@@ -36,6 +36,7 @@ Window {
 
     property string title: "Application"
     property bool showControls: true
+ property bool showThemeToggle: true
     property var colors: Theme.ChiTheme.colors
     readonly property string fontFamily: Theme.ChiTheme.fontFamily
     readonly property var typography: Theme.ChiTheme.typography
@@ -880,24 +881,35 @@ Window {
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 4
 
-                    Repeater {
-                        model: root.toolbarActions
+ Repeater {
+ model: root.toolbarActions
 
-                        ToolbarIconButton {
-                            required property var modelData
-                            required property int index
-                            iconName: modelData.icon || ""
-                            tooltipText: modelData.tooltip || ""
-                            checked: modelData.checked || false
-                            enabled: modelData.enabled !== false
-                            Accessible.name: modelData.tooltip || modelData.icon || qsTr("Action %1").arg(index + 1)
+ ToolbarIconButton {
+ required property var modelData
+ required property int index
+ iconName: modelData.icon || ""
+ tooltipText: modelData.tooltip || ""
+ checked: modelData.checked || false
+ enabled: modelData.enabled !== false
+ Accessible.name: modelData.tooltip || modelData.icon || qsTr("Action %1").arg(index + 1)
 
-                            onClicked: {
-                                if (modelData.triggered)
-                                    modelData.triggered();
-                                root.toolbarActionTriggered(index);
-                            }
-                        }
+ onClicked: {
+ if (modelData.triggered)
+ modelData.triggered();
+ root.toolbarActionTriggered(index);
+ }
+ }
+ }
+
+ // Dark/Light mode toggle
+ ToolbarIconButton {
+ id: _themeToggle
+ visible: root.showThemeToggle
+ iconName: Theme.ChiTheme.isDarkMode ? "light_mode" : "dark_mode"
+ tooltipText: Theme.ChiTheme.isDarkMode ? qsTr("Switch to light mode") : qsTr("Switch to dark mode")
+ onClicked: Theme.ChiTheme.toggleDarkMode()
+ Accessible.name: Theme.ChiTheme.isDarkMode ? qsTr("Switch to light mode") : qsTr("Switch to dark mode")
+ }
                     }
 
                     Item {

@@ -10,9 +10,11 @@ import "../common" as Common
 Item {
     id: iconButton
 
-    // ─── Public API ───────────────────────────────────────────
-    property string icon: ""
-    property string variant: "filled"        // filled | tonal | outlined | standard
+ // ─── Public API ───────────────────────────────────────────
+ property string icon: ""
+ property string iconName: "" // Named Material Symbol (e.g. "play_arrow"). Preferred over raw icon path.
+ readonly property string _resolvedIcon: iconName !== "" ? iconName : icon
+ property string variant: "filled" // filled | tonal | outlined | standard
     property string size: "small"            // xsmall | small | medium | large | xlarge
     property string widthMode: "default"     // narrow | default | wide
     property string shape: "round"           // round | square
@@ -175,13 +177,13 @@ Item {
             enabled: iconButton.enabled
         }
 
-        // Icon
-        Common.Icon {
-            anchors.centerIn: parent
-            source: iconButton.icon
-            size: spec.iconSize
-            color: iconButton._iconColor
-        }
+ // Icon
+ Common.Icon {
+ anchors.centerIn: parent
+ source: iconButton._resolvedIcon
+ size: spec.iconSize
+ color: iconButton._iconColor
+ }
     }
 
     // ─── Input ──────────────────────────────────────────────────
