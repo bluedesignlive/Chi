@@ -67,3 +67,9 @@ This project is the source of truth for the "Chi" UI library. The user is buildi
 MVP components: 20/20 pass behavioral contracts after 8 recent fixes (IconButton, ListItem, ConfirmDialog, Dialog, Tooltip, Slider, Card, TopAppBar). See MVP-COMPONENTS.md for full spec. Components are shippable.
 
 Doc: `doc/` directory contains per-component API reference with properties, signals, methods, and usage examples.
+
+## Website (GitHub Pages)
+
+    https://bluedesignlive.github.io/Chi/
+
+Single-page HTML with 4 routes: `/` (framework), `/apps`, `/theme`, `/docs`. Source in `docs/index.html`. Uses hash-based SPA routing, live theme playground with CSS variable injection from seed color, interactive component gallery, dark/light mode persistence, and copy buttons on all code blocks. Deploys from `main` branch, `/docs` folder.
