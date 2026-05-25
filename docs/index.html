@@ -31,8 +31,9 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 .theme-toggle svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* PAGE SYSTEM */
-.page{min-height:100vh;opacity:0;transform:translateY(12px);pointer-events:none;position:absolute;inset:0;padding-top:64px;transition:opacity .5s var(--ease-out),transform .5s var(--ease-out)}
+.page{display:flex;flex-direction:column;min-height:100vh;opacity:0;transform:translateY(12px);pointer-events:none;position:absolute;inset:0;padding-top:64px;transition:opacity .5s var(--ease-out),transform .5s var(--ease-out)}
 .page.active{opacity:1;transform:translateY(0);pointer-events:auto;position:relative}
+.page-body{flex:1}
 @keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 
 /* HERO */
@@ -198,7 +199,7 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 .apps-hero{padding:5rem 2rem 3rem;text-align:center}
 .apps-hero h1{font-size:clamp(2rem,5vw,3.2rem);font-weight:800;letter-spacing:-.03em;margin-bottom:1rem}
 .apps-hero p{color:var(--text-secondary);max-width:500px;margin:0 auto;font-size:1.05rem}
-.apps-grid{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:2rem;padding-bottom:6rem}
+.apps-grid{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:2rem;padding-bottom:2rem}
 .app-card-large{display:grid;grid-template-columns:1fr 1.2fr;gap:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;box-shadow:var(--shadow-md);transition:all .5s var(--ease-out)}
 .app-card-large:hover{box-shadow:var(--shadow-xl);border-color:var(--border-medium);transform:translateY(-4px)}
 .app-visual-side{background:var(--surface-raised);padding:2rem;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
@@ -263,6 +264,16 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 .footer p{font-size:.85rem;color:var(--text-tertiary);font-weight:500}
 .footer span{color:var(--accent);font-weight:600}
 
+/* SCREENSHOTS */
+.screens{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:2.5rem}
+.screen-card{transition:all .5s var(--ease-out);cursor:default}
+.screen-card:hover{transform:translateY(-6px)}
+.screen-frame{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-lg);position:relative}
+.screen-dots{display:flex;gap:.35rem;padding:.6rem .8rem;border-bottom:1px solid var(--border);background:var(--surface-raised)}
+.screen-dots span{width:10px;height:10px;border-radius:50%}.screen-dots span:nth-child(1){background:#ff5f57}.screen-dots span:nth-child(2){background:#febc2e}.screen-dots span:nth-child(3){background:#28c840}
+.screen-frame img{width:100%;height:auto;display:block;border-radius:0 0 var(--radius-lg) var(--radius-lg)}
+.screen-label{text-align:center;margin-top:.75rem;font-family:var(--font-mono);font-size:.65rem;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.08em}
+
 /* TOAST */
 .toast{position:fixed;bottom:2rem;right:2rem;z-index:9999;padding:.9rem 1.4rem;background:var(--surface);border:1.5px solid var(--border-strong);border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:.6rem;font-size:.85rem;font-weight:600;color:var(--text);transform:translateY(100px);opacity:0;transition:all .4s var(--ease-spring)}
 .toast.show{transform:translateY(0);opacity:1}
@@ -274,7 +285,7 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 .s1{transition-delay:.08s}.s2{transition-delay:.16s}.s3{transition-delay:.24s}.s4{transition-delay:.32s}.s5{transition-delay:.4s}
 
 /* RESPONSIVE */
-@media(max-width:1024px){.features-grid{grid-template-columns:repeat(2,1fr)}.arch-grid{grid-template-columns:repeat(2,1fr)}.gallery-grid{grid-template-columns:repeat(2,1fr)}.palette-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:1024px){.features-grid{grid-template-columns:repeat(2,1fr)}.arch-grid{grid-template-columns:repeat(2,1fr)}.gallery-grid{grid-template-columns:repeat(2,1fr)}.palette-grid{grid-template-columns:repeat(3,1fr)}.screens{grid-template-columns:1fr}}
 @media(max-width:768px){
 .nav{padding:0 1.2rem}.nav-links{gap:0}.nav-links a{padding:.4rem .6rem;font-size:.75rem}.hero{padding:3rem 1.2rem 4rem}.section{padding:4rem 1.2rem}.features-grid,.arch-grid,.gallery-grid{grid-template-columns:1fr}.palette-grid{grid-template-columns:repeat(2,1fr)}.install-grid{grid-template-columns:1fr}.stats-row{gap:2.5rem}.stat::after{display:none}.app-card-large{grid-template-columns:1fr}.app-visual-side{padding:1.5rem}.app-info-side{padding:1.5rem}.app-name-lg{font-size:1.5rem}}
 @media(max-width:480px){.palette-grid{grid-template-columns:1fr}.hero-actions{flex-direction:column;width:100%}.btn{width:100%;justify-content:center}.hero-meta{gap:1.5rem}}
@@ -291,7 +302,7 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
     <a onclick="goTo('apps')" data-page="apps">Apps</a>
     <a onclick="goTo('theme')" data-page="theme">Theme</a>
     <a onclick="goTo('docs')" data-page="docs">Docs</a>
-    <a href="https://github.com/smart/chi" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://github.com/bluedesignlive/Chi" target="_blank" rel="noopener">GitHub</a>
     <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
     </button>
@@ -300,6 +311,7 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 
 <!-- ═══ HOME ═══ -->
 <div class="page active" id="page-home">
+<div class="page-body">
 <section class="hero">
   <div class="hero-ambient"></div>
   <div class="hero-inner">
@@ -308,7 +320,7 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
     <p class="hero-desc hero-reveal" style="transition-delay:.2s">A comprehensive component library for Qt 6. Import Chi, place components, and get dark mode, motion, and responsive layouts — with zero styling decisions.</p>
     <div class="hero-actions hero-reveal" style="transition-delay:.3s">
       <a onclick="goTo('docs')" class="btn btn-primary">Get Started</a>
-      <a href="https://github.com/smart/chi" target="_blank" rel="noopener" class="btn btn-ghost">View on GitHub</a>
+      <a href="https://github.com/bluedesignlive/Chi" target="_blank" rel="noopener" class="btn btn-ghost">View on GitHub</a>
     </div>
     <div class="hero-meta hero-reveal" style="transition-delay:.4s">
       <span><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Qt 6 Required</span>
@@ -343,6 +355,32 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
       <div class="feature-card reveal s1"><div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div><h3>Responsive Breakpoints</h3><p>context.isCompact, context.isExpanded, and more. One codebase adapts to any screen size.</p></div>
       <div class="feature-card reveal s2"><div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div><h3>Dark Mode</h3><p>Toggle it. Everything reacts automatically through ChiTheme — colors, elevations, state layers.</p></div>
       <div class="feature-card reveal s3"><div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div><h3>Design Tokens</h3><p>ChiTheme, ChiMotion, ChiElevation, ShapeTokens, SizeSpecs — centralized, consistent, reusable.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-inner">
+    <div class="section-head reveal">
+      <div class="section-label">Preview</div>
+      <h2 class="section-title">Light and <span>dark</span></h2>
+      <p class="section-desc">Switch themes anywhere. Every Chi component reads from ChiTheme and reacts instantly to dark mode toggle.</p>
+    </div>
+    <div class="screens reveal">
+      <div class="screen-card">
+        <div class="screen-frame">
+          <div class="screen-dots"><span></span><span></span><span></span></div>
+          <img src="assets/screenshots/chi-light.png" alt="Chi light mode" loading="lazy">
+        </div>
+        <div class="screen-label">Light mode</div>
+      </div>
+      <div class="screen-card">
+        <div class="screen-frame">
+          <div class="screen-dots"><span></span><span></span><span></span></div>
+          <img src="assets/screenshots/chi-dark.png" alt="Chi dark mode" loading="lazy">
+        </div>
+        <div class="screen-label">Dark mode</div>
+      </div>
     </div>
   </div>
 </section>
@@ -409,7 +447,7 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
       <p class="section-desc">Requires Qt 6. Developed on Linux and BSD. Cross-platform in principle.</p>
     </div>
     <div class="install-grid reveal">
-      <div class="install-card"><h4><span class="install-num">01</span> Clone & Install</h4><div class="code-wrap"><div class="code-block"><span class="cmd">git clone</span> https://github.com/smart/chi.git<br><span class="cmd">cd</span> chi<br><span class="cmd">./install.sh</span></div><button class="copy-btn" onclick="copyCode(this,'.code-block')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button></div></div>
+      <div class="install-card"><h4><span class="install-num">01</span> Clone & Install</h4><div class="code-wrap"><div class="code-block"><span class="cmd">git clone</span> https://github.com/bluedesignlive/Chi.git<br><span class="cmd">cd</span> chi<br><span class="cmd">./install.sh</span></div><button class="copy-btn" onclick="copyCode(this,'.code-block')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button></div></div>
       <div class="install-card"><h4><span class="install-num">02</span> Use in QML</h4><div class="code-wrap"><div class="code-block"><span class="cmd">import</span> Chi<br><br><span class="cmd">ChiApplicationWindow</span> {<br>&nbsp;&nbsp;&nbsp;&nbsp;Button { text: <span class="str">"Hello"</span> }<br>}</div><button class="copy-btn" onclick="copyCode(this,'.code-block')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button></div></div>
     </div>
   </div>
@@ -435,14 +473,16 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 <section class="cta-section">
   <h2 class="cta-title reveal">Shape the future of <span>native UI</span></h2>
   <p class="cta-desc reveal">Issues, PRs, and harsh feedback welcome. Follow the pattern: read from ChiTheme, read from ChiMotion, don't hardcode anything.</p>
-  <div class="hero-actions reveal"><a href="https://github.com/smart/chi" target="_blank" rel="noopener" class="btn btn-primary">Contribute on GitHub</a><a href="https://github.com/smart/chi#readme" target="_blank" rel="noopener" class="btn btn-ghost">Read Documentation</a></div>
+  <div class="hero-actions reveal"><a href="https://github.com/bluedesignlive/Chi" target="_blank" rel="noopener" class="btn btn-primary">Contribute on GitHub</a><a href="https://github.com/bluedesignlive/Chi#readme" target="_blank" rel="noopener" class="btn btn-ghost">Read Documentation</a></div>
 </section>
+</div><!-- /page-body -->
 
 <footer class="footer"><p>Chi UI Framework — A <span>Smart</span> Open Source Project</p></footer>
 </div>
 
 <!-- ═══ APPS ═══ -->
 <div class="page" id="page-apps">
+<div class="page-body">
 <div class="apps-hero"><h1>Built with <span style="color:var(--accent)">Chi</span></h1><p>Real applications shipping today. All powered by one import.</p></div>
 <div class="apps-grid">
 <div class="app-card-large reveal">
@@ -490,11 +530,13 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
   </div>
 </div>
 </div>
+</div><!-- /page-body -->
 <footer class="footer"><p>Chi UI Framework — A <span>Smart</span> Open Source Project</p></footer>
 </div>
 
 <!-- ═══ THEME ═══ -->
 <div class="page" id="page-theme">
+<div class="page-body">
 <div class="section" style="padding-top:6rem">
   <div class="section-inner">
     <div class="section-head">
@@ -525,19 +567,22 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
     </div>
   </div>
 </div>
+</div><!-- /page-body -->
 <footer class="footer"><p>Chi UI Framework — A <span>Smart</span> Open Source Project</p></footer>
 </div>
 
 <!-- ═══ DOCS ═══ -->
 <div class="page" id="page-docs">
+<div class="page-body">
 <div style="padding-top:6rem">
 <div class="docs-coming">
   <div class="docs-coming-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
   <h3>Documentation</h3>
   <p>Component reference docs are available in the <code>doc/</code> directory of the repository. 30+ files covering every component's properties, signals, and usage examples.</p>
-  <a href="https://github.com/smart/chi/tree/main/doc" target="_blank" rel="noopener" class="btn btn-primary">Browse Docs</a>
+  <a href="https://github.com/bluedesignlive/Chi/tree/main/doc" target="_blank" rel="noopener" class="btn btn-primary">Browse Docs</a>
 </div>
 </div>
+</div><!-- /page-body -->
 <footer class="footer"><p>Chi UI Framework — A <span>Smart</span> Open Source Project</p></footer>
 </div>
 
