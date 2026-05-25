@@ -30,7 +30,8 @@ ChiApplicationWindow {
 
             IconButton {
                 icon: "remove"
-                size: "xlarge"
+                size: "medium"
+                widthMode: "wide"
                 variant: "tonal"
                 enabled: root.count > 0
                 onClicked: root.count--
@@ -38,7 +39,8 @@ ChiApplicationWindow {
 
             IconButton {
                 icon: "add"
-                size: "xlarge"
+                size: "medium"
+                widthMode: "wide"
                 variant: "tonal"
                 onClicked: root.count++
             }
