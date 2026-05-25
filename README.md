@@ -1,13 +1,33 @@
-# Chi
+<p align="center">
+  <a href="https://bluedesignlive.github.io/Chi/">
+    <img src="https://img.shields.io/badge/website-chi--ui.dev-7c3aed?logo=githubpages&logoColor=white" alt="Website">
+  </a>
+  <img src="https://img.shields.io/badge/Qt-6-41CD52?logo=qt" alt="Qt 6">
+  <a href="https://github.com/bluedesignlive/Chi">
+    <img src="https://img.shields.io/github/stars/bluedesignlive/Chi?style=social" alt="Stars">
+  </a>
+</p>
 
-Build beautiful QML applications without thinking about styling.
+<h1 align="center">Chi</h1>
+<p align="center"><strong>Build beautiful QML applications without thinking about styling.</strong></p>
+
+<p align="center">
+  <a href="https://bluedesignlive.github.io/Chi/"><strong>Explore the docs</strong></a> ·
+  <a href="https://bluedesignlive.github.io/Chi/#theme"><strong>Theme playground</strong></a> ·
+  <a href="https://bluedesignlive.github.io/Chi/#apps"><strong>Apps built with Chi</strong></a>
+</p>
+
+<p align="center">
+  <img src="docs/assets/screenshots/chi-light.png" alt="Chi Light Mode" width="45%">
+  <img src="docs/assets/screenshots/chi-dark.png" alt="Chi Dark Mode" width="45%">
+</p>
 
 ```qml
 import Chi
 
 ChiApplicationWindow {
     title: "My App"
-    
+
     Button {
         text: "Do something"
         onClicked: console.log("done")
@@ -32,7 +52,7 @@ That's the whole idea. Import a component, it looks right. Dark mode works. Moti
 ## Install
 
 ```bash
-git clone https://github.com/[your-org]/chi.git
+git clone https://github.com/bluedesignlive/Chi.git
 cd chi
 ./install.sh
 ```
@@ -58,9 +78,3 @@ Developed on Linux and BSD. Cross-platform in principle — macOS and Windows sh
 Issues, PRs, and harsh feedback welcome.
 
 If you add a component, follow the existing pattern: read colors from `ChiTheme`, read durations from `ChiMotion`, don't hardcode anything.
-
----
-
-Replace `[your-org]` with your actual GitHub path. Put a screenshot or GIF at the top when you have one — above the code block, under the tagline. That's the only thing that matters for getting people to scroll down.
-
-Want me to write the GitHub release notes and the Reddit post next, or are you shipping this README and tagging the release yourself?
